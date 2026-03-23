@@ -1,0 +1,104 @@
+### ==========================================
+### ROTAS JÁ IMPLEMENTADAS E PRONTAS PARA TESTE
+### ==========================================
+
+### 1. Health Check (Testar se o servidor está online)
+GET http://localhost:3333/health
+
+###
+
+### 2. Registrar novo usuário (com role específica)
+POST http://localhost:3333/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "João Silva",
+  "email": "joao@exemplo.com",
+  "password": "senha123",
+  "role": "Doador"
+}
+
+###
+
+### 3. Login do usuário (Copie o token que essa requisição vai devolver)
+POST http://localhost:3333/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@exemplo.com",
+  "password": "senha123"
+}
+
+###
+
+### 4. Atualizar FCM Token para Push Notifications
+PATCH http://localhost:3333/users/fcm-token
+Content-Type: application/json
+Authorization: Bearer SEU_TOKEN_AQUI
+
+{
+  "fcmToken": "token_simulado_do_firebase_12345"
+}
+
+###
+
+### 5. Obter dados do usuário (Rota protegida)
+GET http://localhost:3333/users/me
+Content-Type: application/json
+Authorization: Bearer SEU_TOKEN_AQUI
+
+###
+
+### 6. Atualizar dados do usuário (Rota protegida)
+PUT http://localhost:3333/users/me
+Content-Type: application/json
+Authorization: Bearer SEU_TOKEN_AQUI
+
+{
+  "fullName": "João Silva dos Santos",
+  "email": "joao.santos@exemplo.com"
+}
+
+###
+
+### 7. Excluir conta do usuário (Soft Delete)
+DELETE http://localhost:3333/users/me
+Content-Type: application/json
+Authorization: Bearer SEU_TOKEN_AQUI
+
+{
+  "password": "senha123"
+}
+
+###
+
+### 8. Teste de Erro - Email já em uso
+POST http://localhost:3333/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Maria Silva",
+  "email": "joao@exemplo.com",
+  "password": "senha456"
+}
+
+###
+
+### 9. Teste de Erro - Credenciais inválidas (Senha errada)
+POST http://localhost:3333/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@exemplo.com",
+  "password": "senha_errada"
+}
+
+### ==========================================
+### ROTAS FUTURAS (AINDA PRECISAM SER CRIADAS)
+### ==========================================
+
+### Buscar usuários com filtros (Apenas Admin)
+GET http://localhost:3333/users?page=1&limit=5&search=João&role=Doador
+Content-Type: application/json
+Authorization: Bearer SEU_TOKEN_AQUI
+
