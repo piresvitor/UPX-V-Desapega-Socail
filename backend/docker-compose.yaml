@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgis/postgis:15-3.3 
+    container_name: upx_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: desapega-social
+    ports:
+      - "5434:5432" # 5434 para evitar conflitos
+    volumes:
+      - upx_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  upx_data:
+    driver: local
