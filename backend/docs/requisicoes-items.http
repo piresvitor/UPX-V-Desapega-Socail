@@ -1,0 +1,31 @@
+### Criar um Item para Doação (Rota protegida)
+POST http://localhost:3333/items
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDgwNTAxfQ.kMN8uec6kZ4uXat2c2eSAeRtFfLK7diz5uuyH2tTogQ
+
+{
+  "title": "Sofá 3 Lugares Retrátil",
+  "description": "Sofá em bom estado, cor cinza escuro. Precisa de frete grande para retirar.",
+  "category": "Móveis",
+  "imageUrls": ["https://exemplo.com/sofa.jpg"],
+  "latitude": -23.501533,
+  "longitude": -47.458112
+}
+
+### Criar um Item com 3 Imagens
+POST http://localhost:3333/items
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDgwNTAxfQ.kMN8uec6kZ4uXat2c2eSAeRtFfLK7diz5uuyH2tTogQ
+
+{
+  "title": "Geladeira Brastemp",
+  "description": "Geladeira funcionando perfeitamente, apenas com arranhões na porta.",
+  "category": "Eletrodomésticos",
+  "imageUrls": [
+    "https://firebase.storage.com/minha-foto-1.jpg",
+    "https://firebase.storage.com/minha-foto-2.jpg",
+    "https://firebase.storage.com/minha-foto-3.jpg"
+  ],
+  "latitude": -23.501533,
+  "longitude": -47.458112
+}

@@ -37,7 +37,7 @@ export const registerRoute: FastifyPluginAsyncZod = async (server) => {
       .limit(1);
 
     if (existingUser) {
-      return reply.status(409).send({ message: 'Usuário já cadastrado com esse e-mail.' });
+      return reply.status(409).send({ message: 'Credenciais inválidas' });
     }
 
     // Criação do hash da senha com Argon2
