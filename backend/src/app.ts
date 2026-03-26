@@ -14,6 +14,12 @@ import { updateFcmTokenRoute } from './routes/users/update-fcm';
 import { getMeRoute } from './routes/users/get-me';
 import { updateMeRoute } from './routes/users/update-me';
 import { deleteMeRoute } from './routes/users/delete-me';
+import { createItemRoute } from './routes/items/create';
+import { listItemsRoute } from './routes/items/list';
+import { getItemRoute } from './routes/items/get-item';
+import { updateItemRoute } from './routes/items/update';
+import { updateItemStatusRoute } from './routes/items/patch-status';
+import { deleteItemRoute } from './routes/items/delete';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -36,7 +42,7 @@ if (process.env.NODE_ENV === "development") {
   app.register(fastifySwagger, {
     openapi: {
       info: {
-        title: "Desocupa Social",
+        title: "Desapega Social",
         description: "API para o projeto UPX 5.",
         version: '1.0.0'
       },
@@ -49,13 +55,12 @@ if (process.env.NODE_ENV === "development") {
           },
         },
       },
-      security: [{ bearerAuth: [] }], // Aplica o cadeado em todas as rotas (o Fastify ignora nas públicas)
     },
     transform: jsonSchemaTransform,
   });
 
   app.register(fastifySwaggerUi, {
-    routePrefix: '/docs', // Rota onde a interface vai ficar disponível
+    routePrefix: '/docs', 
   });
 }
 
@@ -67,5 +72,11 @@ app.register(updateFcmTokenRoute)
 app.register(getMeRoute)
 app.register(updateMeRoute)
 app.register(deleteMeRoute)
+app.register(createItemRoute)
+app.register(listItemsRoute)
+app.register(getItemRoute)
+app.register(updateItemRoute)
+app.register(updateItemStatusRoute)
+app.register(deleteItemRoute)
 
 export { app };

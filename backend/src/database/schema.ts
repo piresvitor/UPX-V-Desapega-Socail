@@ -8,6 +8,7 @@ import {
   decimal, 
   pgEnum 
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['Doador', 'Beneficiário', 'Freteiro', 'Admin']);
@@ -37,8 +38,7 @@ export const items = pgTable('items', {
   description: text('description'),
   category: varchar('category', { length: 50 }).notNull(),
   status: itemStatusEnum('status').default('Disponível').notNull(),
-  imageUrl: text('image_url'),
-  latitude: decimal('latitude', { precision: 10, scale: 8 }).notNull(),
+  imageUrls: text('image_urls').array(),  latitude: decimal('latitude', { precision: 10, scale: 8 }).notNull(),
   longitude: decimal('longitude', { precision: 11, scale: 8 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
@@ -74,3 +74,14 @@ export const freightRequests = pgTable('freight_requests', {
   status: freightStatusEnum('status').default('Pendente').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const itemsRelations = relations(items, ({ one }) => ({
+  donor: one(users, {
+    fields: [items.donorId], 
+    references: [users.id],  
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  items: many(items),
+}));

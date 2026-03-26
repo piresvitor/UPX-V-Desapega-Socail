@@ -14,6 +14,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 })
 
+
 // Log de conexão p
 pool.on('connect', () => {
   console.log('PostgreSQL conectado com sucesso!')
