@@ -1,0 +1,16 @@
+### Iniciar ou Recuperar Chat
+POST http://localhost:3333/chats
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU0MTkwM30.Y1D0bUA7RWyKZZGjSZ-SG8SYlANGdYWRdd2ldRlc8_E
+
+{
+  "itemId":"b15cd891-164b-4267-bed1-c1c26dd033d2"
+}
+
+### Listar todas as minhas conversas (Inbox)
+GET http://localhost:3333/chats
+Authorization: Bearer SEU_TOKEN_AQUI
+
+### Carregar Histórico do Chat
+GET http://localhost:3333/chats/7c9e3f2e-c02e-4678-a825-a39a53666c5f/messages
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU0MTkwM30.Y1D0bUA7RWyKZZGjSZ-SG8SYlANGdYWRdd2ldRlc8_E

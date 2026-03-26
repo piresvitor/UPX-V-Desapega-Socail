@@ -12,10 +12,10 @@ POST http://localhost:3333/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "João da Silva",
-  "email": "joaosilva@exemplo.com",
+  "fullName": "Maria",
+  "email": "maria@exemplo.com",
   "password": "senha123",
-  "role": "Doador"
+  "role": "Beneficiário"
 }
 
 ###
@@ -25,7 +25,7 @@ POST http://localhost:3333/auth/login
 Content-Type: application/json
 
 {
-  "email": "joao@exemplo.com",
+  "email": "maria@exemplo.com",
   "password": "senha123"
 }
 

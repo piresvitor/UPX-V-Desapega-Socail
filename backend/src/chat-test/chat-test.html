@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Chat</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+    input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
+    button { padding: 10px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+    ul { background: #f9f9f9; padding: 15px; height: 300px; overflow-y: auto; border: 1px solid #eee; list-style-type: none; border-radius: 8px; margin: 0; }
+    li { margin-bottom: 10px; padding: 8px; background: #e3f2fd; border-radius: 4px; }
+    .status { color: gray; font-size: 0.9em; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>📱 Simulação de Celular</h2>
+  <div class="status" id="status">Status: Desconectado 🔴</div>
+  
+  <div class="box">
+    <h3>1. Entrar na Conversa</h3>
+    <input type="text" id="roomId" placeholder="Cole o ID da Sala (Room ID)">
+    <button onclick="joinRoom()">Conectar na Sala</button>
+  </div>
+
+  <div class="box">
+    <h3>2. Enviar Mensagem</h3>
+    <input type="text" id="senderId" placeholder="Seu ID de Usuário (Sender ID)">
+    <input type="text" id="message" placeholder="Digite sua mensagem aqui...">
+    <button onclick="sendMessage()">Enviar Mensagem</button>
+  </div>
+
+  <h3>Chat ao Vivo:</h3>
+  <ul id="chat"></ul>
+
+  <script>
+    // Conecta automaticamente no seu backend rodando localmente
+    const socket = io('http://localhost:3333');
+
+    // Atualiza o status visual
+    socket.on('connect', () => {
+      document.getElementById('status').innerText = 'Status: Conectado ao Servidor 🟢 (Socket ID: ' + socket.id + ')';
+    });
+
+    // Escuta as mensagens chegando do backend
+    socket.on('receive_message', (msg) => {
+      const chatBox = document.getElementById('chat');
+      const li = document.createElement('li');
+      
+      // Formata a hora
+      const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      li.innerHTML = `<strong>Usuário ${msg.senderId.substring(0,8)}...</strong> <br/> ${msg.content} <span style="float:right; color:#888; font-size:0.8em">${time}</span>`;
+      chatBox.appendChild(li);
+      
+      // Rola para o final
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Função para entrar na sala
+    function joinRoom() {
+      const roomId = document.getElementById('roomId').value;
+      if(!roomId) return alert("Preencha o ID da sala!");
+      socket.emit('join_room', roomId);
+      alert('Entrou na sala: ' + roomId);
+    }
+
+    // Função para enviar mensagem
+    function sendMessage() {
+      const roomId = document.getElementById('roomId').value;
+      const senderId = document.getElementById('senderId').value;
+      const content = document.getElementById('message').value;
+
+      if(!roomId || !senderId || !content) return alert("Preencha todos os campos antes de enviar!");
+
+      // Dispara o evento para o Node.js
+      socket.emit('send_message', { roomId, senderId, content });
+      
+      // Limpa o campo de texto
+      document.getElementById('message').value = ''; 
+    }
+  </script>
+</body>
+</html>
