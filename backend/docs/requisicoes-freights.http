@@ -1,0 +1,35 @@
+### Solicitar Frete Solidário
+POST http://localhost:3333/freights
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU0NzE1MX0.MYi6AWa7tJSf60wS743yS-QqQ2rUmUeEIkOXZwW1C2M
+
+{
+  "itemId": "06cec9cb-bd6c-458f-820a-0af643cec4da"
+}
+
+### Radar: Buscar Fretes Próximos
+GET http://localhost:3333/freights/available?lat=-23.50153300&lng=-47.45811200&radius=30
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+
+
+### Aceitar Solicitação de Frete
+PATCH http://localhost:3333/freights/a313ffc4-a955-4a8e-b469-9630b86649b8/accept
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+
+{
+  "estimatedPrice": 50.00
+}
+
+### Atualizar Status para "Em Trânsito"
+PATCH http://localhost:3333/freights/a313ffc4-a955-4a8e-b469-9630b86649b8/status
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+
+{
+  "status": "Em Trânsito"
+}
+
+### Meu Histórico de Fretes
+GET http://localhost:3333/freights/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw

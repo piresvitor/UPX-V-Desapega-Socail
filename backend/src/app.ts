@@ -7,6 +7,9 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifySocketIO from 'fastify-socket.io';
 import { setupWebSockets } from './sockets/chat';
 import { listMessagesRoute } from './routes/chats/messages';
+import { createFreightRoute } from './routes/freights/create';
+import { availableFreightsRoute } from './routes/freights/available';
+import { acceptFreightRoute } from './routes/freights/accept';
 
 // Importação das rotas
 import { registerRoute } from './routes/auth/register'; 
@@ -24,6 +27,8 @@ import { updateItemStatusRoute } from './routes/items/patch-status';
 import { deleteItemRoute } from './routes/items/delete';
 import { createChatRoute } from './routes/chats/create';
 import { listChatsRoute } from './routes/chats/list';
+import { myFreightsRoute } from './routes/freights/me';
+import { updateFreightStatusRoute } from './routes/freights/status';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -92,6 +97,11 @@ app.register(deleteItemRoute)
 app.register(createChatRoute);
 app.register(listChatsRoute);
 app.register(listMessagesRoute);
+app.register(createFreightRoute);
+app.register(availableFreightsRoute);
+app.register(acceptFreightRoute);
+app.register(updateFreightStatusRoute);
+app.register(myFreightsRoute);
 
 setupWebSockets(app);
 export { app };

@@ -2,14 +2,11 @@ import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { eq, and, or, isNull } from 'drizzle-orm';
 import { db } from '../../database/cliente';
-import { items, chatRooms } from '../../database/schema';
-import { authenticateToken } from '../../middleware/auth'; 
+import { items, chatRooms, freightRequests } from '../../database/schema';
+import { authenticateToken } from '../../middleware/auth';
 
 const createChatBodySchema = z.object({
-  itemId: z.uuid('O ID do item deve ser um UUID válido'),
-
-  // Por enquanto vamos focar no tipo DONATION (Doação). 
-  // No futuro, se for frete, enviaremos type: 'FREIGHT'
+  itemId: z.string().uuid('O ID do item deve ser um UUID válido'),
   type: z.enum(['DONATION', 'FREIGHT']).default('DONATION'), 
 });
 
@@ -19,22 +16,14 @@ export const createChatRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Chats'],
       summary: 'Iniciar ou Recuperar Conversa',
-      description: 'Cria uma nova sala de chat para um item ou retorna a sala existente entre os dois usuários.',
+      description: 'Cria uma nova sala de chat para um item (Doação ou Frete).',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header required')
       }),
       body: createChatBodySchema,
       response: {
-        200: z.object({ 
-          message: z.string(),
-          roomId: z.string().uuid(),
-          isNew: z.boolean()
-        }),
-        201: z.object({ 
-          message: z.string(),
-          roomId: z.uuid(),
-          isNew: z.boolean()
-        }),
+        200: z.object({ message: z.string(), roomId: z.string().uuid(), isNew: z.boolean() }),
+        201: z.object({ message: z.string(), roomId: z.string().uuid(), isNew: z.boolean() }),
         400: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
         500: z.object({ message: z.string() })
@@ -43,61 +32,64 @@ export const createChatRoute: FastifyPluginAsyncZod = async (server) => {
   }, async (request, reply) => {
     try {
       const { itemId, type } = request.body;
-      const userId = request.user.sub; // Quem está clicando no botão (Beneficiário)
+      const userId = request.user.sub; 
 
-      // Busca o item para saber quem é o dono (Doador)
-      const item = await db.query.items.findFirst({
-        where: and(
-          eq(items.id, itemId),
-          isNull(items.deletedAt)
-        )
-      });
+      let targetUserId: string;
 
-      if (!item) {
-        return reply.status(404).send({ message: 'Item não encontrado ou indisponível.' });
+      // Lógica para Chat de DOAÇÃO (Fala com o Dono do Item)
+      if (type === 'DONATION') {
+        const item = await db.query.items.findFirst({
+          where: and(eq(items.id, itemId), isNull(items.deletedAt))
+        });
+        if (!item) return reply.status(404).send({ message: 'Item não encontrado.' });
+        if (item.donorId === userId) return reply.status(400).send({ message: 'Você não pode iniciar um chat com o seu próprio item.' });
+        
+        targetUserId = item.donorId;
+      } 
+      // Lógica para Chat de FRETE (Fala com o Beneficiário ou Freteiro)
+      else {
+        const freight = await db.query.freightRequests.findFirst({
+          where: eq(freightRequests.itemId, itemId)
+        });
+        if (!freight) return reply.status(404).send({ message: 'Solicitação de frete não encontrada para este item.' });
+        
+        // Se eu sou o Freteiro, quero falar com o Beneficiário
+        if (userId !== freight.beneficiaryId) {
+          targetUserId = freight.beneficiaryId;
+        } 
+        // Se eu sou o Beneficiário, quero falar com o Freteiro (só dá se ele já aceitou)
+        else {
+          if (!freight.freighterId) return reply.status(400).send({ message: 'Nenhum motorista aceitou este frete ainda.' });
+          targetUserId = freight.freighterId;
+        }
       }
 
-      // Regra de Negócio: O doador não pode abrir um chat de doação consigo mesmo!
-      if (item.donorId === userId && type === 'DONATION') {
-        return reply.status(400).send({ message: 'Você não pode iniciar um chat de doação com o seu próprio item.' });
-      }
-
-      // Verifica se a sala já existe entre esses dois usuários para este item
+      // Verifica se a sala já existe entre o Usuário Logado e o Target (Alvo)
       const existingRoom = await db.query.chatRooms.findFirst({
         where: and(
           eq(chatRooms.itemId, itemId),
           eq(chatRooms.type, type),
-          // O Drizzle OR checa as duas combinações possíveis (Eu sou o participante 1 e ele o 2, ou vice-versa)
           or(
-            and(eq(chatRooms.participant1, userId), eq(chatRooms.participant2, item.donorId)),
-            and(eq(chatRooms.participant1, item.donorId), eq(chatRooms.participant2, userId))
+            and(eq(chatRooms.participant1, userId), eq(chatRooms.participant2, targetUserId)),
+            and(eq(chatRooms.participant1, targetUserId), eq(chatRooms.participant2, userId))
           )
         )
       });
 
-      // Se a sala já existe, devolvemos ela (Status 200)
       if (existingRoom) {
-        return reply.status(200).send({
-          message: 'Sala recuperada com sucesso.',
-          roomId: existingRoom.id,
-          isNew: false
-        });
+        return reply.status(200).send({ message: 'Sala recuperada com sucesso.', roomId: existingRoom.id, isNew: false });
       }
 
-      // Se não existe, criamos a sala nova (Status 201)
+      // Se não existe, criamos a sala nova
       const [newRoom] = await db.insert(chatRooms).values({
         itemId: itemId,
-        participant1: userId, // Quem iniciou a conversa
-        participant2: item.donorId, // O dono do item
+        participant1: userId, 
+        participant2: targetUserId, 
         type: type,
         status: 'Ativo'
       }).returning({ id: chatRooms.id });
 
-      return reply.status(201).send({
-        message: 'Sala de chat criada com sucesso!',
-        roomId: newRoom.id,
-        isNew: true
-      });
+      return reply.status(201).send({ message: 'Sala de chat criada com sucesso!', roomId: newRoom.id, isNew: true });
 
     } catch (error) {
       console.error('Erro ao iniciar chat:', error);
