@@ -1,4 +1,4 @@
-# 🚀 API MobiAccess / Desapega Social
+# 🚀 API Desapega Social
 
 Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido com uma arquitetura moderna e escalável, projetado para suportar buscas geoespaciais e regras de negócio com foco em impacto social.
 
