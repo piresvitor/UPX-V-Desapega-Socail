@@ -32,7 +32,7 @@ export const createItemRoute: FastifyPluginAsyncZod = async (server) => {
         201: z.object({
           message: z.string(),
           item: z.object({
-            id: z.string().uuid(),
+            id: z.uuid(),
             title: z.string(),
             category: z.string(),
             status: z.string()

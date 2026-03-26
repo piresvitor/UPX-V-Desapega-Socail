@@ -4,7 +4,12 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-
+import fastifySocketIO from 'fastify-socket.io';
+import { setupWebSockets } from './sockets/chat';
+import { listMessagesRoute } from './routes/chats/messages';
+import { createFreightRoute } from './routes/freights/create';
+import { availableFreightsRoute } from './routes/freights/available';
+import { acceptFreightRoute } from './routes/freights/accept';
 
 // Importação das rotas
 import { registerRoute } from './routes/auth/register'; 
@@ -20,6 +25,10 @@ import { getItemRoute } from './routes/items/get-item';
 import { updateItemRoute } from './routes/items/update';
 import { updateItemStatusRoute } from './routes/items/patch-status';
 import { deleteItemRoute } from './routes/items/delete';
+import { createChatRoute } from './routes/chats/create';
+import { listChatsRoute } from './routes/chats/list';
+import { myFreightsRoute } from './routes/freights/me';
+import { updateFreightStatusRoute } from './routes/freights/status';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -35,6 +44,13 @@ if (!process.env.JWT_SECRET) {
 
 app.register(jwt, { 
   secret: process.env.JWT_SECRET 
+});
+
+app.register(fastifySocketIO, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 });
 
 // CONFIGURAÇÃO DO SWAGGER 
@@ -78,5 +94,14 @@ app.register(getItemRoute)
 app.register(updateItemRoute)
 app.register(updateItemStatusRoute)
 app.register(deleteItemRoute)
+app.register(createChatRoute);
+app.register(listChatsRoute);
+app.register(listMessagesRoute);
+app.register(createFreightRoute);
+app.register(availableFreightsRoute);
+app.register(acceptFreightRoute);
+app.register(updateFreightStatusRoute);
+app.register(myFreightsRoute);
 
+setupWebSockets(app);
 export { app };

@@ -15,6 +15,10 @@ export const userRoleEnum = pgEnum('user_role', ['Doador', 'Beneficiário', 'Fre
 export const itemStatusEnum = pgEnum('item_status', ['Disponível', 'Reservado', 'Doado', 'Cancelado']);
 export const freightStatusEnum = pgEnum('freight_status', ['Pendente', 'Aceito', 'Em Trânsito', 'Finalizado']);
 
+// ENUMS PARA O CHAT
+export const chatRoomTypeEnum = pgEnum('chat_room_type', ['DONATION', 'FREIGHT']);
+export const chatRoomStatusEnum = pgEnum('chat_room_status', ['Ativo', 'Arquivado']);
+
 // --- TABELAS ---
 
 // 1. Usuários
@@ -38,18 +42,21 @@ export const items = pgTable('items', {
   description: text('description'),
   category: varchar('category', { length: 50 }).notNull(),
   status: itemStatusEnum('status').default('Disponível').notNull(),
-  imageUrls: text('image_urls').array(),  latitude: decimal('latitude', { precision: 10, scale: 8 }).notNull(),
+  imageUrls: text('image_urls').array(), 
+  latitude: decimal('latitude', { precision: 10, scale: 8 }).notNull(),
   longitude: decimal('longitude', { precision: 11, scale: 8 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
 
-// 3. Salas de Chat
+// 3. Salas de Chat (Atualizada com type e status)
 export const chatRooms = pgTable('chat_rooms', {
   id: uuid('id').primaryKey().defaultRandom(),
   itemId: uuid('item_id').references(() => items.id).notNull(),
   participant1: uuid('participant_1').references(() => users.id).notNull(),
   participant2: uuid('participant_2').references(() => users.id).notNull(),
+  type: chatRoomTypeEnum('type').default('DONATION').notNull(),
+  status: chatRoomStatusEnum('status').default('Ativo').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
@@ -75,13 +82,49 @@ export const freightRequests = pgTable('freight_requests', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const itemsRelations = relations(items, ({ one }) => ({
+// --- RELACIONAMENTOS (DRIZZLE ORM) ---
+
+export const usersRelations = relations(users, ({ many }) => ({
+  items: many(items),
+  // Um usuário pode estar em várias salas de chat e enviar várias mensagens
+  chatRoomsAsParticipant1: many(chatRooms, { relationName: 'participant1' }),
+  chatRoomsAsParticipant2: many(chatRooms, { relationName: 'participant2' }),
+  messages: many(messages),
+}));
+
+export const itemsRelations = relations(items, ({ one, many }) => ({
   donor: one(users, {
     fields: [items.donorId], 
     references: [users.id],  
   }),
+  chatRooms: many(chatRooms), // Um item pode ter várias negociações de chat abertas
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
-  items: many(items),
+export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
+  item: one(items, {
+    fields: [chatRooms.itemId],
+    references: [items.id],
+  }),
+  user1: one(users, {
+    fields: [chatRooms.participant1],
+    references: [users.id],
+    relationName: 'participant1',
+  }),
+  user2: one(users, {
+    fields: [chatRooms.participant2],
+    references: [users.id],
+    relationName: 'participant2',
+  }),
+  messages: many(messages), // Uma sala tem muitas mensagens
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  room: one(chatRooms, {
+    fields: [messages.roomId],
+    references: [chatRooms.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
 }));

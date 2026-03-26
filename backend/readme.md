@@ -1,4 +1,4 @@
-# 🚀 API Desapega Social
+# 🚀 API MobiAccess / Desapega Social
 
 Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido com uma arquitetura moderna e escalável, projetado para suportar buscas geoespaciais e regras de negócio com foco em impacto social.
 
@@ -8,9 +8,11 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - **Fastify:** Framework web de altíssimo desempenho.
 - **Drizzle ORM:** Manipulação de banco de dados *type-safe* e moderna.
 - **PostgreSQL + PostGIS:** Banco de dados relacional com extensão espacial para cálculos de GPS.
+- **Socket.io:** Implementação de WebSockets para comunicação em tempo real bidirecional.
 - **Zod:** Validação rigorosa de dados (Schemas e rotas).
 - **JWT (JSON Web Token):** Autenticação e proteção de rotas.
 
+---
 
 ## ✨ Funcionalidades e Regras de Negócio Implementadas
 
@@ -32,9 +34,20 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - O Feed Geral (`GET /items`) possui integração nativa com o **PostGIS** (`ST_DistanceSphere`).
 - Quando o aplicativo (React Native) envia a latitude e longitude do usuário, a API automaticamente filtra itens dentro de um raio de 10km e **ordena os resultados por proximidade**, mostrando as doações mais próximas no topo da lista.
 
+### 5. Comunicação em Tempo Real (Arquitetura Híbrida)
+- **Prevenção de Duplicatas:** O sistema atua como "porteiro", garantindo que Doador e Beneficiário tenham apenas uma sala de chat única por item.
+- **Inbox Inteligente:** A rota de listagem de chats retorna automaticamente os dados da "outra pessoa" da conversa e o último texto enviado.
+- **WebSockets (Socket.io):** As mensagens são trafegadas em tempo real via eventos WebSocket e salvas simultaneamente no PostgreSQL para garantir a integridade do histórico (mesmo em quedas de conexão).
+
+### 6. Logística e Frete Solidário
+- **Radar de Motoristas:** Utiliza PostGIS para listar solicitações de frete ordenadas pela distância real entre o item e a localização atual do motorista (Freteiro).
+- **Role-Based Access Control (RBAC):** Rotas protegidas para garantir que apenas usuários com o papel de `Freteiro` possam ver o radar e aceitar corridas.
+- **Prevenção de Condição de Corrida (Race Condition):** Trava no banco de dados para garantir que, se dois motoristas tentarem aceitar a corrida ao mesmo tempo, apenas o primeiro consiga e o item suma do radar.
+- **Histórico Duplo:** Rota de histórico inteligente que adapta a resposta dependendo se o usuário logado solicitou o frete (Beneficiário) ou realizou a entrega (Motorista).
+
 ---
 
-## 📍 Rotas da API (Endpoints)
+## 📍 Rotas da API (Endpoints HTTP)
 
 Todas as rotas (exceto criação de usuário e login) exigem o envio do token no Header: `Authorization: Bearer <SEU_TOKEN>`
 
@@ -55,4 +68,30 @@ Todas as rotas (exceto criação de usuário e login) exigem o envio do token no
 | `PATCH` | `/items/:id/status` | Altera o status (`Disponível`, `Reservado`, `Doado`, `Cancelado`) |
 | `DELETE` | `/items/:id` | Remove o item da vitrine (Soft Delete) |
 
+### Chats e Comunicação
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/chats` | Inicia uma conversa ou recupera a sala existente (Suporta Doação ou Frete) |
+| `GET` | `/chats` | Lista a Caixa de Entrada (Inbox) com todas as conversas do usuário |
+| `GET` | `/chats/:roomId/messages`| Carrega o histórico das últimas 50 mensagens de uma sala |
+
+### Frete Solidário (Logística)
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/freights` | O Beneficiário solicita um frete para um item |
+| `GET` | `/freights/available` | Radar (PostGIS): Lista fretes próximos. Acesso restrito a Freteiros. |
+| `PATCH` | `/freights/:id/accept` | O Freteiro aceita a corrida e define o valor estimado |
+| `PATCH` | `/freights/:id/status` | Atualiza o andamento (`Em Trânsito`, `Finalizado`) |
+| `GET` | `/freights/me` | Histórico de viagens do Freteiro ou solicitações do Beneficiário |
+
 ---
+
+## 🔌 Eventos WebSocket (Socket.io)
+
+O endpoint do WebSocket roda na mesma porta do servidor HTTP (`http://localhost:3333`).
+
+| Direção | Evento | Payload (JSON) | Descrição |
+| :--- | :--- | :--- | :--- |
+| `Celular -> Servidor` | `join_room` | `roomId` (string) | Conecta o usuário em uma sala específica. |
+| `Celular -> Servidor` | `send_message` | `{ roomId, senderId, content }` | Envia uma nova mensagem e salva no banco. |
+| `Servidor -> Celular` | `receive_message`| `{ id, senderId, content, createdAt... }` | Emite a mensagem salva para todos na sala. |
