@@ -8,6 +8,7 @@ import {
   decimal, 
   pgEnum 
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['Doador', 'Beneficiário', 'Freteiro', 'Admin']);
@@ -73,3 +74,14 @@ export const freightRequests = pgTable('freight_requests', {
   status: freightStatusEnum('status').default('Pendente').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const itemsRelations = relations(items, ({ one }) => ({
+  donor: one(users, {
+    fields: [items.donorId], 
+    references: [users.id],  
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  items: many(items),
+}));

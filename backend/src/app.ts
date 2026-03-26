@@ -15,6 +15,11 @@ import { getMeRoute } from './routes/users/get-me';
 import { updateMeRoute } from './routes/users/update-me';
 import { deleteMeRoute } from './routes/users/delete-me';
 import { createItemRoute } from './routes/items/create';
+import { listItemsRoute } from './routes/items/list';
+import { getItemRoute } from './routes/items/get-item';
+import { updateItemRoute } from './routes/items/update';
+import { updateItemStatusRoute } from './routes/items/patch-status';
+import { deleteItemRoute } from './routes/items/delete';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -68,5 +73,10 @@ app.register(getMeRoute)
 app.register(updateMeRoute)
 app.register(deleteMeRoute)
 app.register(createItemRoute)
+app.register(listItemsRoute)
+app.register(getItemRoute)
+app.register(updateItemRoute)
+app.register(updateItemStatusRoute)
+app.register(deleteItemRoute)
 
 export { app };

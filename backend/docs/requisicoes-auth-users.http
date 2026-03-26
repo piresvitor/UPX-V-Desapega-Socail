@@ -12,8 +12,8 @@ POST http://localhost:3333/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "João Silva",
-  "email": "joao@exemplo.com",
+  "fullName": "João da Silva",
+  "email": "joaosilva@exemplo.com",
   "password": "senha123",
   "role": "Doador"
 }
