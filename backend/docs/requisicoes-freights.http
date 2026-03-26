@@ -1,35 +1,64 @@
-### Solicitar Frete Solidário
-POST http://localhost:3333/freights
+@baseUrl = http://localhost:3333
+# 1. Cole o token do usuário (Beneficiário ou Freteiro)
+@userToken = SEU_TOKEN_AQUI
+# 2. Cole o ID do Item que precisa de frete
+@itemId = SEU_ITEM_ID_AQUI
+# 3. Após solicitar o frete, cole o ID da solicitação gerada aqui
+@freightId = SEU_FREIGHT_ID_AQUI
+
+
+### ===================================================================
+### 1. [SUCESSO 201] Solicitar Frete Solidário (Apenas Beneficiário/Doador)
+### Expectativa: Criar um pedido de frete atrelado a um item existente
+### ===================================================================
+POST {{baseUrl}}/freights
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU0NzE1MX0.MYi6AWa7tJSf60wS743yS-QqQ2rUmUeEIkOXZwW1C2M
+Authorization: Bearer {{userToken}}
 
 {
-  "itemId": "06cec9cb-bd6c-458f-820a-0af643cec4da"
+  "itemId": "{{itemId}}"
 }
 
-### Radar: Buscar Fretes Próximos
-GET http://localhost:3333/freights/available?lat=-23.50153300&lng=-47.45811200&radius=30
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
 
-
-### Aceitar Solicitação de Frete
-PATCH http://localhost:3333/freights/a313ffc4-a955-4a8e-b469-9630b86649b8/accept
+### ===================================================================
+### 2. [SUCESSO 200] Radar: Buscar Fretes Próximos (Apenas Freteiros)
+### Expectativa: Retornar lista de pedidos de frete baseada no raio de busca
+### ===================================================================
+GET {{baseUrl}}/freights/available?lat=-23.50153300&lng=-47.45811200&radius=30
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 3. [SUCESSO 200] Aceitar Solicitação de Frete (Apenas Freteiros)
+### Expectativa: Freteiro assume a corrida e define um preço estimado
+### ===================================================================
+PATCH {{baseUrl}}/freights/{{freightId}}/accept
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "estimatedPrice": 50.00
 }
 
-### Atualizar Status para "Em Trânsito"
-PATCH http://localhost:3333/freights/a313ffc4-a955-4a8e-b469-9630b86649b8/status
+
+### ===================================================================
+### 4. [SUCESSO 200] Atualizar Status do Frete
+### Expectativa: Mudar status para 'Em Trânsito', 'Concluído', etc.
+### ===================================================================
+PATCH {{baseUrl}}/freights/{{freightId}}/status
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+Authorization: Bearer {{userToken}}
 
 {
   "status": "Em Trânsito"
 }
 
-### Meu Histórico de Fretes
-GET http://localhost:3333/freights/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWMxN2NjMC05ZjQwLTQzNjItODVkMy0xNWY5MmZhOGU3OWMiLCJyb2xlIjoiRnJldGVpcm8iLCJpYXQiOjE3NzQ1NDc5MTh9.Y5SdNOcnZavRi06Vl8lIT8a2Gy9_IRbIzmWMaKpooRw
+
+### ===================================================================
+### 5. [SUCESSO 200] Meu Histórico de Fretes
+### Expectativa: Retornar todos os fretes que o usuário solicitou ou aceitou
+### ===================================================================
+GET {{baseUrl}}/freights/me
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
