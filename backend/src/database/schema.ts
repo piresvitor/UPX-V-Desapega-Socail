@@ -128,3 +128,38 @@ export const messagesRelations = relations(messages, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// TABELA: SOLICITAÇÕES DE VERIFICAÇÃO (LGPD + OCR)
+export const verificationRequests = pgTable('verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  
+  // Relação com o usuário
+  userId: uuid('user_id').references(() => users.id).notNull().unique(), // Unique: 1 pedido por pessoa por vez
+  
+  // DADOS SENSÍVEIS (Criptografados)
+  encryptedCpf: text('encrypted_cpf').notNull(),
+  
+  // FOTOS DOS DOCUMENTOS (As URLs do Firebase Storage)
+  identityDocumentUrl: text('identity_document_url').notNull(), // RG/CNH
+  incomeProofUrl: text('income_proof_url').notNull(),           // CadÚnico/Holerite
+  
+  // DADOS EXTRAÍDOS PELO OCR (Tesseract)
+  extractedIncome: text('extracted_income'), // A renda que o robô conseguiu ler (se conseguiu)
+  ocrConfidence: text('ocr_confidence'),     // Nível de confiança da leitura da IA (ex: "85%")
+  
+  // MÁQUINA DE ESTADOS DO PEDIDO
+  status: text('status', { 
+    enum: [
+      'Processando_IA',   // Quando o Tesseract está lendo
+      'Aprovado_Auto',    // Passou direto pela IA (< 1 salário)
+      'Analise_Manual',   // IA não conseguiu ler ou renda duvidosa -> Vai pro Admin
+      'Aprovado_Admin',   // Admin olhou e deu o selo
+      'Rejeitado'         // Admin recusou (fraude, ilegível, etc)
+    ] 
+  }).default('Processando_IA').notNull(),
+  
+  adminMessage: text('admin_message'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

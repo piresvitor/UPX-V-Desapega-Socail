@@ -1,4 +1,4 @@
-# 🚀 API Desapega Social
+# API Desapega Social
 
 Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido com uma arquitetura moderna e escalável, projetado para suportar buscas geoespaciais e regras de negócio com foco em impacto social.
 
@@ -9,6 +9,7 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - **Drizzle ORM:** Manipulação de banco de dados *type-safe* e moderna.
 - **PostgreSQL + PostGIS:** Banco de dados relacional com extensão espacial para cálculos de GPS.
 - **Socket.io:** Implementação de WebSockets para comunicação em tempo real bidirecional.
+- **Firebase Admin SDK:** Integração com os servidores do Google para disparo de Push Notifications.
 - **Zod:** Validação rigorosa de dados (Schemas e rotas).
 - **JWT (JSON Web Token):** Autenticação e proteção de rotas.
 
@@ -45,6 +46,10 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - **Prevenção de Condição de Corrida (Race Condition):** Trava no banco de dados para garantir que, se dois motoristas tentarem aceitar a corrida ao mesmo tempo, apenas o primeiro consiga e o item suma do radar.
 - **Histórico Duplo:** Rota de histórico inteligente que adapta a resposta dependendo se o usuário logado solicitou o frete (Beneficiário) ou realizou a entrega (Motorista).
 
+### 7. Push Notifications (FCM)
+- **Registro de Dispositivos:** Rota para salvar o Token FCM do dispositivo do usuário
+- **Notificações Assíncronas:** Disparo automático de notificações em background quando uma nova mensagem de chat é enviada via WebSocket, engajando usuários offline.
+
 ---
 
 ## 📍 Rotas da API (Endpoints HTTP)
@@ -57,6 +62,7 @@ Todas as rotas (exceto criação de usuário e login) exigem o envio do token no
 | `POST` | `/users` | Cria um novo usuário |
 | `POST` | `/auth` | Realiza login e retorna o Token JWT |
 | `GET` | `/users/me` | Retorna o perfil do usuário logado |
+| `PATCH`| `/users/fcm-token` | Atualiza o token do dispositivo para Push Notifications |
 
 ### Doações (Itens)
 | Método | Rota | Descrição |

@@ -29,6 +29,7 @@ import { createChatRoute } from './routes/chats/create';
 import { listChatsRoute } from './routes/chats/list';
 import { myFreightsRoute } from './routes/freights/me';
 import { updateFreightStatusRoute } from './routes/freights/status';
+import { initializeFirebase } from './services/firebase';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -80,6 +81,9 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
+// Inicializa o Firebase
+initializeFirebase();
+
 // rotas
 app.register(registerRoute);
 app.register(healthRoute)
@@ -104,4 +108,5 @@ app.register(updateFreightStatusRoute);
 app.register(myFreightsRoute);
 
 setupWebSockets(app);
+
 export { app };
