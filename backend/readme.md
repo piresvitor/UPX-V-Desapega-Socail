@@ -8,8 +8,9 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - **Fastify:** Framework web de altíssimo desempenho.
 - **Drizzle ORM:** Manipulação de banco de dados *type-safe* e moderna.
 - **PostgreSQL + PostGIS:** Banco de dados relacional com extensão espacial para cálculos de GPS.
+- **Node.js Crypto (AES-256-CBC):** Criptografia nativa de padrão bancário para proteção de dados sensíveis.
 - **Socket.io:** Implementação de WebSockets para comunicação em tempo real bidirecional.
-- **Firebase Admin SDK:** Integração com os servidores do Google para disparo de Push Notifications.
+- **Firebase Admin SDK:** Integração com os servidores do Google para disparo de Push Notifications e gestão de Storage.
 - **Zod:** Validação rigorosa de dados (Schemas e rotas).
 - **JWT (JSON Web Token):** Autenticação e proteção de rotas.
 
@@ -47,8 +48,15 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 - **Histórico Duplo:** Rota de histórico inteligente que adapta a resposta dependendo se o usuário logado solicitou o frete (Beneficiário) ou realizou a entrega (Motorista).
 
 ### 7. Push Notifications (FCM)
-- **Registro de Dispositivos:** Rota para salvar o Token FCM do dispositivo do usuário
+- **Registro de Dispositivos:** Rota para salvar o Token FCM do dispositivo do usuário.
 - **Notificações Assíncronas:** Disparo automático de notificações em background quando uma nova mensagem de chat é enviada via WebSocket, engajando usuários offline.
+
+### 8. Verificação de Identidade e Adequação à LGPD
+- **Criptografia Padrão Bancário:** Proteção de dados sensíveis (CPF) utilizando o algoritmo `AES-256-CBC`. O dado original nunca é salvo em texto puro no banco.
+- **Validação Matemática Avançada:** Bloqueio de CPFs matematicamente inválidos antes de atingirem o banco de dados via schemas customizados no `Zod`.
+- **Painel de Administração (RBAC):** Middleware de segurança (`requireAdmin`) garantindo que apenas administradores possam aprovar ou rejeitar documentos de comprovação de renda.
+- **Diretrizes LGPD (Privacy by Design):** Integração com o Firebase Storage para destruição automática das fotos de documentos sensíveis imediatamente após a análise do administrador.
+- **Máquina de Estados de Solicitação:** Fluxo inteligente que permite o reenvio de documentos em caso de rejeição, bloqueando envios duplicados e spam enquanto a análise estiver pendente.
 
 ---
 
@@ -63,6 +71,12 @@ Todas as rotas (exceto criação de usuário e login) exigem o envio do token no
 | `POST` | `/auth` | Realiza login e retorna o Token JWT |
 | `GET` | `/users/me` | Retorna o perfil do usuário logado |
 | `PATCH`| `/users/fcm-token` | Atualiza o token do dispositivo para Push Notifications |
+
+### Verificação de Perfil (Segurança e LGPD)
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/verifications` | Envia/reenvia documentos e CPF (Criptografado na hora) |
+| `PATCH` | `/verifications/:id/analyze` | Aprova/Rejeita pedido, concede selo e destrói imagens (Apenas Admin) |
 
 ### Doações (Itens)
 | Método | Rota | Descrição |
