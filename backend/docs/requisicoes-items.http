@@ -1,7 +1,17 @@
-### Criar um Item para Doação (Rota protegida)
-POST http://localhost:3333/items
+@baseUrl = http://localhost:3333
+# 1. Cole o token recebido no Login aqui para testar as rotas protegidas
+@userToken = SEU_TOKEN_AQUI
+# 2. Após criar um item, copie o ID dele e cole aqui para testar as rotas de baixo
+@itemId = SEU_ITEM_ID_AQUI
+
+
+### ===================================================================
+### 1. [SUCESSO 201] Criar um Item para Doação (1 Imagem)
+### Expectativa: Salvar no banco e retornar o ID do novo item
+### ===================================================================
+POST {{baseUrl}}/items
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDgwNTAxfQ.kMN8uec6kZ4uXat2c2eSAeRtFfLK7diz5uuyH2tTogQ
+Authorization: Bearer {{userToken}}
 
 {
   "title": "Sofá 3 Lugares Retrátil",
@@ -12,10 +22,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlY
   "longitude": -47.458112
 }
 
-### Criar um Item com 3 Imagens
-POST http://localhost:3333/items
+
+### ===================================================================
+### 2. [SUCESSO 201] Criar um Item com 3 Imagens
+### Expectativa: Salvar item e o array com as 3 URLs no banco
+### ===================================================================
+POST {{baseUrl}}/items
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg4NTI3fQ.aDKvZO-tDAzPRG-37Z0UiI_xW7g2jCZMZdJ1o1dxZng
+Authorization: Bearer {{userToken}}
 
 {
   "title": "Geladeira Brastemp",
@@ -30,39 +44,73 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlY
   "longitude": -47.458112
 }
 
-### Listar itens (Sem filtros)
-GET http://localhost:3333/items
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOGI4ZDY3Zi1iNWU5LTQwNzUtYWE5OC1kNjgwYWRkMzM3MzYiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg4ODYwfQ.HikJnsPuAo5JStSQH4fY9iNcKP1MD4McV-7FQqXbJI0
-### Listar itens apenas da categoria "Móveis"
-GET http://localhost:3333/items?category=Móveis
-Authorization: Bearer EU_TOKEN_AQUI
-### Listar itens perto de mim (Sorocaba)
-GET http://localhost:3333/items?lat=-23.501533&lng=-47.458112
-Authorization: Bearer EU_TOKEN_AQUI
 
-### Ver detalhes de um item específico
-GET http://localhost:3333/items/40d5de3f-0408-4dd0-a2e5-dd1fabf0bcf3
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOGI4ZDY3Zi1iNWU5LTQwNzUtYWE5OC1kNjgwYWRkMzM3MzYiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg4ODYwfQ.HikJnsPuAo5JStSQH4fY9iNcKP1MD4McV-7FQqXbJI0
-
-### Editar as informações de um item (Apenas o dono consegue)
-PUT http://localhost:3333/items/40d5de3f-0408-4dd0-a2e5-dd1fabf0bcf3
+### ===================================================================
+### 3. [SUCESSO 200] Listar Itens (Feed Geral / Sem Filtros)
+### Expectativa: Retornar a lista de todos os itens disponíveis
+### ===================================================================
+GET {{baseUrl}}/items
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg5NTE0fQ.AcqxBWWadXSHg4_c5Fbq4U2NWN-YJFHQEzg5y5qA4Y8
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 4. [SUCESSO 200] Listar Itens com Filtro de Categoria
+### Expectativa: Retornar apenas itens pertencentes à categoria "Móveis"
+### ===================================================================
+GET {{baseUrl}}/items?category=Móveis
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 5. [SUCESSO 200] Listar Itens por Localização (Raio de Busca)
+### Expectativa: Retornar itens mais próximos da coordenada informada
+### ===================================================================
+GET {{baseUrl}}/items?lat=-23.501533&lng=-47.458112
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 6. [SUCESSO 200] Ver Detalhes de um Item Específico
+### Expectativa: Retornar todos os dados do item usando o ID da URL
+### ===================================================================
+GET {{baseUrl}}/items/{{itemId}}
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 7. [SUCESSO 200] Editar Informações de um Item (Apenas o Dono)
+### Expectativa: Atualizar os dados enviados e retornar sucesso
+### ===================================================================
+PUT {{baseUrl}}/items/{{itemId}}
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "title": "Geladeira Brastemp (Semi-nova)",
   "description": "A geladeira já está limpa e pronta para retirada imediata!"
 }
 
-### Alterar Status de um Item (Disponível -> Reservado)
-PATCH http://localhost:3333/items/40d5de3f-0408-4dd0-a2e5-dd1fabf0bcf3/status
+
+### ===================================================================
+### 8. [SUCESSO 200] Alterar Status de um Item
+### Expectativa: Mudar de 'Disponível' para 'Reservado' ou 'Doado'
+### ===================================================================
+PATCH {{baseUrl}}/items/{{itemId}}/status
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg5NTE0fQ.AcqxBWWadXSHg4_c5Fbq4U2NWN-YJFHQEzg5y5qA4Y8
+Authorization: Bearer {{userToken}}
 
 {
   "status": "Reservado"
 }
 
-### Apagar um item (Soft Delete)
-DELETE http://localhost:3333/items/fbde2312-d62d-4a18-9c7d-eef6772825a9
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZWRkMGNlYy02MmMyLTRlNDgtOGU2OC1hOTFlN2E0MjM0OTkiLCJyb2xlIjoiRG9hZG9yIiwiaWF0IjoxNzc0NDg5NTE0fQ.AcqxBWWadXSHg4_c5Fbq4U2NWN-YJFHQEzg5y5qA4Y8
+### ===================================================================
+### 9. [SUCESSO 200] Apagar um Item (Soft Delete)
+### Expectativa: Desativar a visualização do item (Apenas dono/Admin)
+### ===================================================================
+DELETE {{baseUrl}}/items/{{itemId}}
+Content-Type: application/json
+Authorization: Bearer {{userToken}}

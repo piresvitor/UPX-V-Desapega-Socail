@@ -1,14 +1,19 @@
-### ==========================================
-### ROTAS JÁ IMPLEMENTADAS E PRONTAS PARA TESTE
-### ==========================================
+@baseUrl = http://localhost:3333
+# Cole o token recebido no Login aqui para testar as rotas protegidas
+@userToken = SEU_TOKEN_AQUI
 
-### 1. Health Check (Testar se o servidor está online)
-GET http://localhost:3333/health
+### ===================================================================
+### 1. [SUCESSO 200] Health Check
+### Expectativa: Retornar status "ok" confirmando que a API está online
+### ===================================================================
+GET {{baseUrl}}/health
 
-###
 
-### 2. Registrar novo usuário (com role específica)
-POST http://localhost:3333/auth/register
+### ===================================================================
+### 2. [SUCESSO 201] Registrar Novo Usuário
+### Expectativa: Criar conta e retornar mensagem de sucesso com ID
+### ===================================================================
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
@@ -18,87 +23,105 @@ Content-Type: application/json
   "role": "Beneficiário"
 }
 
-###
 
-### 3. Login do usuário (Copie o token que essa requisição vai devolver)
-POST http://localhost:3333/auth/login
+### ===================================================================
+### 3. [SUCESSO 200] Login de Usuário
+### Expectativa: Retornar o Token JWT para ser usado nas outras requisições
+### ===================================================================
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "carlos@exemplo.com",
+  "email": "adm@exemplo.com",
   "password": "senha123"
 }
 
-###
 
-### 4. Atualizar FCM Token para Push Notifications
-PATCH http://localhost:3333/users/fcm-token
+### ===================================================================
+### 4. [ERRO 400/409] Falha no Registro - E-mail já em uso
+### Expectativa: Erro informando que o e-mail já está cadastrado no banco
+### ===================================================================
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
-Authorization: Bearer SEU_TOKEN_AQUI
 
 {
-  "fcmToken": "token_simulado_do_firebase_12345"
+  "fullName": "Maria Silva",
+  "email": "maria@exemplo.com",
+  "password": "senha456",
+  "role": "Beneficiário"
 }
 
-###
 
-### 5. Obter dados do usuário (Rota protegida)
-GET http://localhost:3333/users/me
+### ===================================================================
+### 5. [ERRO 401] Falha no Login - Credenciais Inválidas
+### Expectativa: Erro informando que a senha ou e-mail estão incorretos
+### ===================================================================
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
-Authorization: Bearer SEU_TOKEN_AQUI
 
-###
+{
+  "email": "maria@exemplo.com",
+  "password": "senha_errada_aqui"
+}
 
-### 6. Atualizar dados do usuário (Rota protegida)
-PUT http://localhost:3333/users/me
+
+### ===================================================================
+### 6. [SUCESSO 200] Obter Perfil do Usuário Logado (Rota Protegida)
+### Expectativa: Retornar os dados do usuário (sem a senha)
+### ===================================================================
+GET {{baseUrl}}/users/me
 Content-Type: application/json
-Authorization: Bearer SEU_TOKEN_AQUI
+Authorization: Bearer {{userToken}}
+
+
+### ===================================================================
+### 7. [SUCESSO 200] Atualizar Perfil do Usuário (Rota Protegida)
+### Expectativa: Atualizar nome/email e retornar sucesso
+### ===================================================================
+PUT {{baseUrl}}/users/me
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "fullName": "João Silva dos Santos",
   "email": "joao.santos@exemplo.com"
 }
 
-###
 
-### 7. Excluir conta do usuário (Soft Delete)
-DELETE http://localhost:3333/users/me
+### ===================================================================
+### 8. [SUCESSO 200] Atualizar FCM Token (Push Notifications)
+### Expectativa: Salvar o token do celular para o Firebase Cloud Messaging
+### ===================================================================
+PATCH {{baseUrl}}/users/fcm-token
 Content-Type: application/json
-Authorization: Bearer SEU_TOKEN_AQUI
+Authorization: Bearer {{userToken}}
+
+{
+  "fcmToken": "token_simulado_do_firebase_12345"
+}
+
+
+### ===================================================================
+### 9. [SUCESSO 200] Excluir Conta - Soft Delete (Rota Protegida)
+### Expectativa: Desativar a conta do usuário confirmando a senha
+### ===================================================================
+DELETE {{baseUrl}}/users/me
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "password": "senha123"
 }
 
-###
 
-### 8. Teste de Erro - Email já em uso
-POST http://localhost:3333/auth/register
-Content-Type: application/json
-
-{
-  "fullName": "Maria Silva",
-  "email": "joao@exemplo.com",
-  "password": "senha456"
-}
-
-###
-
-### 9. Teste de Erro - Credenciais inválidas (Senha errada)
-POST http://localhost:3333/auth/login
-Content-Type: application/json
-
-{
-  "email": "joao@exemplo.com",
-  "password": "senha_errada"
-}
-
-### ==========================================
+### ===================================================================
 ### ROTAS FUTURAS (AINDA PRECISAM SER CRIADAS)
-### ==========================================
+### ===================================================================
 
-### Buscar usuários com filtros (Apenas Admin)
-GET http://localhost:3333/users?page=1&limit=5&search=João&role=Doador
+### ===================================================================
+### 10. [SUCESSO 200] Buscar Usuários com Filtros (Apenas Admin)
+### Expectativa: Retornar lista paginada de usuários conforme filtros
+### ===================================================================
+GET {{baseUrl}}/users?page=1&limit=5&search=João&role=Doador
 Content-Type: application/json
-Authorization: Bearer SEU_TOKEN_AQUI
-
+Authorization: Bearer {{userToken}}

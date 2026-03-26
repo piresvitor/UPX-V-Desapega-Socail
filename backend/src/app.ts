@@ -10,6 +10,9 @@ import { listMessagesRoute } from './routes/chats/messages';
 import { createFreightRoute } from './routes/freights/create';
 import { availableFreightsRoute } from './routes/freights/available';
 import { acceptFreightRoute } from './routes/freights/accept';
+import { createVerificationRoute } from './routes/verifications/create';
+import { analyzeVerificationRoute } from './routes/verifications/analyze';
+
 
 // Importação das rotas
 import { registerRoute } from './routes/auth/register'; 
@@ -30,6 +33,7 @@ import { listChatsRoute } from './routes/chats/list';
 import { myFreightsRoute } from './routes/freights/me';
 import { updateFreightStatusRoute } from './routes/freights/status';
 import { initializeFirebase } from './services/firebase';
+
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -106,6 +110,8 @@ app.register(availableFreightsRoute);
 app.register(acceptFreightRoute);
 app.register(updateFreightStatusRoute);
 app.register(myFreightsRoute);
+app.register(createVerificationRoute);
+app.register(analyzeVerificationRoute);
 
 setupWebSockets(app);
 

@@ -33,3 +33,25 @@ export async function sendPushNotification(token: string, title: string, body: s
     return false;
   }
 }
+
+export async function deleteFirebaseFileByUrl(fileUrl: string) {
+  try {
+    //Extrai o nome do arquivo da URL pública do Firebase Storage
+    const regex = /\/o\/(.*?)\?alt=media/;
+    const match = fileUrl.match(regex);
+    
+    if (match && match[1]) {
+      //O decodeURIComponent transforma %2F em barras normais, etc.
+      const filePath = decodeURIComponent(match[1]); 
+      
+      //Manda o Firebase Admin deletar o arquivo silenciosamente
+      await admin.storage().bucket().file(filePath).delete();
+      console.log(`🗑️ Arquivo apagado do Firebase Storage (LGPD): ${filePath}`);
+    } else {
+      console.log(`⚠️ Não foi possível extrair o caminho do arquivo da URL: ${fileUrl}`);
+    }
+  } catch (error) {
+    // Nós apenas registramos o erro, mas NÃO travamos o sistema se a foto já tiver sumido
+    console.error('Erro ao tentar apagar arquivo do Firebase:', error);
+  }
+}

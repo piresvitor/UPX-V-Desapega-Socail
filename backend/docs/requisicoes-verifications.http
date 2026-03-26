@@ -1,0 +1,59 @@
+@baseUrl = http://localhost:3333
+# Cole o token do seu usuário de teste aqui
+@userToken = SEU_TOKEN_JWT_AQUI
+
+### ===================================================================
+### 1. [ERRO 400] Zod: Tentar enviar um CPF matematicamente inválido
+### Expectativa: Erro 400 informando que o CPF é inválido
+### ===================================================================
+POST {{baseUrl}}/verifications
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "cpf": "111.111.111-11",
+  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg.jpg",
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico.jpg"
+}
+
+### ===================================================================
+### 2. [ERRO 400] Zod: Tentar enviar uma URL que não é um link
+### Expectativa: Erro 400 informando que a URL do documento é inválida
+### ===================================================================
+POST {{baseUrl}}/verifications
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "cpf": "123.456.789-09",
+  "identityDocumentUrl": "arquivo-falso-sem-http",
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico.jpg"
+}
+
+### ===================================================================
+### 3. [SUCESSO 201] Caminho Feliz: Primeira vez enviando documentos
+### Expectativa: Status 201 (Created) e mensagem de sucesso
+### ===================================================================
+POST {{baseUrl}}/verifications
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "cpf": "123.456.789-09",
+  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
+}
+
+### ===================================================================
+### 4. [ERRO 400] Regra de Negócio: Tentar enviar de novo logo em seguida
+### Expectativa: Erro 400 informando que já existe solicitação em análise
+### ===================================================================
+POST {{baseUrl}}/verifications
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "cpf": "123.456.789-09",
+  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
+}
