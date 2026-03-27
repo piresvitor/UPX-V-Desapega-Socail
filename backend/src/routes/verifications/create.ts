@@ -6,6 +6,7 @@ import { verificationRequests } from '../../database/schema';
 import { authenticateToken } from '../../middleware/auth';
 import { encryptCpf } from '../../utils/crypto';
 import { isValidCPF } from '../../utils/validators-cpf';
+import { processOcrInBackground } from '../../services/ocr';
 
 const createVerificationBodySchema = z.object({
   identityDocumentUrl: z.url('A URL do documento de identidade é inválida'),
@@ -25,8 +26,8 @@ export const createVerificationRoute: FastifyPluginAsyncZod = async (server) => 
       description: 'Recebe os links e o CPF. Se o usuário tinha um pedido rejeitado, atualiza os dados para nova análise.',
       body: createVerificationBodySchema,
       response: {
-        201: z.object({ message: z.string(), requestId: z.string().uuid() }),
-        200: z.object({ message: z.string(), requestId: z.string().uuid() }),
+        201: z.object({ message: z.string(), requestId: z.uuid() }),
+        200: z.object({ message: z.string(), requestId: z.uuid() }),
         400: z.object({ message: z.string() }),
         500: z.object({ message: z.string() })
       }
@@ -66,8 +67,8 @@ export const createVerificationRoute: FastifyPluginAsyncZod = async (server) => 
             .where(eq(verificationRequests.id, existingRequest.id))
             .returning({ id: verificationRequests.id });
 
-          // Aqui é onde chamaremos a função do Tesseract no futuro:
-          // processOcrInBackground(updatedRequest.id, incomeProofUrl);
+          // Aqui é onde chamaremos a função do Tesseract:
+          processOcrInBackground(updatedRequest.id, userId, incomeProofUrl);
 
           return reply.status(200).send({
             message: 'Documentos reenviados com sucesso! Iniciando nova análise.',
@@ -85,8 +86,8 @@ export const createVerificationRoute: FastifyPluginAsyncZod = async (server) => 
         status: 'Processando_IA' // Prepara para a IA
       }).returning({ id: verificationRequests.id });
 
-      // Aqui também chamaremos a função do Tesseract no futuro:
-      // processOcrInBackground(newRequest.id, incomeProofUrl);
+      // Aqui também chamaremos a função do Tesseract:
+      processOcrInBackground(newRequest.id, userId, incomeProofUrl);
 
       return reply.status(201).send({
         message: 'Documentos enviados com sucesso! Iniciando processamento.',

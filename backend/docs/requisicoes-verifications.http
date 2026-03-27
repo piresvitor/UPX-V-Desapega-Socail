@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3333
 # Cole o token do seu usuário de teste aqui
-@userToken = SEU_TOKEN_JWT_AQUI
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMTNjZTA1ZS1iZGMzLTQ2MjMtYWI3Zi1mYWJjYjI0ZDYzZjAiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU3MjEyM30.IpcPRAuKdtKzaFY16N39ueLh5BAddenk-lapEMV5MEU
 
 ### ===================================================================
 ### 1. [ERRO 400] Zod: Tentar enviar um CPF matematicamente inválido
@@ -27,7 +27,7 @@ Authorization: Bearer {{userToken}}
 {
   "cpf": "123.456.789-09",
   "identityDocumentUrl": "arquivo-falso-sem-http",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico.jpg"
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/cadunico.jpg"
 }
 
 ### ===================================================================
@@ -41,7 +41,7 @@ Authorization: Bearer {{userToken}}
 {
   "cpf": "123.456.789-09",
   "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
+  "incomeProofUrl": "https://media.discordapp.net/attachments/1221593494313894040/1486886021147656312/image.png?ex=69c72204&is=69c5d084&hm=cbda3411f70bb5c3c458cb19bd10073b519fd0f802a28bd9e7f6b12ba4c15b89&=&format=webp&quality=lossless"
 }
 
 ### ===================================================================
@@ -54,6 +54,6 @@ Authorization: Bearer {{userToken}}
 
 {
   "cpf": "123.456.789-09",
-  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
+  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b//rg-real.jpg",
+  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/cadunico-real.jpg"
 }

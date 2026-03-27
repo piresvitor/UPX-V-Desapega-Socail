@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3333
 # Cole o token recebido no Login aqui para testar as rotas protegidas
-@userToken = SEU_TOKEN_AQUI
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU2OTYxOX0.jtxVd0oWktG5w6ezSg3ETSnxpnhQdyvUgWy8fLxGBYs
 
 ### ===================================================================
 ### 1. [SUCESSO 200] Health Check
@@ -17,8 +17,8 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "Maria",
-  "email": "maria@exemplo.com",
+  "fullName": "Tiago",
+  "email": "tiago@exemplo.com",
   "password": "senha123",
   "role": "Beneficiário"
 }
@@ -32,7 +32,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "adm@exemplo.com",
+  "email": "tiago@exemplo.com",
   "password": "senha123"
 }
 
