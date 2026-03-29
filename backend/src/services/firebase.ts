@@ -46,9 +46,9 @@ export async function deleteFirebaseFileByUrl(fileUrl: string) {
       
       //Manda o Firebase Admin deletar o arquivo silenciosamente
       await admin.storage().bucket().file(filePath).delete();
-      console.log(`🗑️ Arquivo apagado do Firebase Storage (LGPD): ${filePath}`);
+      console.log(`Arquivo apagado do Firebase Storage (LGPD): ${filePath}`);
     } else {
-      console.log(`⚠️ Não foi possível extrair o caminho do arquivo da URL: ${fileUrl}`);
+      console.log(`Não foi possível extrair o caminho do arquivo da URL: ${fileUrl}`);
     }
   } catch (error) {
     // Nós apenas registramos o erro, mas NÃO travamos o sistema se a foto já tiver sumido

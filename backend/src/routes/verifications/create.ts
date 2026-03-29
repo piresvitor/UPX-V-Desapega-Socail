@@ -1,101 +1,99 @@
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db } from '../../database/cliente';
 import { verificationRequests } from '../../database/schema';
-import { authenticateToken } from '../../middleware/auth';
 import { encryptCpf } from '../../utils/crypto';
-import { isValidCPF } from '../../utils/validators-cpf';
+import { processOcrInBackground } from '../../services/ocr';
+import { isValidCPF } from '../../utils/validators-cpf'; 
+import { authenticateToken } from '../../middleware/auth';
 
-const createVerificationBodySchema = z.object({
-  identityDocumentUrl: z.url('A URL do documento de identidade é inválida'),
-  incomeProofUrl: z.url('A URL do comprovante de renda é inválida'),
-  cpf: z.string()
-    .transform(val => val.replace(/[^\d]/g, ''))
-    .refine(val => val.length === 11, 'O CPF deve conter exatamente 11 números')
-    .refine(val => isValidCPF(val), 'O CPF informado é inválido')
-});
+// O Zod  repassa o trabalho para a  função de verificação de CPF
+const cpfSchema = z.string().refine(isValidCPF, { message: "CPF inválido." });
 
-export const createVerificationRoute: FastifyPluginAsyncZod = async (server) => {
-  server.post('/verifications', {
-    onRequest: [authenticateToken],
-    schema: {
-      tags: ['Verificações'],
-      summary: 'Enviar ou Reenviar Documentos',
-      description: 'Recebe os links e o CPF. Se o usuário tinha um pedido rejeitado, atualiza os dados para nova análise.',
-      body: createVerificationBodySchema,
-      response: {
-        201: z.object({ message: z.string(), requestId: z.string().uuid() }),
-        200: z.object({ message: z.string(), requestId: z.string().uuid() }),
-        400: z.object({ message: z.string() }),
-        500: z.object({ message: z.string() })
+export async function createVerificationRoute(app: FastifyInstance) {
+  
+  app.post('/verifications', { preHandler: [authenticateToken] }, async (request, reply) => {
+    const userId = request.user.sub;
+
+    let rawCpf = '';
+    let identityDocumentBuffer: Buffer | null = null;
+    let incomeProofBuffer: Buffer | null = null;
+
+    // Lendo o formulário Multipart (Arquivos recebidos em pedaços pela rede)
+    const parts = request.parts();
+    for await (const part of parts) {
+      if (part.type === 'file') {
+        const buffer = await part.toBuffer();
+        if (part.fieldname === 'identityDocument') identityDocumentBuffer = buffer;
+        if (part.fieldname === 'incomeProof') incomeProofBuffer = buffer;
+      } else {
+        if (part.fieldname === 'cpf') rawCpf = part.value as string;
       }
     }
-  }, async (request, reply) => {
-    try {
-      const { identityDocumentUrl, incomeProofUrl, cpf } = request.body;
-      const userId = request.user.sub; 
 
-      const secureCpf = encryptCpf(cpf);
-
-      // Verifica se já existe um pedido
-      const existingRequest = await db.query.verificationRequests.findFirst({
-        where: eq(verificationRequests.userId, userId)
+    // Validação de Presença: O usuário mandou tudo?
+    if (!rawCpf || !identityDocumentBuffer || !incomeProofBuffer) {
+      return reply.status(400).send({ 
+        message: 'Formulário incompleto. Envie o CPF, a foto do RG e o Comprovante de Renda.' 
       });
+    }
 
-      if (existingRequest) {
-        if (existingRequest.status === 'Aprovado_Auto' || existingRequest.status === 'Aprovado_Admin') {
-          return reply.status(400).send({ message: 'Seu perfil já possui o selo de verificação!' });
-        }
-        
-        if (existingRequest.status === 'Processando_IA' || existingRequest.status === 'Analise_Manual') {
-          return reply.status(400).send({ message: 'Você já possui uma solicitação em análise. Aguarde o resultado.' });
-        }
+    // Valida o CPF com a função especialista acoplada ao Zod
+    const result = cpfSchema.safeParse(rawCpf);
+    if (!result.success) {
+      return reply.status(400).send({ message: result.error.issues[0].message });
+    }
 
-        // O FLUXO DE REENVIO (Update)
-        if (existingRequest.status === 'Rejeitado') {
-          const [updatedRequest] = await db.update(verificationRequests)
-            .set({
-              encryptedCpf: secureCpf,
-              identityDocumentUrl,
-              incomeProofUrl,
-              status: 'Processando_IA', 
-              adminMessage: null, // Limpa a mensagem de rejeição antiga
-              updatedAt: new Date()
-            })
-            .where(eq(verificationRequests.id, existingRequest.id))
-            .returning({ id: verificationRequests.id });
+    // Criptografia antes de encostar no banco de dados
+    const encryptedCpf = encryptCpf(rawCpf);
 
-          // Aqui é onde chamaremos a função do Tesseract no futuro:
-          // processOcrInBackground(updatedRequest.id, incomeProofUrl);
+    // Verifica se já existe um pedido em andamento (Proteção contra Spam)
+    const existingRequest = await db.query.verificationRequests.findFirst({
+      where: eq(verificationRequests.userId, userId)
+    });
 
-          return reply.status(200).send({
-            message: 'Documentos reenviados com sucesso! Iniciando nova análise.',
-            requestId: updatedRequest.id
-          });
-        }
+    if (existingRequest) {
+      if (existingRequest.status === 'Processando_IA' || existingRequest.status === 'Analise_Manual') {
+        return reply.status(400).send({ message: 'Você já possui uma solicitação em análise.' });
       }
 
-      // O FLUXO DE PRIMEIRA VEZ (Insert)
-      const [newRequest] = await db.insert(verificationRequests).values({
-        userId: userId,
-        encryptedCpf: secureCpf,
-        identityDocumentUrl: identityDocumentUrl,
-        incomeProofUrl: incomeProofUrl,
-        status: 'Processando_IA' // Prepara para a IA
-      }).returning({ id: verificationRequests.id });
+      if (existingRequest.status === 'Aprovado_Auto' || existingRequest.status === 'Aprovado_Admin') {
+        return reply.status(400).send({ message: 'Seu perfil já está verificado.' });
+      }
 
-      // Aqui também chamaremos a função do Tesseract no futuro:
-      // processOcrInBackground(newRequest.id, incomeProofUrl);
+      // FLUXO DE REENVIO (Se foi rejeitado antes)
+      if (existingRequest.status === 'Rejeitado') {
+        const [updatedRequest] = await db.update(verificationRequests)
+          .set({ status: 'Processando_IA', adminMessage: null, updatedAt: new Date() })
+          .where(eq(verificationRequests.id, existingRequest.id))
+          .returning({ id: verificationRequests.id });
 
-      return reply.status(201).send({
-        message: 'Documentos enviados com sucesso! Iniciando processamento.',
-        requestId: newRequest.id
-      });
+        // IA processando a imagem direto da memória RAM (O Buffer)
+        processOcrInBackground(updatedRequest.id, userId, incomeProofBuffer, identityDocumentBuffer);
 
-    } catch (error) {
-      console.error('Erro ao processar solicitação de verificação:', error);
-      return reply.status(500).send({ message: 'Erro interno ao tentar processar seus documentos.' });
+        return reply.status(200).send({ 
+          message: 'Documentos reenviados! Iniciando análise segura.', 
+          requestId: updatedRequest.id 
+        });
+      }
     }
+
+    // FLUXO DE PRIMEIRA VEZ (Insert)
+    const [newRequest] = await db.insert(verificationRequests).values({
+      userId,
+      encryptedCpf,
+      status: 'Processando_IA',
+      identityDocumentUrl: 'aguardando...', // Isso será preenchido depois, se necessário
+      incomeProofUrl: 'aguardando...',      // Isso será preenchido depois, se necessário
+    }).returning({ id: verificationRequests.id });
+
+    // IA processando a imagem direto da memória RAM (O Buffer)
+    processOcrInBackground(newRequest.id, userId, incomeProofBuffer, identityDocumentBuffer);
+
+    return reply.status(201).send({ 
+      message: 'Documentos recebidos em segurança! Iniciando processamento.', 
+      requestId: newRequest.id 
+    });
   });
-};
+}

@@ -2,6 +2,7 @@ import fastify from 'fastify';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider, jsonSchemaTransform } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifySocketIO from 'fastify-socket.io';
@@ -12,6 +13,7 @@ import { availableFreightsRoute } from './routes/freights/available';
 import { acceptFreightRoute } from './routes/freights/accept';
 import { createVerificationRoute } from './routes/verifications/create';
 import { analyzeVerificationRoute } from './routes/verifications/analyze';
+import { getMyVerificationRoute } from './routes/verifications/me'
 
 
 // Importação das rotas
@@ -55,6 +57,14 @@ app.register(fastifySocketIO, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
+  }
+});
+
+// Prepara o Fastify a receber arquivos (Uploads de fotos/PDFs)
+app.register(multipart, {
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limite de 5MB por arquivo (Evita travamentos de memória)
+    files: 2,                  // Aceita no máximo 2 arquivos por requisição (Ex: RG e Holerite)
   }
 });
 
@@ -110,8 +120,9 @@ app.register(availableFreightsRoute);
 app.register(acceptFreightRoute);
 app.register(updateFreightStatusRoute);
 app.register(myFreightsRoute);
-app.register(createVerificationRoute);
+app.register(createVerificationRoute); 
 app.register(analyzeVerificationRoute);
+app.register(getMyVerificationRoute)
 
 setupWebSockets(app);
 

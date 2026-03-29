@@ -1,59 +1,28 @@
-@baseUrl = http://localhost:3333
-# Cole o token do seu usuário de teste aqui
-@userToken = SEU_TOKEN_JWT_AQUI
+### Variáveis (Preencha com o token do Login)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NWE5MTYyOS0zMzRmLTRjYmItYWExZi0xMjk5YmI2YTFkYzciLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgxOTk4OX0.dL7uOyikShDtqph3gsp_F0zyOsuxojfykwHLmfnTeyw
+@baseUrl = http://127.0.0.1:3333
 
-### ===================================================================
-### 1. [ERRO 400] Zod: Tentar enviar um CPF matematicamente inválido
-### Expectativa: Erro 400 informando que o CPF é inválido
-### ===================================================================
+### Enviar Documentos para Análise (Upload Real Multipart)
 POST {{baseUrl}}/verifications
-Content-Type: application/json
-Authorization: Bearer {{userToken}}
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
-{
-  "cpf": "111.111.111-11",
-  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg.jpg",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico.jpg"
-}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="cpf"
 
-### ===================================================================
-### 2. [ERRO 400] Zod: Tentar enviar uma URL que não é um link
-### Expectativa: Erro 400 informando que a URL do documento é inválida
-### ===================================================================
-POST {{baseUrl}}/verifications
-Content-Type: application/json
-Authorization: Bearer {{userToken}}
+12345678909
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="identityDocument"; filename="rg_teste.jpg"
+Content-Type: image/jpeg
 
-{
-  "cpf": "123.456.789-09",
-  "identityDocumentUrl": "arquivo-falso-sem-http",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico.jpg"
-}
+< ./rg_teste.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="incomeProof"; filename="holerite_teste.jpg"
+Content-Type: image/jpeg
 
-### ===================================================================
-### 3. [SUCESSO 201] Caminho Feliz: Primeira vez enviando documentos
-### Expectativa: Status 201 (Created) e mensagem de sucesso
-### ===================================================================
-POST {{baseUrl}}/verifications
-Content-Type: application/json
-Authorization: Bearer {{userToken}}
+< ./holerite_teste.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-{
-  "cpf": "123.456.789-09",
-  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
-}
-
-### ===================================================================
-### 4. [ERRO 400] Regra de Negócio: Tentar enviar de novo logo em seguida
-### Expectativa: Erro 400 informando que já existe solicitação em análise
-### ===================================================================
-POST {{baseUrl}}/verifications
-Content-Type: application/json
-Authorization: Bearer {{userToken}}
-
-{
-  "cpf": "123.456.789-09",
-  "identityDocumentUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/rg-real.jpg",
-  "incomeProofUrl": "https://firebasestorage.googleapis.com/v0/b/mobiaccess/cadunico-real.jpg"
-}
+### 2. Consultar Status da Verificação (Visão do Frontend)
+GET {{baseUrl}}/verifications/me
+Authorization: Bearer {{token}}
