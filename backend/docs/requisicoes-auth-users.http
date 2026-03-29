@@ -17,8 +17,8 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "Tiago",
-  "email": "tiago@exemplo.com",
+  "fullName": "Hacker Silva",
+  "email": "hacker@exemplo.com",
   "password": "senha123",
   "role": "Beneficiário"
 }
@@ -32,7 +32,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "tiago@exemplo.com",
+  "email": "hacker@exemplo.com",
   "password": "senha123"
 }
 
