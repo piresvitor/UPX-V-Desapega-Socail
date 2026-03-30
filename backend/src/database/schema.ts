@@ -6,7 +6,10 @@ import {
   timestamp, 
   boolean, 
   decimal, 
-  pgEnum 
+  pgEnum,
+  geometry,
+  index,
+  uniqueIndex
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -50,11 +53,13 @@ export const items = pgTable('items', {
   category: varchar('category', { length: 50 }).notNull(),
   status: itemStatusEnum('status').default('Disponível').notNull(),
   imageUrls: text('image_urls').array(), 
-  latitude: decimal('latitude', { precision: 10, scale: 8 }).notNull(),
-  longitude: decimal('longitude', { precision: 11, scale: 8 }).notNull(),
+  location: geometry('location', { type: 'point', mode: 'xy', srid: 4326 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
-});
+}, (table) => ({
+  locationIdx: index('location_idx').using('gist', table.location),
+  donorIdIdx: index('donor_id_idx').on(table.donorId),
+}));
 
 // 3. Salas de Chat
 export const chatRooms = pgTable('chat_rooms', {
@@ -66,7 +71,11 @@ export const chatRooms = pgTable('chat_rooms', {
   status: chatRoomStatusEnum('status').default('Ativo').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
-});
+}, (table) => ({
+  itemIdIdx: index('chat_rooms_item_id_idx').on(table.itemId),
+  participant1Idx: index('chat_rooms_p1_idx').on(table.participant1),
+  participant2Idx: index('chat_rooms_p2_idx').on(table.participant2),
+}));
 
 // 4. Mensagens
 export const messages = pgTable('messages', {
@@ -76,7 +85,10 @@ export const messages = pgTable('messages', {
   content: text('content').notNull(),
   readAt: timestamp('read_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  roomIdIdx: index('messages_room_id_idx').on(table.roomId),
+  senderIdIdx: index('messages_sender_id_idx').on(table.senderId),
+}));
 
 // 5. Solicitações de Frete
 export const freightRequests = pgTable('freight_requests', {
@@ -87,7 +99,11 @@ export const freightRequests = pgTable('freight_requests', {
   estimatedPrice: decimal('estimated_price', { precision: 10, scale: 2 }),
   status: freightStatusEnum('status').default('Pendente').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  itemIdIdx: index('freight_item_id_idx').on(table.itemId),
+  beneficiaryIdIdx: index('freight_beneficiary_id_idx').on(table.beneficiaryId),
+  freighterIdIdx: index('freight_freighter_id_idx').on(table.freighterId),
+}));
 
 // 6. Solicitações de Verificação (LGPD + OCR)
 export const verificationRequests = pgTable('verification_requests', {
@@ -121,7 +137,12 @@ export const reviews = pgTable('reviews', {
   rating: decimal('rating', { precision: 2, scale: 1 }).notNull(), 
   comment: text('comment'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  reviewerIdIdx: index('reviews_reviewer_id_idx').on(table.reviewerId),
+  revieweeIdIdx: index('reviews_reviewee_id_idx').on(table.revieweeId),
+  itemIdIdx: index('reviews_item_id_idx').on(table.itemId),
+  uniqueReviewIdx: uniqueIndex('unique_review_idx').on(table.reviewerId, table.revieweeId, table.itemId),
+}));
 
 
 // ============================================================================

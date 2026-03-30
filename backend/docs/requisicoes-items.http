@@ -1,13 +1,13 @@
 @baseUrl = http://localhost:3333
 # 1. Cole o token recebido no Login aqui para testar as rotas protegidas
-@userToken = SEU_TOKEN_AQUI
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTNjOTFhMC02YzA0LTQzNTEtYmI3YS1iNjgxNTlmMDhhOGUiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDg0Mzc2Nn0.GvC0RpJ6qJomQbFRlKoZwZNV6QS-x5J_u70rg4DAbYQ
 # 2. Após criar um item, copie o ID dele e cole aqui para testar as rotas de baixo
 @itemId = SEU_ITEM_ID_AQUI
 
 
-### ===================================================================
+#### ===================================================================
 ### 1. [SUCESSO 201] Criar um Item para Doação (1 Imagem)
-### Expectativa: Salvar no banco e retornar o ID do novo item
+### Expectativa: Backend converte Latitude/Longitude pura em geometry Point para injetar no PostGIS
 ### ===================================================================
 POST {{baseUrl}}/items
 Content-Type: application/json
@@ -15,7 +15,7 @@ Authorization: Bearer {{userToken}}
 
 {
   "title": "Sofá 3 Lugares Retrátil",
-  "description": "Sofá em bom estado, cor cinza escuro. Precisa de frete grande para retirar.",
+  "description": "Sofá em bom estado. Precisa de frete grande para retirar.",
   "category": "Móveis",
   "imageUrls": ["https://exemplo.com/sofa.jpg"],
   "latitude": -23.501533,
@@ -24,38 +24,26 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 2. [SUCESSO 201] Criar um Item com 3 Imagens
-### Expectativa: Salvar item e o array com as 3 URLs no banco
+### 3. [SUCESSO 200] Listar Itens (Feed Geográfico e Paginado)
+### Expectativa: Dispara ST_DistanceSphere pelo PostGIS, paginando de 10 em 10 itens dentro de 5km
 ### ===================================================================
-POST {{baseUrl}}/items
-Content-Type: application/json
-Authorization: Bearer {{userToken}}
-
-{
-  "title": "Geladeira Brastemp",
-  "description": "Geladeira funcionando perfeitamente, apenas com arranhões na porta.",
-  "category": "Eletrodomésticos",
-  "imageUrls": [
-    "https://firebase.storage.com/minha-foto-1.jpg",
-    "https://firebase.storage.com/minha-foto-2.jpg",
-    "https://firebase.storage.com/minha-foto-3.jpg"
-  ],
-  "latitude": -23.501533,
-  "longitude": -47.458112
-}
-
-
-### ===================================================================
-### 3. [SUCESSO 200] Listar Itens (Feed Geral / Sem Filtros)
-### Expectativa: Retornar a lista de todos os itens disponíveis
-### ===================================================================
-GET {{baseUrl}}/items
+GET {{baseUrl}}/items?page=1&limit=10&lat=-23.501533&lng=-47.458112&radius=5000
 Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 4. [SUCESSO 200] Listar Itens com Filtro de Categoria
+### 4. [SUCESSO 200] Feed Geral SÓ COM PADRÕES DA PAGINAÇÃO
+### Expectativa: Rota deve funcionar perfeitamente sem enviar GPS, trazendo os 10 itens globais mais recentes
+### ===================================================================
+GET {{baseUrl}}/items?page=1
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+
+
+### ===================================================================
+### 5. [SUCESSO 200] Listar Itens com Filtro de Categoria
 ### Expectativa: Retornar apenas itens pertencentes à categoria "Móveis"
 ### ===================================================================
 GET {{baseUrl}}/items?category=Móveis
@@ -64,7 +52,7 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 5. [SUCESSO 200] Listar Itens por Localização (Raio de Busca)
+### 6. [SUCESSO 200] Listar Itens por Localização (Raio de Busca)
 ### Expectativa: Retornar itens mais próximos da coordenada informada
 ### ===================================================================
 GET {{baseUrl}}/items?lat=-23.501533&lng=-47.458112
@@ -73,7 +61,7 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 6. [SUCESSO 200] Ver Detalhes de um Item Específico
+### 7. [SUCESSO 200] Ver Detalhes de um Item Específico
 ### Expectativa: Retornar todos os dados do item usando o ID da URL
 ### ===================================================================
 GET {{baseUrl}}/items/{{itemId}}
@@ -82,7 +70,7 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 7. [SUCESSO 200] Editar Informações de um Item (Apenas o Dono)
+### 8. [SUCESSO 200] Editar Informações de um Item (Apenas o Dono)
 ### Expectativa: Atualizar os dados enviados e retornar sucesso
 ### ===================================================================
 PUT {{baseUrl}}/items/{{itemId}}
@@ -96,7 +84,7 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### 8. [SUCESSO 200] Alterar Status de um Item
+### 9. [SUCESSO 200] Alterar Status de um Item
 ### Expectativa: Mudar de 'Disponível' para 'Reservado' ou 'Doado'
 ### ===================================================================
 PATCH {{baseUrl}}/items/{{itemId}}/status
@@ -108,7 +96,7 @@ Authorization: Bearer {{userToken}}
 }
 
 ### ===================================================================
-### 9. [SUCESSO 200] Apagar um Item (Soft Delete)
+### 10. [SUCESSO 200] Apagar um Item (Soft Delete)
 ### Expectativa: Desativar a visualização do item (Apenas dono/Admin)
 ### ===================================================================
 DELETE {{baseUrl}}/items/{{itemId}}
