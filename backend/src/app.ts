@@ -43,6 +43,7 @@ import { listPendingVerificationsRoute } from './routes/admin/list-pending'
 import { adminBanUserRoute } from './routes/admin/ban-user'
 import { adminDashboardRoute } from './routes/admin/dashboard'
 import { publicStatisticsRoute } from './routes/public/statistics'
+import { listUsersRoute } from './routes/admin/list-users'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -141,5 +142,6 @@ app.register(listPendingVerificationsRoute)
 app.register(adminBanUserRoute)
 app. register(adminDashboardRoute)
 app.register(publicStatisticsRoute)
+app.register(listUsersRoute)
 
 export { app };

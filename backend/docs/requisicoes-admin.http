@@ -85,3 +85,10 @@ Content-Type: application/json
 ### ============================================================================
 GET {{baseUrl}}/admin/dashboard
 Authorization: Bearer {{tokenAdmin}}
+
+### ===================================================================
+### 7. [SUCESSO 200] Buscar Usuários com Filtros (Apenas Admin)
+### ===================================================================
+GET {{baseUrl}}/admin/users?page=1&limit=5&search=Joao&role=Doador
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}}
