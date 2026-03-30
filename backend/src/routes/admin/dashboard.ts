@@ -68,7 +68,7 @@ export const adminDashboardRoute: FastifyPluginAsyncZod = async (server) => {
           count: count() 
         }).from(users).where(isNull(users.deletedAt)).groupBy(users.role),
 
-// 4. Status dos Itens (Agrupados para pegar o Total, Disponível e Doado de uma vez)
+        // 4. Status dos Itens (Agrupados para pegar o Total, Disponível e Doado de uma vez)
         db.select({ 
           status: items.status, 
           count: count() 
