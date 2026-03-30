@@ -56,11 +56,16 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 
 ## 📍 Rotas da API (Endpoints HTTP)
 
+> **⚠️ NOTA SOBRE PAGINAÇÃO:** As rotas que retornam listas pesadas (Feed de Doações e Mensagens do Chat) exigem os parâmetros `page` e `limit` na URL (ex: `?page=1&limit=10`). Omissão usará os padrões do backend para preservar a memória.
+
+> **⚠️ NOTA SOBRE UPLOADS (LGPD):** A rota de Verificação (`POST /verifications`) ignora cargas JSON. O envio deve ser restrito ao cabeçalho `multipart/form-data`, atrelando os arquivos nas chaves `identityDocument` (RG/CNH) e `incomeProof` (Holerite/CadÚnico). 
+
 *Nota: Todas as rotas (exceto Públicas, Criação de Usuário e Login) exigem o envio do token JWT no Header: `Authorization: Bearer <SEU_TOKEN>`*
 
-### 🌍 Rota Pública (Landing Page)
+### 🌍 Rota Pública e Infraestrutura
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
+| `GET` | `/health` | Healthcheck atestando que a API e o Banco estão saudáveis. |
 | `GET` | `/public/statistics` | Retorna as métricas de impacto (Total de usuários, doações e fretes) para prova social. |
 
 ### 👤 Usuários, Autenticação e Reputação
@@ -69,52 +74,38 @@ Backend do aplicativo focado em doações e acessibilidade urbana. Desenvolvido 
 | `POST` | `/users` | Cria um novo usuário |
 | `POST` | `/auth` | Realiza login e retorna o Token JWT |
 | `GET` | `/users/me` | Retorna o perfil do usuário logado (com média de reputação) |
+| `PATCH`| `/users/me` | Atualiza dados do perfil do usuário logado (Nome, email, etc) |
+| `DELETE`| `/users/me` | Encerra a própria conta (Aplica Soft Delete e Oculta Doações) |
 | `GET` | `/users/:id` | Retorna o perfil público de outro usuário |
 | `PATCH`| `/users/fcm-token` | Atualiza o token do dispositivo para Push Notifications |
-| `POST` | `/reviews` | Avalia um usuário (1 a 5 estrelas) |
+| `POST` | `/reviews` | Avalia um usuário (1 a 5 estrelas). Escudado contra Race Conditions. |
 | `GET` | `/reviews/:userId` | Lista todas as avaliações que um usuário recebeu |
 
 ### 🛡️ Verificação de Perfil (LGPD & OCR)
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/verifications` | Envia/reenvia documentos via multipart form-data. Processa OCR em RAM. |
+| `POST` | `/verifications` | Envia documentos via multipart form-data. Processa OCR em RAM. |
 | `GET` | `/verifications/me` | Retorna o status atual do processo de verificação do usuário logado |
+| `POST` | `/verifications/analyze` | Gatilho assíncrono interno/webhook para re-processamento da IA |
 
 ### 👑 Painel de Administração
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
 | `GET` | `/admin/dashboard` | Retorna um raio-x completo do banco de dados otimizado via SQL COUNT |
 | `GET` | `/admin/verifications/pending`| Lista a Fila de Trabalho (Aguardando Análise Manual) com links do Firebase |
-| `PATCH`| `/admin/verifications/:id` | Aprova/Rejeita verificação de perfil manualmente, concedendo o selo `isVerified` |
-| `PATCH`| `/admin/users/:id/ban` | Aplica ou remove um *Soft Delete* no usuário (Suspensão) |
+| `PATCH`| `/admin/verifications/:id` | Aprova/Rejeita verificação manualmente, concedendo o selo `isVerified` |
+| `PATCH`| `/admin/users/:id/ban` | Aplica o Martelo do Ban (Soft Delete). Oculta o usuário de toda a plataforma. |
 
 ### 📦 Doações (Itens)
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/items` | Cadastra uma nova doação (suporta múltiplas imagens) |
-| `GET` | `/items` | Feed Geral: Lista os itens com filtros via PostGIS (`lat`, `lng`, `radius`) |
+| `POST` | `/items` | Cadastra uma nova doação associada em coordenada PostGIS. |
+| `GET` | `/items` | Feed Geral: Distância nativa via PostGIS (`lat`, `lng`, `radius`, `page`, `limit`) |
 | `GET` | `/items/:id` | Detalhes de um item (Aplica a Trava de 24h para não-verificados) |
 | `PUT` | `/items/:id` | Edita os dados do item (Apenas para o dono) |
 | `PATCH`| `/items/:id/status` | Altera o status (`Disponível`, `Reservado`, `Doado`, `Cancelado`) |
 | `DELETE`| `/items/:id` | Remove o item da vitrine (Soft Delete) |
 
-### 💬 Chats e Comunicação
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/chats` | Inicia uma conversa ou recupera a sala existente (Suporta Doação ou Frete) |
-| `GET` | `/chats` | Lista a Caixa de Entrada (Inbox) com a última mensagem e dados do remetente |
-| `GET` | `/chats/:roomId/messages`| Carrega o histórico de mensagens de uma sala |
-
-### 🚚 Frete Solidário (Logística)
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/freights` | Beneficiário solicita um frete para um item |
-| `GET` | `/freights/available` | Radar (PostGIS): Lista fretes próximos. Acesso exclusivo a Freteiros. |
-| `PATCH`| `/freights/:id/accept` | Freteiro aceita a corrida e define o valor estimado |
-| `PATCH`| `/freights/:id/status` | Atualiza o andamento (`Em Trânsito`, `Finalizado`) |
-| `GET` | `/freights/me` | Histórico de viagens do Freteiro ou solicitações do Beneficiário |
-
----
 
 ## 🔌 Eventos WebSocket (Socket.io)
 

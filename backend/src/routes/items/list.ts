@@ -11,7 +11,7 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Items'],
       summary: 'Feed de Doações',
-      description: 'Lista os itens disponíveis. Usuários não verificados só veem itens após 24h. Suporta busca geoespacial por raio e ordena por proximidade.',
+      description: 'Lista os itens disponíveis. Usuários não verificados só veem itens após 24h. Oculta doações de usuários banidos.',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header must be Bearer token')
       }),
@@ -21,21 +21,21 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
         category: z.string().optional(),
         lat: z.coerce.number().optional(),
         lng: z.coerce.number().optional(),
-        radius: z.coerce.number().default(10000), // Raio padrão: 10km (10000 metros)
+        radius: z.coerce.number().default(10000), 
       }),
       response: {
         200: z.array(z.object({
-          id: z.uuid(), 
+          id: z.string().uuid(), 
           title: z.string(),
           description: z.string().nullable().optional(),
           category: z.string(),
           imageUrls: z.array(z.string()).nullable().optional(),
           status: z.string(),
-          latitude: z.string(),
+          latitude: z.string(), 
           longitude: z.string(),
           createdAt: z.date(),
           donor: z.object({
-            id: z.uuid(),
+            id: z.string().uuid(),
             fullName: z.string()
           })
         })),
@@ -47,18 +47,16 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
       const { page, limit, category, lat, lng, radius } = request.query;
       const userId = request.user.sub;
 
-      // Iniciar o array de filtros
       const filters: (SQL<unknown> | undefined)[] = [
-        isNull(items.deletedAt), // Ignora itens apagados (Soft Delete)
-        eq(items.status, 'Disponível') // Traz apenas o que ainda pode ser doado
+        isNull(items.deletedAt),       
+        isNull(users.deletedAt),      
+        eq(items.status, 'Disponível') 
       ];
 
-      // Filtro de Categoria
       if (category) {
         filters.push(eq(items.category, category));
       }
 
-      // Trava de 24h para Prioridade Social
       const [currentUser] = await db.select({ isVerified: users.isVerified })
         .from(users)
         .where(eq(users.id, userId));
@@ -67,45 +65,46 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
         filters.push(sql`${items.createdAt} <= NOW() - INTERVAL '24 hours'`);
       }
 
-      // Busca Geoespacial: PostGIS ST_DistanceSphere (Apenas itens dentro do raio)
+      // Busca Geoespacial com PostGIS nativo
       if (lat !== undefined && lng !== undefined) {
         filters.push(sql`
           ST_DistanceSphere(
-            ST_MakePoint(${items.longitude}::numeric, ${items.latitude}::numeric),
-            ST_MakePoint(${lng}, ${lat})
+            ${items.location},
+            ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)
           ) <= ${radius}
         `);
       }
 
+      let orderLogic: any[] = [desc(items.createdAt)]; 
 
-      let orderLogic: any[] = [desc(items.createdAt)]; // Padrão: mais recentes primeiro
-
-      // Se o usuário mandou o GPS, priorizamos a distância!
       if (lat !== undefined && lng !== undefined) {
         orderLogic = [
-          sql`ST_DistanceSphere(
-            ST_MakePoint(${items.longitude}::numeric, ${items.latitude}::numeric),
-            ST_MakePoint(${lng}, ${lat})
-          ) ASC`, // ASC = Do mais perto (menor distância) para o mais longe
-          desc(items.createdAt) // Desempate: Se a distância for igual, mostra o mais novo
+          sql`ST_DistanceSphere(${items.location}, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)) ASC`,
+          desc(items.createdAt) 
         ];
       }
 
-      // Consulta final
-      const availableItems = await db.query.items.findMany({
-        where: and(...filters),
-        limit: limit,
-        offset: (page - 1) * limit,
-        orderBy: orderLogic,
-        with: {
-          donor: {
-            columns: {
-              id: true,
-              fullName: true
-            }
-          }
+      const availableItems = await db.select({
+        id: items.id,
+        title: items.title,
+        description: items.description,
+        category: items.category,
+        imageUrls: items.imageUrls,
+        status: items.status,
+        latitude: sql<string>`ST_Y(${items.location}::geometry)::text`,  
+        longitude: sql<string>`ST_X(${items.location}::geometry)::text`, 
+        createdAt: items.createdAt,
+        donor: {
+          id: users.id,
+          fullName: users.fullName
         }
-      });
+      })
+      .from(items)
+      .innerJoin(users, eq(items.donorId, users.id)) 
+      .where(and(...filters))
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .orderBy(...orderLogic);
 
       return reply.status(200).send(availableItems);
 
