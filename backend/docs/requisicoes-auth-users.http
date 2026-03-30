@@ -17,8 +17,8 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "gabriel",
-  "email": "gabriel@exemplo.com",
+  "fullName": "larissa",
+  "email": "larissa@exemplo.com",
   "password": "senha123",
   "role": "Beneficiário"
 }
@@ -32,14 +32,14 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "gabriel@exemplo.com",
+  "email": "larissa@exemplo.com",
   "password": "senha123"
 }
 
 
 ### ===================================================================
 ### 4. [ERRO 400/409] Falha no Registro - E-mail já em uso
-### Expectativa: Erro informando que o e-mail já está cadastrado no banco
+### Expectativa: Erro credencias inválidas
 ### ===================================================================
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
@@ -84,7 +84,7 @@ Authorization: Bearer {{userToken}}
 
 {
   "fullName": "João Silva dos Santos",
-  "email": "joao.santos@exemplo.com"
+  "email": "joao.santos12@exemplo.com"
 }
 
 
@@ -115,18 +115,18 @@ Authorization: Bearer {{userToken}}
 
 
 ### ===================================================================
-### ROTAS FUTURAS (AINDA PRECISAM SER CRIADAS)
-### ===================================================================
-
-### ===================================================================
 ### 10. [SUCESSO 200] Buscar Usuários com Filtros (Apenas Admin)
 ### Expectativa: Retornar lista paginada de usuários conforme filtros
 ### ===================================================================
-GET {{baseUrl}}/users?page=1&limit=5&search=João&role=Doador
+GET {{baseUrl}}/admin/users?page=1&limit=5&search=João&role=Doador
 Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
-### Consultar Perfil Público de Outro Usuário
+### ===================================================================
+### 11. [SUCESSO 200] Buscar perfil publico de Usuários 
+### Expectativa: Retornar Perfil Público de Outro Usuário
+### ===================================================================
+
 GET {{baseUrl}}/users/d8b8d67f-b5e9-4075-aa98-d680add33736
 Authorization: Bearer {{userToken}}
 

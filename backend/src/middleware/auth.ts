@@ -40,7 +40,7 @@ export async function requireAdmin(request: FastifyRequest, reply: FastifyReply)
 
     if (!user || user.role !== 'Admin') {
       return reply.status(403).send({ 
-        message: 'Acesso Negado: Apenas administradores do Desapega Social podem aprovar documentos.' 
+        message: 'Acesso Negado: Esta operação é exclusiva para administradores do sistema.'
       });
     }
   } catch (error) {
