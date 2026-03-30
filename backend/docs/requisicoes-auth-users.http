@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3333
 # Cole o token recebido no Login aqui para testar as rotas protegidas
-@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDU2OTYxOX0.jtxVd0oWktG5w6ezSg3ETSnxpnhQdyvUgWy8fLxGBYs
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxODZhMWUyZi05MGVlLTQwY2YtYTFkNS0wMDY3ZThlNTMxMjIiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgzODkzOH0.NZZxfL70ikZg_0_An9uoSOH_Jwn_GNpvjpbsW6MtbX8
 
 ### ===================================================================
 ### 1. [SUCESSO 200] Health Check
@@ -17,8 +17,8 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "Hacker Silva",
-  "email": "hacker@exemplo.com",
+  "fullName": "gabriel",
+  "email": "gabriel@exemplo.com",
   "password": "senha123",
   "role": "Beneficiário"
 }
@@ -32,7 +32,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "hacker@exemplo.com",
+  "email": "dudu@exemplo.com",
   "password": "senha123"
 }
 
@@ -125,3 +125,8 @@ Authorization: Bearer {{userToken}}
 GET {{baseUrl}}/users?page=1&limit=5&search=João&role=Doador
 Content-Type: application/json
 Authorization: Bearer {{userToken}}
+
+### Consultar Perfil Público de Outro Usuário
+GET {{baseUrl}}/users/d8b8d67f-b5e9-4075-aa98-d680add33736
+Authorization: Bearer {{userToken}}
+

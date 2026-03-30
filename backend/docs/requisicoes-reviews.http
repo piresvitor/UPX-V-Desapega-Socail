@@ -1,0 +1,62 @@
+### Variáveis Iniciais
+# 1. Faça login com o usuário que VAI DAR a nota e cole o token aqui:
+@tokenReviewer = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxODZhMWUyZi05MGVlLTQwY2YtYTFkNS0wMDY3ZThlNTMxMjIiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgzNzQ2Nn0.Grwrjc5nkX9L7aF5QnAPEPyzMExr6_d9rAopJUbqqDI
+
+# 2. Copie o ID (UUID) do usuário que VAI RECEBER a nota:
+@revieweeId = d8b8d67f-b5e9-4075-aa98-d680add33736
+
+@baseUrl = http://127.0.0.1:3333
+
+### TESTE 1: Dar uma nota 5 estrelas (Sucesso)
+### Expectativa: Retornar 201 Created e atualizar a média do avaliado no banco.
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{tokenReviewer}}
+Content-Type: application/json
+
+{
+  "revieweeId": "{{revieweeId}}",
+  "rating": 5,
+  "comment": "Cara super gente boa, a cadeira de rodas estava em perfeito estado!"
+}
+
+### TESTE 2: Dar uma segunda nota para testar a Matemática da Média
+### Expectativa: Se a primeira foi 5, e essa for 3, a média no banco deve cair para 4.00.
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{tokenReviewer}}
+Content-Type: application/json
+
+{
+  "revieweeId": "{{revieweeId}}",
+  "rating": 3,
+  "comment": "Demorou um pouco para responder no chat, mas deu tudo certo."
+}
+
+### TESTE 3: Regra de Negócio - Tentativa de Autoavaliação
+### Expectativa: Retornar 403 Forbidden (Você não pode avaliar a si mesmo).
+### OBS: Para testar isso, cole o SEU PRÓPRIO ID na variável de revieweeId provisoriamente.
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{tokenReviewer}}
+Content-Type: application/json
+
+{
+  "revieweeId": "{{revieweeId}}",
+  "rating": 5,
+  "comment": "Eu sou o melhor usuário desse app!"
+}
+
+### TESTE 4: Validação do Zod - Nota Inválida
+### Expectativa: Retornar 400 Bad Request (A nota deve ser entre 1 e 5).
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{tokenReviewer}}
+Content-Type: application/json
+
+{
+  "revieweeId": "{{revieweeId}}",
+  "rating": 6,
+  "comment": "Nota 6 porque o cara é incrível!"
+}
+
+### TESTE 5: Listar todas as avaliações de um usuário
+### Expectativa: Retornar um array com as notas, comentários e o nome do avaliador
+GET {{baseUrl}}/reviews/{{revieweeId}}
+Authorization: Bearer {{tokenReviewer}}

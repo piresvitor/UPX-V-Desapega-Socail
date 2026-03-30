@@ -5,25 +5,27 @@ import { db } from '../../database/cliente';
 import { users } from '../../database/schema'; 
 import { authenticateToken } from '../../middleware/auth';
 
-export const getMeRoute: FastifyPluginAsyncZod = async (server) => {
-  server.get('/users/me', {
+export const getPublicProfileRoute: FastifyPluginAsyncZod = async (server) => {
+  server.get('/users/:id', {
     onRequest: [authenticateToken],
     schema: {
       tags: ['Users'],
-      summary: 'Get My Profile',
-      description: 'Retorna dados do usuário autenticado a partir do token JWT',
+      summary: 'Get Public Profile',
+      description: 'Retorna os dados públicos de um usuário pelo ID (para exibir o perfil antes de uma doação/frete).',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header must be Bearer token')
       }),
+      params: z.object({
+        id: z.uuid({ message: 'ID do usuário inválido.' })
+      }),
       response: {
         200: z.object({
-          id: z.uuid(),
+          id: z.string().uuid(),
           fullName: z.string(),
-          email: z.email(), 
           role: z.string(),
           isVerified: z.boolean(),
-          ratingAverage: z.string(), 
-          ratingCount: z.string()    
+          ratingAverage: z.string(),
+          ratingCount: z.string()
         }),
         404: z.object({ message: z.string() }),
         500: z.object({ message: z.string() })
@@ -31,13 +33,12 @@ export const getMeRoute: FastifyPluginAsyncZod = async (server) => {
     }
   }, async (request, reply) => {
     try {
-      const userId = request.user.sub;
+      const targetUserId = request.params.id;
 
       const [user] = await db
         .select({
           id: users.id,
           fullName: users.fullName,
-          email: users.email,
           role: users.role,
           isVerified: users.isVerified,
           ratingAverage: users.ratingAverage, 
@@ -45,7 +46,7 @@ export const getMeRoute: FastifyPluginAsyncZod = async (server) => {
           deletedAt: users.deletedAt 
         })
         .from(users)
-        .where(eq(users.id, userId))
+        .where(eq(users.id, targetUserId))
         .limit(1);
 
       if (!user || user.deletedAt !== null) {
@@ -55,7 +56,6 @@ export const getMeRoute: FastifyPluginAsyncZod = async (server) => {
       return reply.status(200).send({
         id: user.id,
         fullName: user.fullName,
-        email: user.email,
         role: user.role,
         isVerified: user.isVerified,
         ratingAverage: user.ratingAverage,
@@ -63,7 +63,7 @@ export const getMeRoute: FastifyPluginAsyncZod = async (server) => {
       });
 
     } catch (error) {
-      console.error('Erro ao buscar dados do usuário:', error);
+      console.error('Erro ao buscar perfil público do usuário:', error);
       return reply.status(500).send({ message: 'Erro interno do servidor' });
     }
   });
