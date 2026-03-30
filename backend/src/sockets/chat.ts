@@ -28,60 +28,81 @@ export function setupWebSockets(app: FastifyInstance) {
         console.log(`Usuário ${socket.id} entrou na sala: ${roomId}`);
       });
 
-      socket.on('send_message', async (data: SendMessagePayload) => {
+      // O callback permite que o Frontend saiba imediatamente se deu erro ao salvar
+      socket.on('send_message', async (data: SendMessagePayload, callback?: (response: any) => void) => {
         const { roomId, senderId, content } = data;
 
         try {
-          // Salva a mensagem no banco (Histórico)
+          // 1. Salva a mensagem no banco (Síncrono e Imediato)
           const [newMessage] = await db.insert(messages).values({
             roomId,
             senderId,
             content,
           }).returning();
 
-          console.log(`Nova mensagem na sala ${roomId}: ${content}`);
-
           // 2. Emite para todos na sala (Tempo Real)
           app.io.to(roomId).emit('receive_message', newMessage);
 
-          // NOTIFICAÇÃO (FIREBASE)
-          
-          // Descobre quem são as pessoas na sala
-          const room = await db.query.chatRooms.findFirst({
-            where: eq(chatRooms.id, roomId)
-          });
-
-          if (room) {
-            // Se eu sou o participante 1, o destinatário é o 2 (e vice-versa)
-            const targetUserId = room.participant1 === senderId ? room.participant2 : room.participant1;
-
-            // Busca o token do destinatário e o nome de quem enviou (para aparecer na tela do celular)
-            // Usamos Promise.all para fazer as duas buscas no banco ao mesmo tempo
-            const [targetUser, senderUser] = await Promise.all([
-              db.query.users.findFirst({ where: eq(users.id, targetUserId), columns: { fcmToken: true } }),
-              db.query.users.findFirst({ where: eq(users.id, senderId), columns: { fullName: true } })
-            ]);
-
-            // Se o destinatário tem um token salvo, manda a notificação!
-            if (targetUser?.fcmToken && senderUser) {
-              await sendPushNotification(
-                targetUser.fcmToken,
-                `Nova mensagem de ${senderUser.fullName}`,
-                content, // O texto da mensagem que vai aparecer no balãozinho do celular
-                { roomId: roomId, type: 'CHAT_MESSAGE' } // Dados extras para o app abrir a tela certa
-              );
-            }
+          // Avisa ao remetente que a msg foi salva com sucesso
+          if (typeof callback === 'function') {
+            callback({ success: true, message: newMessage });
           }
 
+          // 3. BACKGROUND JOB: Envia o Push Notification (Fire and Forget)
+          processPushNotification(roomId, senderId, content).catch(err => {
+             console.error(`[BACKGROUND PUSH ERROR] Sala ${roomId}:`, err);
+          });
+
         } catch (error) {
-          console.error('Erro ao salvar a mensagem via socket:', error);
+          console.error('Falha crítica ao salvar mensagem:', error);
+          if (typeof callback === 'function') {
+            callback({ success: false, error: 'Erro interno ao salvar mensagem.' });
+          }
         }
       });
 
       socket.on('disconnect', () => {
-        console.log(`Usuário desconectado: ${socket.id}`);
+        console.log(`🔌 Usuário desconectado: ${socket.id}`);
       });
       
     });
   });
+}
+
+// =========================================================
+// FUNÇÃO ASSÍNCRONA PARA BACKGROUND (ISOLADA)
+// =========================================================
+async function processPushNotification(roomId: string, senderId: string, content: string) {
+  const room = await db.query.chatRooms.findFirst({
+    where: eq(chatRooms.id, roomId)
+  });
+
+  if (!room) return;
+
+  const targetUserId = room.participant1 === senderId ? room.participant2 : room.participant1;
+
+  // Busca concorrente: Pega o Token do alvo e o Nome do remetente ao mesmo tempo!
+  const [targetUser, senderUser] = await Promise.all([
+    db.query.users.findFirst({ where: eq(users.id, targetUserId), columns: { id: true, fcmToken: true } }),
+    db.query.users.findFirst({ where: eq(users.id, senderId), columns: { fullName: true } })
+  ]);
+
+  if (targetUser?.fcmToken && senderUser) {
+    try {
+      await sendPushNotification(
+        targetUser.fcmToken,
+        `Nova mensagem de ${senderUser.fullName}`,
+        content,
+        { roomId: roomId, type: 'CHAT_MESSAGE' }
+      );
+    } catch (fbError: any) {
+      console.error('[FIREBASE PUSH] Falha no disparo:', fbError.message);
+      
+      // AUTO-LIMPEZA: Se o usuário desinstalou o app, o Firebase avisa. Nós limpamos o token do banco!
+      if (fbError.code === 'messaging/invalid-registration-token' || fbError.code === 'messaging/registration-token-not-registered') {
+          console.warn(`Limpando FCM Token expirado/inválido para o usuário ${targetUser.id}`);
+          await db.update(users).set({ fcmToken: null }).where(eq(users.id, targetUser.id));
+      }
+    }
+  }
 }
