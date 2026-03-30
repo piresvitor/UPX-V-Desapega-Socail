@@ -6,14 +6,6 @@ import multipart from '@fastify/multipart';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifySocketIO from 'fastify-socket.io';
-import { setupWebSockets } from './sockets/chat';
-import { listMessagesRoute } from './routes/chats/messages';
-import { createFreightRoute } from './routes/freights/create';
-import { availableFreightsRoute } from './routes/freights/available';
-import { acceptFreightRoute } from './routes/freights/accept';
-import { createVerificationRoute } from './routes/verifications/create';
-import { analyzeVerificationRoute } from './routes/verifications/analyze';
-import { getMyVerificationRoute } from './routes/verifications/me'
 
 
 // Importação das rotas
@@ -35,7 +27,22 @@ import { listChatsRoute } from './routes/chats/list';
 import { myFreightsRoute } from './routes/freights/me';
 import { updateFreightStatusRoute } from './routes/freights/status';
 import { initializeFirebase } from './services/firebase';
-
+import { setupWebSockets } from './sockets/chat';
+import { listMessagesRoute } from './routes/chats/messages';
+import { createFreightRoute } from './routes/freights/create';
+import { availableFreightsRoute } from './routes/freights/available';
+import { acceptFreightRoute } from './routes/freights/accept';
+import { createVerificationRoute } from './routes/verifications/create';
+import { analyzeVerificationRoute } from './routes/verifications/analyze';
+import { getMyVerificationRoute } from './routes/verifications/me'
+import { createReviewRoute } from './routes/reviews/create';
+import { listReviewsRoute } from './routes/reviews/list';
+import { getPublicProfileRoute } from './routes/users/get-public';
+import { adminVerifyUserRoute } from './routes/admin/verify'
+import { listPendingVerificationsRoute } from './routes/admin/list-pending'
+import { adminBanUserRoute } from './routes/admin/ban-user'
+import { adminDashboardRoute } from './routes/admin/dashboard'
+import { publicStatisticsRoute } from './routes/public/statistics'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -123,6 +130,14 @@ app.register(myFreightsRoute);
 app.register(createVerificationRoute); 
 app.register(analyzeVerificationRoute);
 app.register(getMyVerificationRoute)
+app.register(createReviewRoute);
+app.register(listReviewsRoute);
+app.register(getPublicProfileRoute)
+app.register(adminVerifyUserRoute)
+app.register(listPendingVerificationsRoute)
+app.register(adminBanUserRoute)
+app. register(adminDashboardRoute)
+app.register(publicStatisticsRoute)
 
 setupWebSockets(app);
 

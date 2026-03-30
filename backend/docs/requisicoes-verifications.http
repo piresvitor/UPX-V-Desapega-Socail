@@ -1,5 +1,5 @@
 ### Variáveis (Preencha com o token do Login)
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NWE5MTYyOS0zMzRmLTRjYmItYWExZi0xMjk5YmI2YTFkYzciLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgxOTk4OX0.dL7uOyikShDtqph3gsp_F0zyOsuxojfykwHLmfnTeyw
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxODZhMWUyZi05MGVlLTQwY2YtYTFkNS0wMDY3ZThlNTMxMjIiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgzODkzOH0.NZZxfL70ikZg_0_An9uoSOH_Jwn_GNpvjpbsW6MtbX8
 @baseUrl = http://127.0.0.1:3333
 
 ### Enviar Documentos para Análise (Upload Real Multipart)

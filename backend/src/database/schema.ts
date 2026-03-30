@@ -10,16 +10,18 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
+// ============================================================================
 // --- ENUMS ---
+// ============================================================================
 export const userRoleEnum = pgEnum('user_role', ['Doador', 'Beneficiário', 'Freteiro', 'Admin']);
 export const itemStatusEnum = pgEnum('item_status', ['Disponível', 'Reservado', 'Doado', 'Cancelado']);
 export const freightStatusEnum = pgEnum('freight_status', ['Pendente', 'Aceito', 'Em Trânsito', 'Finalizado']);
-
-// ENUMS PARA O CHAT
 export const chatRoomTypeEnum = pgEnum('chat_room_type', ['DONATION', 'FREIGHT']);
 export const chatRoomStatusEnum = pgEnum('chat_room_status', ['Ativo', 'Arquivado']);
 
+// ============================================================================
 // --- TABELAS ---
+// ============================================================================
 
 // 1. Usuários
 export const users = pgTable('users', {
@@ -30,6 +32,11 @@ export const users = pgTable('users', {
   role: userRoleEnum('role').default('Beneficiário').notNull(),
   isVerified: boolean('is_verified').default(false).notNull(),
   fcmToken: text('fcm_token'),
+  
+  // --- SISTEMA DE REPUTAÇÃO ---
+  ratingAverage: decimal('rating_average', { precision: 3, scale: 2 }).default('0.00').notNull(), 
+  ratingCount: decimal('rating_count', { precision: 10, scale: 0 }).default('0').notNull(), 
+  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
@@ -49,7 +56,7 @@ export const items = pgTable('items', {
   deletedAt: timestamp('deleted_at'),
 });
 
-// 3. Salas de Chat (Atualizada com type e status)
+// 3. Salas de Chat
 export const chatRooms = pgTable('chat_rooms', {
   id: uuid('id').primaryKey().defaultRandom(),
   itemId: uuid('item_id').references(() => items.id).notNull(),
@@ -82,14 +89,56 @@ export const freightRequests = pgTable('freight_requests', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// --- RELACIONAMENTOS (DRIZZLE ORM) ---
+// 6. Solicitações de Verificação (LGPD + OCR)
+export const verificationRequests = pgTable('verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull().unique(), 
+  encryptedCpf: text('encrypted_cpf').notNull(),
+  identityDocumentUrl: text('identity_document_url').notNull(), 
+  incomeProofUrl: text('income_proof_url').notNull(),           
+  extractedIncome: text('extracted_income'), 
+  ocrConfidence: text('ocr_confidence'),     
+  status: text('status', { 
+    enum: [
+      'Processando_IA',   
+      'Aprovado_Auto',    
+      'Analise_Manual',   
+      'Aprovado_Admin',   
+      'Rejeitado'         
+    ] 
+  }).default('Processando_IA').notNull(),
+  adminMessage: text('admin_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
-export const usersRelations = relations(users, ({ many }) => ({
+// 7. Avaliações (Sistema de Reputação)
+export const reviews = pgTable('reviews', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  reviewerId: uuid('reviewer_id').references(() => users.id).notNull(),
+  revieweeId: uuid('reviewee_id').references(() => users.id).notNull(),
+  itemId: uuid('item_id').references(() => items.id), 
+  rating: decimal('rating', { precision: 2, scale: 1 }).notNull(), 
+  comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+
+// ============================================================================
+// --- RELACIONAMENTOS (DRIZZLE ORM) ---
+// ============================================================================
+
+export const usersRelations = relations(users, ({ many, one }) => ({
   items: many(items),
-  // Um usuário pode estar em várias salas de chat e enviar várias mensagens
   chatRoomsAsParticipant1: many(chatRooms, { relationName: 'participant1' }),
   chatRoomsAsParticipant2: many(chatRooms, { relationName: 'participant2' }),
   messages: many(messages),
+  reviewsGiven: many(reviews, { relationName: 'reviewer' }),
+  reviewsReceived: many(reviews, { relationName: 'reviewee' }),
+  verificationRequest: one(verificationRequests, {
+    fields: [users.id],
+    references: [verificationRequests.userId],
+  }),
 }));
 
 export const itemsRelations = relations(items, ({ one, many }) => ({
@@ -97,7 +146,8 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
     fields: [items.donorId], 
     references: [users.id],  
   }),
-  chatRooms: many(chatRooms), // Um item pode ter várias negociações de chat abertas
+  chatRooms: many(chatRooms),
+  reviews: many(reviews),
 }));
 
 export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
@@ -115,7 +165,7 @@ export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
     references: [users.id],
     relationName: 'participant2',
   }),
-  messages: many(messages), // Uma sala tem muitas mensagens
+  messages: many(messages),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -129,37 +179,19 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
-// TABELA: SOLICITAÇÕES DE VERIFICAÇÃO (LGPD + OCR)
-export const verificationRequests = pgTable('verification_requests', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  
-  // Relação com o usuário
-  userId: uuid('user_id').references(() => users.id).notNull().unique(), // Unique: 1 pedido por pessoa por vez
-  
-  // DADOS SENSÍVEIS (Criptografados)
-  encryptedCpf: text('encrypted_cpf').notNull(),
-  
-  // FOTOS DOS DOCUMENTOS (As URLs do Firebase Storage)
-  identityDocumentUrl: text('identity_document_url').notNull(), // RG/CNH
-  incomeProofUrl: text('income_proof_url').notNull(),           // CadÚnico/Holerite
-  
-  // DADOS EXTRAÍDOS PELO OCR (Tesseract)
-  extractedIncome: text('extracted_income'), // A renda que o robô conseguiu ler (se conseguiu)
-  ocrConfidence: text('ocr_confidence'),     // Nível de confiança da leitura da IA (ex: "85%")
-  
-  // MÁQUINA DE ESTADOS DO PEDIDO
-  status: text('status', { 
-    enum: [
-      'Processando_IA',   // Quando o Tesseract está lendo
-      'Aprovado_Auto',    // Passou direto pela IA (< 1 salário)
-      'Analise_Manual',   // IA não conseguiu ler ou renda duvidosa -> Vai pro Admin
-      'Aprovado_Admin',   // Admin olhou e deu o selo
-      'Rejeitado'         // Admin recusou (fraude, ilegível, etc)
-    ] 
-  }).default('Processando_IA').notNull(),
-  
-  adminMessage: text('admin_message'),
-  
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  reviewer: one(users, {
+    fields: [reviews.reviewerId],
+    references: [users.id],
+    relationName: 'reviewer',
+  }),
+  reviewee: one(users, {
+    fields: [reviews.revieweeId],
+    references: [users.id],
+    relationName: 'reviewee',
+  }),
+  item: one(items, {
+    fields: [reviews.itemId],
+    references: [items.id],
+  }),
+}));

@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db } from '../../database/cliente';
@@ -8,12 +8,38 @@ import { processOcrInBackground } from '../../services/ocr';
 import { isValidCPF } from '../../utils/validators-cpf'; 
 import { authenticateToken } from '../../middleware/auth';
 
-// O Zod  repassa o trabalho para a  função de verificação de CPF
+// O Zod repassa o trabalho para a função de verificação de CPF
 const cpfSchema = z.string().refine(isValidCPF, { message: "CPF inválido." });
 
-export async function createVerificationRoute(app: FastifyInstance) {
-  
-  app.post('/verifications', { preHandler: [authenticateToken] }, async (request, reply) => {
+export const createVerificationRoute: FastifyPluginAsyncZod = async (server) => {
+  server.post('/verifications', {
+    onRequest: [authenticateToken],
+    schema: {
+      tags: ['Verifications (LGPD & OCR)'],
+      summary: 'Enviar Documentos para Verificação',
+      description: 'Recebe o CPF e as fotos do RG e Comprovante de Renda via multipart/form-data. Processa as imagens na memória RAM e aciona a IA (OCR) para validação anti-fraude.',
+      consumes: ['multipart/form-data'], // Avisa o Swagger que é uma rota de upload
+      headers: z.object({
+        authorization: z.string().regex(/^Bearer .+/, 'Authorization header must be Bearer token')
+      }),
+      response: {
+        200: z.object({
+          message: z.string(),
+          requestId: z.string().uuid()
+        }),
+        201: z.object({
+          message: z.string(),
+          requestId: z.string().uuid()
+        }),
+        400: z.object({
+          message: z.string()
+        }),
+        500: z.object({
+          message: z.string()
+        })
+      }
+    }
+  }, async (request, reply) => {
     const userId = request.user.sub;
 
     let rawCpf = '';
@@ -96,4 +122,4 @@ export async function createVerificationRoute(app: FastifyInstance) {
       requestId: newRequest.id 
     });
   });
-}
+};
