@@ -61,7 +61,7 @@ export const updateMeRoute: FastifyPluginAsyncZod = async (server) => {
 
         if (existingUser && existingUser.id !== userId) {
           return reply.status(409).send({ 
-            message: 'Este e-mail já está sendo usado por outro usuário' 
+            message: 'Este e-mail já está sendo usado' 
           });
         }
       }

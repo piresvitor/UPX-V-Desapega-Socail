@@ -75,7 +75,7 @@ app.register(multipart, {
   }
 });
 
-// CONFIGURAÇÃO DO SWAGGER 
+// Configurações do Swagger 
 if (process.env.NODE_ENV === "development") {
   app.register(fastifySwagger, {
     openapi: {
@@ -105,7 +105,10 @@ if (process.env.NODE_ENV === "development") {
 // Inicializa o Firebase
 initializeFirebase();
 
-// rotas
+// Serviço de Socket
+setupWebSockets(app);
+
+// Rotas
 app.register(registerRoute);
 app.register(healthRoute)
 app.register(loginRoute)
@@ -138,7 +141,5 @@ app.register(listPendingVerificationsRoute)
 app.register(adminBanUserRoute)
 app. register(adminDashboardRoute)
 app.register(publicStatisticsRoute)
-
-setupWebSockets(app);
 
 export { app };
