@@ -1,0 +1,87 @@
+### Variáveis Iniciais
+# 1. Faça login com um usuário ADMIN e cole o token aqui:
+@tokenAdmin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMTk3YzM2Mi01MTZiLTQ4ZDItODc1NS0wNzUzODc5MzJmYzUiLCJyb2xlIjoiQWRtaW4iLCJpYXQiOjE3NzQ4NDEyNTh9.Ksih6PGv2THy9aD2S-UA6bQBQKQTsPmr6jKxuU0N1xk
+
+# 2. Depois de rodar o TESTE 1, copie o ID de um pedido e cole aqui para os Testes 2 e 3:
+@requestId = c77f6733-8244-4524-8dd3-7129ef405e7c
+
+@baseUrl = http://127.0.0.1:3333
+
+### ============================================================================
+### TESTE 1: Listar Fila de Trabalho (Visão do Dashboard Admin)
+### Expectativa: Retornar todos os usuários que estão no status "Analise_Manual"
+### com os links do cofre do Firebase para o Admin avaliar.
+### ============================================================================
+GET {{baseUrl}}/admin/verifications/pending
+Authorization: Bearer {{tokenAdmin}}
+
+
+### ============================================================================
+### TESTE 2: APROVAR Usuário
+### Expectativa: Status muda para "Aprovado_Admin", isVerified do usuário vira true.
+### ============================================================================
+PATCH {{baseUrl}}/admin/verifications/{{requestId}}
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "action": "Aprovar"
+}
+
+
+### ============================================================================
+### TESTE 3: REJEITAR Usuário (Caso a foto seja falsa ou ilegível)
+### Expectativa: Status muda para "Rejeitado" e salva a mensagem explicando o motivo.
+### ============================================================================
+PATCH {{baseUrl}}/admin/verifications/{{requestId}}
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "action": "Rejeitar",
+  "adminMessage": "A foto do seu Cadastro Único está muito borrada e não conseguimos ler o CPF. Por favor, envie uma foto mais nítida."
+}
+
+### Cole o ID do usuário que será o nosso "alvo" do banimento:
+@targetUserId = COLE_O_ID_DO_USUARIO_AQUI
+
+### ============================================================================
+### TESTE 4: Banir Usuário (O Martelo do Ban)
+### Expectativa: Retornar 200 OK e preencher o deleted_at no banco de dados.
+### ============================================================================
+PATCH {{baseUrl}}/admin/users/{{targetUserId}}/ban
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "action": "Banir"
+}
+
+
+### ============================================================================
+### TESTE 5: Tentar buscar o perfil do usuário banido (Verificar se sumiu)
+### Expectativa: A nossa rota de Perfil deve retornar 404 (Usuário não encontrado)
+### pois nós configuramos ela para ignorar quem tem deletedAt preenchido!
+### ============================================================================
+GET {{baseUrl}}/users/{{targetUserId}}
+Authorization: Bearer {{tokenAdmin}}
+
+
+### ============================================================================
+### TESTE 6: Restaurar Usuário (Desfazer o Ban)
+### Expectativa: Retornar 200 OK e limpar (NULL) o deleted_at no banco de dados.
+### ============================================================================
+PATCH {{baseUrl}}/admin/users/{{targetUserId}}/ban
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "action": "Restaurar"
+}
+
+### ============================================================================
+### TESTE 7: Gerar Relatório do Dashboard (Estatísticas Globais)
+### Expectativa: Retornar um JSON completo com os contadores otimizados do BD.
+### ============================================================================
+GET {{baseUrl}}/admin/dashboard
+Authorization: Bearer {{tokenAdmin}}

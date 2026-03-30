@@ -10,7 +10,7 @@ export const analyzeVerificationRoute: FastifyPluginAsyncZod = async (server) =>
   server.patch('/verifications/:id/analyze', {
     onRequest: [authenticateToken, requireAdmin], 
     schema: {
-      tags: ['Verificações'],
+      tags: ['Verifications (LGPD & OCR)'],
       summary: 'Aprovar ou Rejeitar Documentos',
       description: 'Analisa o pedido, dá o selo de verificado e apaga os documentos (LGPD).',
       params: z.object({

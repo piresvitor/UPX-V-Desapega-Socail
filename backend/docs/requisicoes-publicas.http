@@ -1,0 +1,7 @@
+@baseUrl = http://127.0.0.1:3333
+
+### ============================================================================
+### TESTE 1: Buscar Estatísticas Públicas (Sem Autenticação)
+### Expectativa: Retornar os 3 números gigantes para desenhar a tela inicial.
+### ============================================================================
+GET {{baseUrl}}/public/statistics

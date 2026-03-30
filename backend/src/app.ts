@@ -38,7 +38,11 @@ import { getMyVerificationRoute } from './routes/verifications/me'
 import { createReviewRoute } from './routes/reviews/create';
 import { listReviewsRoute } from './routes/reviews/list';
 import { getPublicProfileRoute } from './routes/users/get-public';
-
+import { adminVerifyUserRoute } from './routes/admin/verify'
+import { listPendingVerificationsRoute } from './routes/admin/list-pending'
+import { adminBanUserRoute } from './routes/admin/ban-user'
+import { adminDashboardRoute } from './routes/admin/dashboard'
+import { publicStatisticsRoute } from './routes/public/statistics'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -129,6 +133,11 @@ app.register(getMyVerificationRoute)
 app.register(createReviewRoute);
 app.register(listReviewsRoute);
 app.register(getPublicProfileRoute)
+app.register(adminVerifyUserRoute)
+app.register(listPendingVerificationsRoute)
+app.register(adminBanUserRoute)
+app. register(adminDashboardRoute)
+app.register(publicStatisticsRoute)
 
 setupWebSockets(app);
 
