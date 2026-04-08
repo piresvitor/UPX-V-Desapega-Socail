@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextType {
@@ -19,6 +19,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const segments = useSegments();
   const router = useRouter();
+  
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
     async function loadStorageData() {
@@ -37,27 +39,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadStorageData();
   }, []);
 
-  // O Porteiro Inteligente
   useEffect(() => {
-    if (isLoading) return;
+    // Se ainda está carregando o banco local ou o GPS, não faz nada
+    if (isLoading || !navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
+    const rootSegment = segments[0];
 
     if (!token) {
-      // Sem token? Verifica o Onboarding
-      if (!hasViewedOnboarding && segments[0] !== 'onboarding') {
+      // Se não tem token e não está no grupo de auth/onboarding, manda pra lá
+      if (!hasViewedOnboarding && rootSegment !== 'onboarding') {
         router.replace('/onboarding');
-      } else if (hasViewedOnboarding && !inAuthGroup) {
+      } else if (hasViewedOnboarding && rootSegment !== '(auth)') {
         router.replace('/(auth)/login');
       }
     } else {
-      // Com token? Protege contra voltar pro login ou onboarding
-      if (!inTabsGroup) {
+      // Se TEM token e está tentando entrar no login/onboarding, manda pra Home
+      if (rootSegment === '(auth)' || rootSegment === 'onboarding' || rootSegment === undefined) {
         router.replace('/(tabs)/home');
       }
     }
-  }, [token, hasViewedOnboarding, segments, isLoading]);
+  }, [token, hasViewedOnboarding, segments, isLoading, navigationState?.key]);
 
   const signIn = async (newToken: string) => {
     await AsyncStorage.setItem('@DesapegaSocial:token', newToken);

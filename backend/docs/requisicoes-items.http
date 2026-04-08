@@ -2,7 +2,7 @@
 # 1. Cole o token recebido no Login aqui para testar as rotas protegidas
 @userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTNjOTFhMC02YzA0LTQzNTEtYmI3YS1iNjgxNTlmMDhhOGUiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDg0Mzc2Nn0.GvC0RpJ6qJomQbFRlKoZwZNV6QS-x5J_u70rg4DAbYQ
 # 2. Após criar um item, copie o ID dele e cole aqui para testar as rotas de baixo
-@itemId = SEU_ITEM_ID_AQUI
+@itemId = 39e5bc94-42f9-429f-a641-69bd1089270b
 
 
 #### ===================================================================
@@ -14,8 +14,8 @@ Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-  "title": "Sofá 3 Lugares Retrátil",
-  "description": "Sofá em bom estado. Precisa de frete grande para retirar.",
+  "title": "geladeira",
+  "description": "Precisa de frete grande para retirar.",
   "category": "Móveis",
   "imageUrls": ["https://exemplo.com/sofa.jpg"],
   "latitude": -23.501533,

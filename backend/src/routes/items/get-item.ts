@@ -11,12 +11,11 @@ export const getItemRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Items'],
       summary: 'Detalhes de um Item Específico',
-      description: 'Retorna os detalhes completos de um item. Bloqueia o acesso se estiver nas primeiras 24h e o usuário não for verificado.',
       headers: z.object({
-        authorization: z.string().regex(/^Bearer .+/, 'Authorization header required')
+        authorization: z.string().regex(/^Bearer .+/)
       }),
       params: z.object({
-        id: z.uuid('O ID do item deve ser um UUID válido')
+        id: z.uuid()
       }),
       response: {
         200: z.object({
@@ -24,11 +23,14 @@ export const getItemRoute: FastifyPluginAsyncZod = async (server) => {
           title: z.string(),
           description: z.string().nullable().optional(),
           category: z.string(),
+          // Garante que se vier nulo do banco, o Zod aceite
           imageUrls: z.array(z.string()).nullable().optional(),
           status: z.string(),
-          latitude: z.string(),
-          longitude: z.string(),
-          createdAt: z.date(),
+          // ⬇️ MUDANÇA AQUI: Coerção para aceitar número ou string e converter
+          latitude: z.coerce.string(), 
+          longitude: z.coerce.string(),
+          // ⬇️ MUDANÇA AQUI: Aceita Date ou string (ISO)
+          createdAt: z.coerce.date(), 
           donor: z.object({
             id: z.uuid(),
             fullName: z.string()
@@ -42,13 +44,12 @@ export const getItemRoute: FastifyPluginAsyncZod = async (server) => {
   }, async (request, reply) => {
     try {
       const { id } = request.params;
-      const userId = request.user.sub; // Usuário que está tentando ver o item
+      const userId = request.user.sub;
 
-      // Busca o item no banco de dados
       const item = await db.query.items.findFirst({
         where: and(
           eq(items.id, id),
-          isNull(items.deletedAt) // Garante que não foi deletado
+          isNull(items.deletedAt)
         ),
         with: {
           donor: {
@@ -57,30 +58,38 @@ export const getItemRoute: FastifyPluginAsyncZod = async (server) => {
         }
       });
 
-      // Se o item não existir, retorna 404
       if (!item) {
-        return reply.status(404).send({ message: 'Item não encontrado ou já foi removido.' });
+        return reply.status(404).send({ message: 'Item não encontrado.' });
       }
 
-      // Regra de Negócio: O usuário tem permissão para ver este item agora?
+      // ⬇️ DICA DE OURO: Verifique se o donorId existe no item retornado
+      // Se o Drizzle não retornar o donorId no findFirst (dependendo do schema), 
+      // a comparação 'item.donorId !== userId' pode falhar.
+
       const [currentUser] = await db.select({ isVerified: users.isVerified })
         .from(users)
         .where(eq(users.id, userId));
 
-      // Calculamos se o item tem menos de 24 horas de vida
       const itemAgeInMs = Date.now() - new Date(item.createdAt).getTime();
       const isUnder24Hours = itemAgeInMs < 24 * 60 * 60 * 1000;
 
-      // Se o item é novo, O usuário NÃO é verificado, e O usuário NÃO é o próprio doador
       if (isUnder24Hours && !currentUser?.isVerified && item.donorId !== userId) {
         return reply.status(403).send({ 
-          message: 'Este item está em período de exclusividade (Prioridade Social). Volte mais tarde.',
+          message: 'Este item está em período de exclusividade.',
           code: 'LOCKED_24H' 
         });
       }
 
-      // Se passou em todas as validações de segurança, entrega o item!
-      return reply.status(200).send(item);
+
+      return reply.status(200).send({
+        ...item,
+        // Extraímos do objeto 'location' que o Drizzle retornou
+        // Convertemos para String para bater com o seu schema Zod
+        latitude: String(item.location.y), 
+        longitude: String(item.location.x),
+        createdAt: item.createdAt,
+        donor: item.donor
+      });
 
     } catch (error) {
       console.error('Erro ao buscar detalhes do item:', error);
