@@ -1,6 +1,6 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { and, desc, eq, isNull, sql, SQL } from 'drizzle-orm';
+import { and, desc, eq, isNull, or, sql, SQL } from 'drizzle-orm'; 
 import { db } from '../../database/cliente';
 import { items, users } from '../../database/schema';
 import { authenticateToken } from '../../middleware/auth'; 
@@ -11,7 +11,7 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Items'],
       summary: 'Feed de Doações',
-      description: 'Lista os itens disponíveis. Usuários não verificados só veem itens após 24h. Oculta doações de usuários banidos.',
+      description: 'Lista os itens disponíveis. Usuários não verificados só veem itens após 24h, a menos que sejam os donos.',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header must be Bearer token')
       }),
@@ -25,7 +25,7 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
       }),
       response: {
         200: z.array(z.object({
-          id: z.string().uuid(), 
+          id: z.uuid(), 
           title: z.string(),
           description: z.string().nullable().optional(),
           category: z.string(),
@@ -33,9 +33,9 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
           status: z.string(),
           latitude: z.string(), 
           longitude: z.string(),
-          createdAt: z.date(),
+          createdAt: z.coerce.date(), 
           donor: z.object({
-            id: z.string().uuid(),
+            id: z.uuid(),
             fullName: z.string()
           })
         })),
@@ -62,7 +62,14 @@ export const listItemsRoute: FastifyPluginAsyncZod = async (server) => {
         .where(eq(users.id, userId));
 
       if (!currentUser?.isVerified) {
-        filters.push(sql`${items.createdAt} <= NOW() - INTERVAL '24 hours'`);
+        filters.push(
+          or(
+            // Regra 1: O item tem mais de 24 horas
+            sql`${items.createdAt} <= NOW() - INTERVAL '24 hours'`,
+            // Regra 2: O item foi postado pelo usuário que está olhando o feed
+            eq(items.donorId, userId)
+          )
+        );
       }
 
       // Busca Geoespacial com PostGIS nativo
