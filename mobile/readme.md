@@ -45,6 +45,12 @@ mobile/frontend/
 * **Integração Espacial (PostGIS):** Envia coordenadas para a API e recebe itens ordenados por proximidade (Raio em KM).
 * **Filtros Dinâmicos:** Barra de busca, chips de categorias e revalidação instantânea de dados via pull-to-refresh.
 
+### ➕ Nova Doação (CreateScreen)
+* **Captura de Mídia Integrada:** Permite ao usuário tirar até 3 fotos usando a câmera do dispositivo ou selecioná-las diretamente da galeria (expo-image-picker).
+* **Upload na Nuvem (Firebase Storage):** Processamento de imagem em Blob e envio direto para o Firebase usando o Client SDK (protegido por variáveis de ambiente .env e fallback). Retorna URLs públicas de alta velocidade (CDN).
+* **GPS Embutido:** Coleta silenciosa das coordenadas exatas no momento da publicação (expo-location) com sistema de fallback caso o GPS falhe, garantindo que o usuário não seja travado.git a
+* **Sincronização de Estado:** Após o envio bem-sucedido (POST /items), invalida automaticamente o cache do TanStack Query, atualizando o Feed e o Perfil instantaneamente sem necessidade de recarregar o app.
+
 ### 🔍 Detalhes da Doação (ItemDetailsScreen)
 * **Trava de Prioridade Social (24h):** Bloqueia a solicitação do item caso seja novo e o usuário não seja verificado (exceto se for o dono).
 * **Mapa de Privacidade:** Renderiza um mapa interativo desenhando um círculo de 700 metros de raio, protegendo o endereço exato do doador.
