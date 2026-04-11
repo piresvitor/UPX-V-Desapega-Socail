@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3333
 # 1. Cole o token recebido no Login aqui para testar as rotas protegidas
-@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTNjOTFhMC02YzA0LTQzNTEtYmI3YS1iNjgxNTlmMDhhOGUiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDg0Mzc2Nn0.GvC0RpJ6qJomQbFRlKoZwZNV6QS-x5J_u70rg4DAbYQ
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQwZjM0MS04ZTdjLTQwOGYtOTIxOC1lMmMzYTBiYWYxMTYiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NTkxNTM3MX0.xIuUblQVsfWqbScmmdVjogsgyq1dXPGxM2BNoETtTas
 # 2. Após criar um item, copie o ID dele e cole aqui para testar as rotas de baixo
 @itemId = 39e5bc94-42f9-429f-a641-69bd1089270b
 
@@ -14,7 +14,7 @@ Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-  "title": "geladeira",
+  "title": "Geladeira Test",
   "description": "Precisa de frete grande para retirar.",
   "category": "Móveis",
   "imageUrls": ["https://exemplo.com/sofa.jpg"],

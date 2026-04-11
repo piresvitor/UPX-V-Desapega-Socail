@@ -172,7 +172,12 @@ export default function ItemDetailsScreen() {
 
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.categorySubText}>📦 Categoria: {item.category}</Text>
-        <Text style={styles.donorInfo}>Postado por {item.donor.fullName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+        <Text style={{ fontSize: 15, color: '#666' }}>Postado por </Text>
+            <TouchableOpacity onPress={() => router.push(`/user/${item.donor.id}`)}>
+            <Text style={styles.donorNameLink}>{item.donor.fullName}</Text>
+        </TouchableOpacity>
+        </View>
         
         <View style={styles.divider} />
         
@@ -269,6 +274,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8 },
   description: { fontSize: 16, color: '#444', lineHeight: 24, marginBottom: 25 },
   
+  donorNameLink: { fontSize: 15, color: '#2196F3', fontWeight: 'bold', textDecorationLine: 'underline' },
+
   mapContainer: { borderRadius: 12, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#EEE', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1 },
   map: { width: '100%', height: 200 },
 
