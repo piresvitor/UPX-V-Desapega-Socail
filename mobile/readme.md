@@ -31,8 +31,9 @@ mobile/frontend/
 ├── assets/               # Imagens estáticas, ícones e fontes
 ├── package.json          # Dependências e scripts do projeto
 └── README.md             # Documentação do Frontend
+```
 
-## ✨ Funcionalidades Já Desenvolvidas
+## Funcionalidades Já Desenvolvidas
 
 ### 🛡️ Autenticação e Segurança
 * **Onboarding:** Fluxo de apresentação do app para novos usuários.
