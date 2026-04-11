@@ -26,7 +26,7 @@ mobile/frontend/
 │   ├── _layout.tsx       # Layout Raiz (Providers de Autenticação e TanStack Query)
 │   └── onboarding.tsx    # Fluxo de boas-vindas
 ├── src/                  # Lógica de negócios e configurações
-│   ├── contexts/         # Contextos globais (ex: AuthContext - "O Porteiro")
+│   ├── contexts/         # Contextos globais (ex: AuthContext)
 │   └── services/         # Clientes de API (ex: api.ts com Axios)
 ├── assets/               # Imagens estáticas, ícones e fontes
 ├── package.json          # Dependências e scripts do projeto
@@ -48,7 +48,7 @@ mobile/frontend/
 ### ➕ Nova Doação (CreateScreen)
 * **Captura de Mídia Integrada:** Permite ao usuário tirar até 3 fotos usando a câmera do dispositivo ou selecioná-las diretamente da galeria (expo-image-picker).
 * **Upload na Nuvem (Firebase Storage):** Processamento de imagem em Blob e envio direto para o Firebase usando o Client SDK (protegido por variáveis de ambiente .env e fallback). Retorna URLs públicas de alta velocidade (CDN).
-* **GPS Embutido:** Coleta silenciosa das coordenadas exatas no momento da publicação (expo-location) com sistema de fallback caso o GPS falhe, garantindo que o usuário não seja travado.git a
+* **GPS Embutido:** Coleta silenciosa das coordenadas exatas no momento da publicação (expo-location) com sistema de fallback caso o GPS falhe, garantindo que o usuário não seja travado.
 * **Sincronização de Estado:** Após o envio bem-sucedido (POST /items), invalida automaticamente o cache do TanStack Query, atualizando o Feed e o Perfil instantaneamente sem necessidade de recarregar o app.
 
 ### 🔍 Detalhes da Doação (ItemDetailsScreen)
@@ -67,6 +67,7 @@ mobile/frontend/
 * **Edição de Perfil:** Modal interativo para alteração de nome e redefinição de senha.
 * **Deleção em Cascata (Soft Delete):** Exclusão de conta protegida por senha que, através de uma transação no banco de dados, remove automaticamente todos os itens do usuário da plataforma.
 * **Perfil Público:** Tela dedicada para interessados verificarem a reputação e histórico de avaliações de um doador antes do contato.
+
 ## 🛠️ Como Executar o Projeto
 
 1.  Instale as dependências:
