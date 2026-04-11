@@ -61,6 +61,13 @@ mobile/frontend/
 * **Status Dinâmico (PATCH):** Menu nativo interativo para alternar entre "Disponível", "Reservado", "Doado" ou "Cancelado".
 * **Remoção (DELETE):** Confirmação segura para exclusão da doação.
 
+### 💬 Chat em Tempo Real e Inbox
+* **Comunicação Bi-direcional (WebSockets):** Integração com `socket.io-client` para troca de mensagens instantâneas entre doador e beneficiário sem necessidade de recarregar a tela (Pull-to-Refresh).
+* **Gestão de Estado de Conexão:** Feedback visual (Status Dot verde/vermelho) indicando a saúde da conexão do Socket no cabeçalho do chat.
+* **Inbox Inteligente (TanStack Query):** Lista de conversas ativas com cache reativo. Apresenta prévia da última mensagem, prefixo "Você:" para mensagens próprias e badge de "Não Lida" (bolinha azul) para mensagens pendentes.
+* **Leitura Automática:** Sistema silencioso que atualiza o status de leitura (`readAt`) via PATCH ao abrir a sala de chat, invalidando o cache e atualizando a interface da Inbox em tempo real.
+* **Push Notifications (Firebase Cloud Messaging):** Captura nativa do Device Token usando `expo-notifications`. O backend processa o envio de notificações em background de forma concorrente para não travar o fluxo do WebSocket.
+
 ### 👤 Gestão de Perfil e Usuários
 * **Perfil Pessoal:** Hub com dados do usuário, média de estrelas e selo inteligente de "Autenticado Via IA".
 * **Minhas Doações e Avaliações:** Listagens integradas nativamente na aba de perfil para controle rápido.

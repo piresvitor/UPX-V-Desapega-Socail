@@ -33,6 +33,7 @@ export const listChatsRoute: FastifyPluginAsyncZod = async (server) => {
             content: z.string(),
             createdAt: z.date(),
             readAt: z.date().nullable(),
+            senderId: z.uuid(), 
           }).nullable().optional(),
         })),
         500: z.object({ message: z.string() })
@@ -42,34 +43,31 @@ export const listChatsRoute: FastifyPluginAsyncZod = async (server) => {
     try {
       const userId = request.user.sub;
 
-      // Busca todas as salas onde o usuário é o participante 1 OU o participante 2
       const rooms = await db.query.chatRooms.findMany({
         where: or(
           eq(chatRooms.participant1, userId),
           eq(chatRooms.participant2, userId)
         ),
-        orderBy: [desc(chatRooms.createdAt)], // Ordena pelas conversas mais novas
+        orderBy: [desc(chatRooms.createdAt)], 
         with: {
           item: {
             columns: { id: true, title: true, imageUrls: true }
           },
-          user1: { // Dados do participante 1
+          user1: { 
             columns: { id: true, fullName: true }
           },
-          user2: { // Dados do participante 2
+          user2: { 
             columns: { id: true, fullName: true }
           },
-          messages: { // Traz apenas a ÚLTIMA mensagem para fazer o preview do Inbox
+          messages: { 
             orderBy: [desc(messages.createdAt)],
             limit: 1,
-            columns: { content: true, createdAt: true, readAt: true }
+            columns: { content: true, createdAt: true, readAt: true, senderId: true } 
           }
         }
       });
 
-      // Formata os dados para o Frontend 
       const formattedRooms = rooms.map(room => {
-        // Descobre quem é a "outra pessoa" da conversa
         const isUser1 = room.user1.id === userId;
         const otherUser = isUser1 ? room.user2 : room.user1;
 

@@ -45,6 +45,7 @@ import { adminDashboardRoute } from './routes/admin/dashboard'
 import { publicStatisticsRoute } from './routes/public/statistics'
 import { listUsersRoute } from './routes/admin/list-users'
 import { getMyItemsRoute } from './routes/items/get-my-items'
+import { markAsReadRoute } from './routes/chats/read'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -145,5 +146,6 @@ app. register(adminDashboardRoute)
 app.register(publicStatisticsRoute)
 app.register(listUsersRoute)
 app.register(getMyItemsRoute)
+app.register(markAsReadRoute)
 
 export { app };
