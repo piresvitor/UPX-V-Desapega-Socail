@@ -22,7 +22,7 @@ interface ItemDetails {
   description: string;
   category: string;
   imageUrls: string[];
-  status: 'Disponível' | 'Reservado' | 'Doado' | 'Cancelado'; // Tipagem baseada no seu DB
+  status: 'Disponível' | 'Reservado' | 'Doado' | 'Cancelado';
   createdAt: string;
   latitude: string;
   longitude: string;
@@ -54,8 +54,6 @@ export default function ItemDetailsScreen() {
   });
 
   // --- Mutations (Integrações com o Backend) ---
-  
-  // 1. Rota DELETE /items/{id}
   const deleteMutation = useMutation({
     mutationFn: async () => await api.delete(`/items/${id}`),
     onSuccess: () => {
@@ -65,13 +63,21 @@ export default function ItemDetailsScreen() {
     },
   });
 
-  // 2. Rota PATCH /items/{id}/status
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => await api.patch(`/items/${id}/status`, { status: newStatus }),
     onSuccess: (_, variables) => {
       Alert.alert('Sucesso', `Status atualizado para: ${variables}`);
       queryClient.invalidateQueries({ queryKey: ['item', id] });
     },
+  });
+
+  const startChatMutation = useMutation({
+    mutationFn: async () => await api.post('/chats', { itemId: item?.id, type: 'DONATION' }),
+    onSuccess: (response) => {
+      // Redireciona para a sala criada/recuperada
+      router.push(`/chat/${response.data.roomId}`);
+    },
+    onError: () => Alert.alert('Erro', 'Não foi possível iniciar o chat. Tente novamente.')
   });
 
   // --- Lógica de Negócio ---
@@ -96,7 +102,8 @@ export default function ItemDetailsScreen() {
       Alert.alert('Acesso Restrito', 'Usuários não verificados precisam aguardar 24h para solicitar itens novos.');
       return;
     }
-    Alert.alert('Iniciando Chat', 'Conectando você ao doador...');
+    // Dispara a requisição para o backend criar ou recuperar a sala
+    startChatMutation.mutate(); 
   };
 
   const confirmDelete = () => {
@@ -135,7 +142,6 @@ export default function ItemDetailsScreen() {
 
   if (!item || !me) return null;
 
-  // Define a cor da badge de status dinamicamente baseada no Enum
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Disponível': return { bg: '#E8F5E9', text: '#2E7D32' };
@@ -173,10 +179,10 @@ export default function ItemDetailsScreen() {
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.categorySubText}>📦 Categoria: {item.category}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-        <Text style={{ fontSize: 15, color: '#666' }}>Postado por </Text>
-            <TouchableOpacity onPress={() => router.push(`/user/${item.donor.id}`)}>
+          <Text style={{ fontSize: 15, color: '#666' }}>Postado por </Text>
+          <TouchableOpacity onPress={() => router.push(`/user/${item.donor.id}`)}>
             <Text style={styles.donorNameLink}>{item.donor.fullName}</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.divider} />
@@ -215,20 +221,18 @@ export default function ItemDetailsScreen() {
             <Text style={styles.ownerTitle}>Painel do Doador</Text>
             
             <View style={styles.ownerActionRow}>
-              {/* Botão de Editar (Rota PUT) */}
               <TouchableOpacity 
                 style={[styles.btnHalf, styles.btnEdit]} 
-                onPress={() => router.push(`/item/edit/${id}`)}              >
+                onPress={() => router.push(`/item/edit/${id}`)}
+              >
                 <Text style={styles.btnTextWhite}>Editar</Text>
               </TouchableOpacity>
 
-              {/* Botão de Alterar Status (Rota PATCH) */}
               <TouchableOpacity style={[styles.btnHalf, styles.btnOutline]} onPress={handleStatusChange}>
                 <Text style={styles.btnTextOutline}>Status</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Botão de Deletar (Rota DELETE) */}
             <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={confirmDelete}>
               <Text style={styles.btnTextWhite}>Remover Doação</Text>
             </TouchableOpacity>
@@ -238,10 +242,15 @@ export default function ItemDetailsScreen() {
             style={[styles.btn, isLocked ? styles.btnLocked : styles.btnPrimary]} 
             onPress={handleRequestDonation}
             activeOpacity={0.8}
+            disabled={startChatMutation.isPending || isLocked}
           >
-            <Text style={styles.btnTextWhite}>
-              {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
-            </Text>
+            {startChatMutation.isPending ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.btnTextWhite}>
+                {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
@@ -268,7 +277,6 @@ const styles = StyleSheet.create({
   
   title: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A', marginBottom: 6 },
   categorySubText: { fontSize: 14, color: '#2196F3', fontWeight: 'bold', marginBottom: 6 },
-  donorInfo: { fontSize: 15, color: '#666', marginBottom: 15 },
   divider: { height: 1, backgroundColor: '#F0F0F0', marginBottom: 20 },
   
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8 },
@@ -281,18 +289,17 @@ const styles = StyleSheet.create({
 
   footer: { paddingHorizontal: 20, marginTop: 10 },
   
-  // Estilos do Painel do Doador
   ownerTitle: { fontSize: 14, fontWeight: 'bold', color: '#777', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   ownerGrid: { gap: 10 },
   ownerActionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   btnHalf: { flex: 1, height: 50, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  btnEdit: { backgroundColor: '#4CAF50' }, // Verde para edição
+  btnEdit: { backgroundColor: '#4CAF50' }, 
   
   btn: { height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', width: '100%' },
   btnPrimary: { backgroundColor: '#2196F3' },
   btnLocked: { backgroundColor: '#B0BEC5' },
   btnOutline: { backgroundColor: '#FFF', borderWidth: 2, borderColor: '#2196F3' },
-  btnDanger: { backgroundColor: '#FF5252' }, // Vermelho para deletar
+  btnDanger: { backgroundColor: '#FF5252' }, 
   
   btnTextWhite: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   btnTextOutline: { color: '#2196F3', fontSize: 16, fontWeight: 'bold' },
