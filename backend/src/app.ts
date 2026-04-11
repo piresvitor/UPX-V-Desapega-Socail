@@ -44,6 +44,7 @@ import { adminBanUserRoute } from './routes/admin/ban-user'
 import { adminDashboardRoute } from './routes/admin/dashboard'
 import { publicStatisticsRoute } from './routes/public/statistics'
 import { listUsersRoute } from './routes/admin/list-users'
+import { getMyItemsRoute } from './routes/items/get-my-items'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -143,5 +144,6 @@ app.register(adminBanUserRoute)
 app. register(adminDashboardRoute)
 app.register(publicStatisticsRoute)
 app.register(listUsersRoute)
+app.register(getMyItemsRoute)
 
 export { app };

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { verify } from 'argon2';
 import { db } from '../../database/cliente';
-import { users } from '../../database/schema';
+import { users, items } from '../../database/schema';
 import { authenticateToken } from '../../middleware/auth';
 
 export const deleteMeRoute: FastifyPluginAsyncZod = async (server) => {
@@ -12,7 +12,7 @@ export const deleteMeRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Users'],
       summary: 'Delete User (Soft Delete)',
-      description: 'Desativa a conta do usuário autenticado mediante confirmação de senha.',
+      description: 'Desativa a conta do usuário autenticado e remove automaticamente suas doações.',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header must be Bearer token')
       }),
@@ -31,33 +31,37 @@ export const deleteMeRoute: FastifyPluginAsyncZod = async (server) => {
       const userId = request.user.sub;
       const { password } = request.body;
 
-      //Verificar se o usuário existe e se já não foi deletado
       const [existingUser] = await db
         .select()
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
 
-      // Se não existir OU se a coluna deletedAt já estiver preenchida
       if (!existingUser || existingUser.deletedAt !== null) {
         return reply.status(404).send({ message: 'Usuário não encontrado ou já excluído' });
       }
 
-      // Verificar se a senha confere com o hash do banco
       const isPasswordValid = await verify(existingUser.passwordHash, password);
       
       if (!isPasswordValid) {
         return reply.status(403).send({ message: 'Senha incorreta. Não foi possível excluir a conta.' });
       }
 
-      // Aplicar o Soft Delete
-      // Em vez de "db.delete()", nós fazemos um update na data de exclusão
-      await db
-        .update(users)
-        .set({ deletedAt: new Date() })
-        .where(eq(users.id, userId));
+      const now = new Date();
 
-      return reply.status(200).send({ message: 'Sua conta foi desativada com sucesso.' });
+      await db.transaction(async (tx) => {
+        // 1. Soft Delete no Usuário
+        await tx.update(users)
+          .set({ deletedAt: now })
+          .where(eq(users.id, userId));
+
+        // 2. Soft Delete automático em TODOS os itens deste usuário
+        await tx.update(items)
+          .set({ deletedAt: now })
+          .where(eq(items.donorId, userId));
+      });
+
+      return reply.status(200).send({ message: 'Sua conta e itens foram desativados com sucesso.' });
 
     } catch (error) {
       console.error('Erro ao excluir conta:', error);
