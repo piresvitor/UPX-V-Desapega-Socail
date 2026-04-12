@@ -68,6 +68,12 @@ mobile/frontend/
 * **Leitura Automática:** Sistema silencioso que atualiza o status de leitura (`readAt`) via PATCH ao abrir a sala de chat, invalidando o cache e atualizando a interface da Inbox em tempo real.
 * **Push Notifications (Firebase Cloud Messaging):** Captura nativa do Device Token usando `expo-notifications`. O backend processa o envio de notificações em background de forma concorrente para não travar o fluxo do WebSocket.
 
+### ⭐ Sistema de Reputação e Avaliações
+* **Gatilho Contextual (Smart Banner):** Exibição dinâmica de um banner dourado dentro da Sala de Chat de negociações assim que o status do item é alterado para "Doado".
+* **Modal Interativo:** Tela em formato Modal/BottomSheet utilizando ícones vetoriais interativos (@expo/vector-icons) para seleção de 1 a 5 estrelas e campo de feedback descritivo.
+* **Prevenção de Duplicidade (UX/UI):** Verificação silenciosa via TanStack Query que esconde automaticamente o botão de avaliar caso o usuário já tenha registrado uma nota na negociação, aliada ao tratamento de erros de Unique Index em nível de banco de dados.
+* **Sincronização Imediata:** Invalidação de cache instantânea que atualiza a média e a lista de avaliações no Perfil Público do usuário no exato milissegundo em que a revisão é enviada, refletindo o novo Social Proof da plataforma.
+
 ### 👤 Gestão de Perfil e Usuários
 * **Perfil Pessoal:** Hub com dados do usuário, média de estrelas e selo inteligente de "Autenticado Via IA".
 * **Minhas Doações e Avaliações:** Listagens integradas nativamente na aba de perfil para controle rápido.

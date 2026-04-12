@@ -32,14 +32,34 @@ export default function ChatRoomScreen() {
     queryFn: async () => (await api.get('/users/me')).data,
   });
 
-  // Puxa a lista de chats do cache
   const { data: chats } = useQuery({
     queryKey: ['chats'],
     queryFn: async () => (await api.get('/chats')).data,
   });
 
-  // Encontra os detalhes desta sala específica
   const currentChat = chats?.find((c: any) => c.id === roomId);
+
+  const { data: itemDetails } = useQuery({
+    queryKey: ['item', currentChat?.item?.id],
+    queryFn: async () => (await api.get(`/items/${currentChat?.item?.id}`)).data,
+    enabled: !!currentChat?.item?.id, 
+  });
+
+  const { data: myReviewForThisItem } = useQuery({
+    queryKey: ['review_check', me?.id, currentChat?.otherUser?.id, currentChat?.item?.id],
+    queryFn: async () => {
+      if (!currentChat?.otherUser?.id) return false;
+      const response = await api.get(`/reviews/${currentChat.otherUser.id}`);
+      const reviews = response.data;
+      
+      return reviews.some((r: any) => {
+        const isMe = r.reviewer.id === me?.id;
+        const isThisItem = r.itemId ? r.itemId === currentChat?.item?.id : true;
+        return isMe && isThisItem;
+      });
+    },
+    enabled: !!me?.id && !!currentChat?.otherUser?.id,
+  });
 
   const { isLoading: loadingHistory } = useQuery({
     queryKey: ['chatMessages', roomId],
@@ -51,12 +71,10 @@ export default function ChatRoomScreen() {
     enabled: !!roomId,
   });
 
-  // arca as mensagens como lidas ao entrar na sala ---
   useEffect(() => {
     const markMessagesAsRead = async () => {
       try {
         await api.patch(`/chats/${roomId}/read`);
-        // Invalida a lista de chats para que a bolinha azul suma imediatamente na Inbox
         queryClient.invalidateQueries({ queryKey: ['chats'] });
       } catch (error) {
         console.error('Erro ao marcar mensagens como lidas', error);
@@ -68,11 +86,9 @@ export default function ChatRoomScreen() {
     }
   }, [roomId, queryClient]);
 
-  // --- Conexão WebSocket ---
   useEffect(() => {
     const connectSocket = async () => {
       const token = await AsyncStorage.getItem('@DesapegaSocial:token');
-      
       const BACKEND_URL = 'http://10.0.2.2:3333'; 
 
       socketRef.current = io(BACKEND_URL, {
@@ -88,7 +104,6 @@ export default function ChatRoomScreen() {
       socketRef.current.on('receive_message', (newMessage: Message) => {
         setMessages((prevMessages) => [newMessage, ...prevMessages]);
         
-        // Se eu recebi a mensagem E estou com a tela aberta, marco ela como lida na hora!
         if (newMessage.senderId !== me?.id) {
              api.patch(`/chats/${roomId}/read`).then(() => {
                  queryClient.invalidateQueries({ queryKey: ['chats'] });
@@ -157,9 +172,19 @@ export default function ChatRoomScreen() {
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {currentChat ? currentChat.otherUser.fullName : 'Carregando...'}
-          </Text>
+          {/* NOVO: Nome agora é um botão clicável que leva ao Perfil Público */}
+          <TouchableOpacity 
+            activeOpacity={0.7}
+            onPress={() => {
+              if (currentChat?.otherUser?.id) {
+                router.push(`/user/${currentChat.otherUser.id}`);
+              }
+            }}
+          >
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {currentChat ? currentChat.otherUser.fullName : 'Carregando...'}
+            </Text>
+          </TouchableOpacity>
           {currentChat && (
             <Text style={styles.headerSub} numberOfLines={1}>
               📦 {currentChat.item.title}
@@ -169,6 +194,29 @@ export default function ChatRoomScreen() {
 
         <View style={[styles.statusDot, { backgroundColor: isSocketConnected ? '#4CAF50' : '#F44336' }]} />
       </View>
+
+      {/* BANNER DE AVALIAÇÃO */}
+      {itemDetails?.status === 'Doado' && currentChat && !myReviewForThisItem && (
+        <View style={styles.reviewBanner}>
+          <View style={styles.reviewBannerTextContainer}>
+            <Text style={styles.reviewBannerTitle}>Doação Concluída! 🎉</Text>
+            <Text style={styles.reviewBannerSub}>Como foi negociar com {currentChat.otherUser.fullName}?</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.reviewBannerBtn}
+            onPress={() => router.push({
+              pathname: '/review/create' as any,
+              params: { 
+                revieweeId: currentChat.otherUser.id, 
+                revieweeName: currentChat.otherUser.fullName,
+                itemId: currentChat.item.id 
+              }
+            })}
+          >
+            <Text style={styles.reviewBannerBtnText}>⭐ Avaliar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {loadingHistory ? (
         <View style={styles.center}><ActivityIndicator size="large" color="#2196F3" /></View>
@@ -208,13 +256,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E5DDD5' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  header: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#DDD', elevation: 2 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#DDD', elevation: 2, zIndex: 10 },
   backBtn: { width: 70 },
   backBtnText: { fontSize: 16, color: '#2196F3', fontWeight: 'bold' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  // Adicionei um leve sublinhado para o usuário saber que é clicável (opcional)
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', textDecorationLine: 'underline' },
   headerSub: { fontSize: 13, color: '#666', marginTop: 2 },
   statusDot: { width: 10, height: 10, borderRadius: 5, alignSelf: 'center', flex: 0 },
+
+  reviewBanner: { flexDirection: 'row', backgroundColor: '#FFF9C4', padding: 15, alignItems: 'center', borderBottomWidth: 1, borderColor: '#FBC02D', elevation: 1 },
+  reviewBannerTextContainer: { flex: 1, paddingRight: 10 },
+  reviewBannerTitle: { fontSize: 14, fontWeight: 'bold', color: '#F57F17' },
+  reviewBannerSub: { fontSize: 12, color: '#777', marginTop: 2 },
+  reviewBannerBtn: { backgroundColor: '#F57F17', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20 },
+  reviewBannerBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
 
   listContent: { padding: 15, gap: 10 },
 
