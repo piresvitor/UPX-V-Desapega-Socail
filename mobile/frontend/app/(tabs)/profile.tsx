@@ -68,6 +68,13 @@ export default function ProfileScreen() {
     setEditModalVisible(true);
   };
 
+  // Helper para renderizar estrelas visuais (ex: ★★★☆☆)
+  const renderStars = (rating: number) => {
+    const filled = '★'.repeat(rating);
+    const empty = '☆'.repeat(5 - rating);
+    return <Text style={styles.reviewStars}>{filled}<Text style={styles.emptyStars}>{empty}</Text></Text>;
+  };
+
   if (loadingProfile) return <View style={styles.center}><ActivityIndicator size="large" color="#2196F3" /></View>;
 
   return (
@@ -79,7 +86,7 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{profile?.email}</Text>
         
         {profile?.isVerified && (
-          <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Usuário Autenticado Via IA</Text></View>
+          <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Usuário Verificado Via IA</Text></View>
         )}
 
         <View style={styles.ratingBox}>
@@ -90,8 +97,12 @@ export default function ProfileScreen() {
 
       {/* TABS SELECTOR */}
       <View style={styles.tabsHeader}>
-        <TouchableOpacity style={[styles.tabBtn, activeTab === 'itens' && styles.tabBtnActive]} onPress={() => setActiveTab('itens')}><Text style={[styles.tabBtnText, activeTab === 'itens' && styles.tabBtnTextActive]}>Meus Itens</Text></TouchableOpacity>
-        <TouchableOpacity style={[styles.tabBtn, activeTab === 'avaliacoes' && styles.tabBtnActive]} onPress={() => setActiveTab('avaliacoes')}><Text style={[styles.tabBtnText, activeTab === 'avaliacoes' && styles.tabBtnTextActive]}>Avaliações</Text></TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, activeTab === 'itens' && styles.tabBtnActive]} onPress={() => setActiveTab('itens')}>
+          <Text style={[styles.tabBtnText, activeTab === 'itens' && styles.tabBtnTextActive]}>Meus Itens</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, activeTab === 'avaliacoes' && styles.tabBtnActive]} onPress={() => setActiveTab('avaliacoes')}>
+          <Text style={[styles.tabBtnText, activeTab === 'avaliacoes' && styles.tabBtnTextActive]}>Avaliações</Text>
+        </TouchableOpacity>
       </View>
 
       {/* LISTAGENS */}
@@ -107,7 +118,9 @@ export default function ProfileScreen() {
                 )}
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: 'red' }]}>{item.status}</Text>
+                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: '#F44336' }, item.status === 'Reservado' && { color: '#FF9800' }]}>
+                    {item.status}
+                  </Text>
                 </View>
               </TouchableOpacity>
             )) : <Text style={styles.emptyText}>Você ainda não postou nada.</Text>
@@ -118,11 +131,14 @@ export default function ProfileScreen() {
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <Text style={styles.reviewerName}>{review.reviewer.fullName}</Text>
-                  <Text style={styles.reviewStars}>{'★'.repeat(review.rating)}</Text>
+                  {renderStars(review.rating)}
                 </View>
                 <Text style={styles.reviewComment}>{review.comment}</Text>
+                <Text style={styles.reviewDate}>
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </Text>
               </View>
-            )) : <Text style={styles.emptyText}>Nenhuma avaliação recebida.</Text>
+            )) : <Text style={styles.emptyText}>Você ainda não recebeu avaliações.</Text>
           )
         )}
       </View>
@@ -138,7 +154,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btnLogout} onPress={() => signOut()}>
-          <Text style={styles.btnLogoutText}>Sair</Text>
+          <Text style={styles.btnLogoutText}>Sair do App</Text>
         </TouchableOpacity>
       </View>
 
@@ -147,18 +163,18 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
-                <Text style={{marginBottom: 15, color: '#666'}}>Digite sua senha para desativar a conta:</Text>
+                <Text style={styles.modalSubText}>Digite sua senha para desativar a conta:</Text>
                 <TextInput style={styles.modalInput} placeholder="Sua senha" secureTextEntry value={passwordConfirm} onChangeText={setPasswordConfirm} />
                 <View style={styles.modalRow}>
-                    <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={{padding: 10}}><Text>Cancelar</Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
                     <TouchableOpacity 
                       onPress={() => {
                         if(!passwordConfirm) return Alert.alert('Atenção', 'Senha obrigatória');
                         deactivateMutation.mutate(passwordConfirm);
                       }} 
-                      style={{padding: 10}}
+                      style={styles.modalBtnConfirmDanger}
                     >
-                      {deactivateMutation.isPending ? <ActivityIndicator color="red" /> : <Text style={{color: 'red', fontWeight: 'bold'}}>Confirmar</Text>}
+                      {deactivateMutation.isPending ? <ActivityIndicator color="#FFF" /> : <Text style={styles.confirmDangerText}>Confirmar</Text>}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -178,9 +194,9 @@ export default function ProfileScreen() {
                 <TextInput style={styles.modalInput} value={editPassword} onChangeText={setEditPassword} placeholder="Deixe em branco para não alterar" secureTextEntry />
 
                 <View style={styles.modalRow}>
-                    <TouchableOpacity onPress={() => setEditModalVisible(false)} style={{padding: 10}}><Text>Cancelar</Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
                     <TouchableOpacity 
-                      style={styles.btnConfirmEdit}
+                      style={styles.modalBtnConfirm}
                       disabled={updateProfileMutation.isPending}
                       onPress={() => {
                         const payload: any = {};
@@ -194,7 +210,7 @@ export default function ProfileScreen() {
                         }
                       }} 
                     >
-                      {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={{color: '#fff', fontWeight: 'bold'}}>Salvar</Text>}
+                      {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmText}>Salvar</Text>}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -208,35 +224,46 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#f0f0f0' },
-  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#2196F3', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  
+  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#f0f0f0', backgroundColor: '#FFF' },
+  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#2196F3', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 3 },
   avatarText: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
-  name: { fontSize: 22, fontWeight: 'bold' },
-  email: { color: '#666', marginBottom: 10 },
-  verifiedBadge: { backgroundColor: '#E0F2F1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#4DB6AC' },
+  name: { fontSize: 24, fontWeight: 'bold', color: '#111827' },
+  email: { color: '#6B7280', marginBottom: 12 },
+  
+  verifiedBadge: { backgroundColor: '#E0F2F1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#4DB6AC' },
   verifiedText: { color: '#00796B', fontWeight: 'bold', fontSize: 12 },
-  ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
-  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#F57F17', marginRight: 5 },
+  
+  ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#F57F17', marginRight: 6 },
   ratingLabel: { color: '#777', fontWeight: 'bold' },
-  tabsHeader: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f0f0f0' },
-  tabBtn: { flex: 1, padding: 15, alignItems: 'center', borderBottomWidth: 2, borderColor: 'transparent' },
+  
+  tabsHeader: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E7EB' },
+  tabBtn: { flex: 1, padding: 16, alignItems: 'center', borderBottomWidth: 2, borderColor: 'transparent' },
   tabBtnActive: { borderColor: '#2196F3' },
-  tabBtnText: { color: '#999', fontWeight: 'bold' },
+  tabBtnText: { color: '#9CA3AF', fontWeight: 'bold', fontSize: 15 },
   tabBtnTextActive: { color: '#2196F3' },
-  listContainer: { padding: 20, minHeight: 150 },
-  itemCard: { flexDirection: 'row', backgroundColor: '#f9f9f9', padding: 10, borderRadius: 10, marginBottom: 10, alignItems: 'center', borderWidth: 1, borderColor: '#eee' },
-  itemThumb: { width: 50, height: 50, borderRadius: 5, backgroundColor: '#ddd' },
-  itemThumbPlaceholder: { width: 50, height: 50, borderRadius: 5, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
-  itemInfo: { marginLeft: 15 },
-  itemTitle: { fontWeight: 'bold', fontSize: 16 },
-  itemStatus: { color: '#4CAF50', fontSize: 12, fontWeight: 'bold', marginTop: 2 },
-  reviewCard: { padding: 15, borderBottomWidth: 1, borderColor: '#f0f0f0' },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  reviewerName: { fontWeight: 'bold', color: '#333' },
-  reviewStars: { color: '#FFA000' },
-  reviewComment: { color: '#555' },
-  emptyText: { textAlign: 'center', color: '#999', marginTop: 20, fontStyle: 'italic' },
-  actions: { padding: 20, gap: 12 },
+  
+  listContainer: { padding: 20, minHeight: 200 },
+  
+  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', elevation: 1 },
+  itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#ddd' },
+  itemThumbPlaceholder: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  itemInfo: { marginLeft: 16, flex: 1 },
+  itemTitle: { fontWeight: 'bold', fontSize: 16, color: '#1F2937' },
+  itemStatus: { color: '#4CAF50', fontSize: 13, fontWeight: 'bold', marginTop: 4 },
+  
+  reviewCard: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#F3F4F6' },
+  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' },
+  reviewerName: { fontWeight: 'bold', color: '#1F2937', fontSize: 15 },
+  reviewStars: { color: '#F59E0B', fontSize: 16, letterSpacing: 2 },
+  emptyStars: { color: '#E5E7EB' },
+  reviewComment: { color: '#4B5563', fontSize: 14, lineHeight: 20 },
+  reviewDate: { color: '#9CA3AF', fontSize: 12, marginTop: 8 },
+  
+  emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
+  
+  actions: { padding: 20, gap: 12, marginBottom: 30 },
   btnEdit: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFF' },
   btnEditText: { color: '#374151', fontSize: 16, fontWeight: 'bold' },
   btnDanger: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FFF' },
@@ -244,11 +271,18 @@ const styles = StyleSheet.create({
   btnLogout: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' },
   btnLogoutText: { color: '#B91C1C', fontSize: 16, fontWeight: 'bold' },
   
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', padding: 24, borderRadius: 15 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 5 },
-  modalInput: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 16 },
-  modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, alignItems: 'center' },
-  btnConfirmEdit: { backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 }
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', padding: 24, borderRadius: 16, elevation: 5 },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 8, color: '#111827' },
+  modalSubText: { marginBottom: 20, color: '#6B7280', fontSize: 15 },
+  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 6, marginTop: 10 },
+  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 15, fontSize: 16, backgroundColor: '#F9FAFB' },
+  
+  modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center', marginTop: 10 },
+  modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
+  cancelText: { color: '#6B7280', fontWeight: '600', fontSize: 15 },
+  modalBtnConfirm: { backgroundColor: '#2196F3', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
+  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+  modalBtnConfirmDanger: { backgroundColor: '#EF4444', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
+  confirmDangerText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 }
 });

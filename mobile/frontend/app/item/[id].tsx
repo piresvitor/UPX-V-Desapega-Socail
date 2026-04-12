@@ -238,20 +238,39 @@ export default function ItemDetailsScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity 
-            style={[styles.btn, isLocked ? styles.btnLocked : styles.btnPrimary]} 
-            onPress={handleRequestDonation}
-            activeOpacity={0.8}
-            disabled={startChatMutation.isPending || isLocked}
-          >
-            {startChatMutation.isPending ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.btnTextWhite}>
-                {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
-              </Text>
-            )}
-          </TouchableOpacity>
+          /* Se NÃO for o dono, checa o status do item */
+          item.status === 'Doado' ? (
+            /* Botão de Avaliação Interativo que abre o Modal */
+            <TouchableOpacity 
+              style={[styles.btn, styles.btnOutline]} 
+              onPress={() => router.push({
+                pathname: '/review/create',
+                params: { 
+                  revieweeId: item.donor.id, 
+                  revieweeName: item.donor.fullName,
+                  itemId: item.id 
+                }
+              })}
+            >
+              <Text style={styles.btnTextOutline}>⭐ Avaliar Doador</Text>
+            </TouchableOpacity>
+          ) : (
+            /* Botão Padrão de Solicitação */
+            <TouchableOpacity 
+              style={[styles.btn, isLocked ? styles.btnLocked : styles.btnPrimary]} 
+              onPress={handleRequestDonation}
+              activeOpacity={0.8}
+              disabled={startChatMutation.isPending || isLocked}
+            >
+              {startChatMutation.isPending ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.btnTextWhite}>
+                  {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )
         )}
       </View>
     </ScrollView>
