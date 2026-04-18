@@ -44,14 +44,13 @@ A arquitetura do projeto foi desenhada para ser escalável, segura e de alta per
 4. **Admin / ONG:** Curadoria da plataforma, moderação e aprovação manual de documentos.
 
 ## 📅 Status do Projeto (UPX)
-Este ecossistema está sendo desenvolvido como Projeto de Extensão (UPX) do último semestre de **Análise e Desenvolvimento de Sistemas (ADS)** no **Centro Universitário Facens** (Sorocaba-SP).
 
-**Fase Atual:** Integração e Construção do App Mobile.
+**Fase Atual:** Finalizando o ecossistema de segurança e iniciando o RBAC.
 * ✅ **Documentação e Requisitos:** Concluídos.
-* ✅ **Backend (API Core):** CRUDs, PostGIS, Autenticação, Trava de 24h, WebSockets e Firebase Finalizados.
-* ✅ **Frontend (UI Core & Maps):** Autenticação, Feed com Filtros Geográficos e CRUD do Doador finalizados.
-* ⏳ **Frontend (Funcionalidades Avançadas):** Chat e Fluxo Logístico em andamento.
-
+* ✅ **Backend (API Core):** CRUDs, PostGIS, Autenticação, Trava de 24h e WebSockets concluídos.
+* ✅ **Segurança e IA (Fase 2):** Fluxo de OCR Tesseract.js com algoritmo de tolerância a falhas e criptografia AES-256 concluído.
+* ✅ **Frontend (UI & Segurança):** Chat, Sistema de Avaliações e Verificação de Identidade via IA integrados.
+* ⏳ **Fase 3 (Expansão de Papéis):** Implementação do Radar de Fretes e Painel Admin em andamento.git add .
 ---
 
 ### 📂 Navegação do Repositório

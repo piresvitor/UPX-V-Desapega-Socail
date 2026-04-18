@@ -16,7 +16,6 @@ export default function ProfileScreen() {
 
   const [activeTab, setActiveTab] = useState<'itens' | 'avaliacoes'>('itens');
   
-  // Estados Modais
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [passwordConfirm, setPasswordConfirm] = useState('');
   
@@ -39,6 +38,19 @@ export default function ProfileScreen() {
     queryKey: ['reviews', 'me', profile?.id],
     queryFn: async () => (await api.get(`/reviews/${profile?.id}`)).data,
     enabled: !!profile?.id
+  });
+
+  // NOVO: Busca o status da verificação para atualizar o selo em tempo real
+  const { data: verificationStatus } = useQuery({
+    queryKey: ['verifications', 'me'],
+    queryFn: async () => {
+      try {
+        return (await api.get('/verifications/me')).data;
+      } catch (error: any) {
+        if (error.response?.status === 404) return null;
+        throw error;
+      }
+    }
   });
 
   // Mutações
@@ -68,7 +80,6 @@ export default function ProfileScreen() {
     setEditModalVisible(true);
   };
 
-  // Helper para renderizar estrelas visuais (ex: ★★★☆☆)
   const renderStars = (rating: number) => {
     const filled = '★'.repeat(rating);
     const empty = '☆'.repeat(5 - rating);
@@ -85,8 +96,15 @@ export default function ProfileScreen() {
         <Text style={styles.name}>{profile?.fullName}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
         
-        {profile?.isVerified && (
-          <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Usuário Verificado Via IA</Text></View>
+        {/* SELOS DINÂMICOS DE VERIFICAÇÃO */}
+        {profile?.isVerified ? (
+          <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Usuário Verificado</Text></View>
+        ) : verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' ? (
+          <View style={styles.pendingBadge}><Text style={styles.pendingText}>⏳ Documentos em Análise</Text></View>
+        ) : verificationStatus?.status === 'Rejeitado' ? (
+          <View style={styles.rejectedBadge}><Text style={styles.rejectedText}>❌ Verificação Rejeitada</Text></View>
+        ) : (
+          <View style={styles.unverifiedBadge}><Text style={styles.unverifiedText}>Conta Limitada (Pendente Verificação)</Text></View>
         )}
 
         <View style={styles.ratingBox}>
@@ -95,7 +113,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* TABS SELECTOR */}
       <View style={styles.tabsHeader}>
         <TouchableOpacity style={[styles.tabBtn, activeTab === 'itens' && styles.tabBtnActive]} onPress={() => setActiveTab('itens')}>
           <Text style={[styles.tabBtnText, activeTab === 'itens' && styles.tabBtnTextActive]}>Meus Itens</Text>
@@ -105,7 +122,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* LISTAGENS */}
       <View style={styles.listContainer}>
         {activeTab === 'itens' ? (
           loadingItems ? <ActivityIndicator color="#2196F3" /> : (
@@ -143,8 +159,23 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* AÇÕES E CONFIGURAÇÕES */}
       <View style={styles.actions}>
+        {/* BOTÃO MUDA DEPENDENDO DO STATUS */}
+        {!profile?.isVerified && (
+          <TouchableOpacity 
+            style={verificationStatus?.status === 'Rejeitado' ? styles.btnVerifyDanger : styles.btnVerify} 
+            onPress={() => router.push('/verification')}
+          >
+            <Text style={styles.btnVerifyText}>
+              {verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' 
+                ? '🔍 Acompanhar Verificação' 
+                : verificationStatus?.status === 'Rejeitado' 
+                ? '⚠️ Tentar Verificação Novamente' 
+                : '🛡️ Enviar Documentos e Remover Trava'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={styles.btnEdit} onPress={handleOpenEditModal}>
           <Text style={styles.btnEditText}>Editar Perfil</Text>
         </TouchableOpacity>
@@ -158,7 +189,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* MODAL DE DELETAR */}
+      {/* MODAL DE DELETAR E EDITAR OMITIDOS POR ESPAÇO, SÃO IGUAIS AO ANTERIOR */}
       <Modal visible={deleteModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -181,18 +212,14 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* MODAL DE EDITAR PERFIL */}
       <Modal visible={editModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Editar Perfil</Text>
-                
                 <Text style={styles.inputLabel}>Nome Completo</Text>
                 <TextInput style={styles.modalInput} value={editName} onChangeText={setEditName} placeholder="Seu nome" />
-
                 <Text style={styles.inputLabel}>Nova Senha (Opcional)</Text>
                 <TextInput style={styles.modalInput} value={editPassword} onChangeText={setEditPassword} placeholder="Deixe em branco para não alterar" secureTextEntry />
-
                 <View style={styles.modalRow}>
                     <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
                     <TouchableOpacity 
@@ -202,12 +229,8 @@ export default function ProfileScreen() {
                         const payload: any = {};
                         if (editName.trim() && editName !== profile?.fullName) payload.fullName = editName.trim();
                         if (editPassword.trim()) payload.password = editPassword.trim();
-                        
-                        if (Object.keys(payload).length > 0) {
-                          updateProfileMutation.mutate(payload);
-                        } else {
-                          setEditModalVisible(false);
-                        }
+                        if (Object.keys(payload).length > 0) updateProfileMutation.mutate(payload);
+                        else setEditModalVisible(false);
                       }} 
                     >
                       {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmText}>Salvar</Text>}
@@ -233,6 +256,12 @@ const styles = StyleSheet.create({
   
   verifiedBadge: { backgroundColor: '#E0F2F1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#4DB6AC' },
   verifiedText: { color: '#00796B', fontWeight: 'bold', fontSize: 12 },
+  unverifiedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FCA5A5' },
+  unverifiedText: { color: '#B91C1C', fontWeight: 'bold', fontSize: 12 },
+  pendingBadge: { backgroundColor: '#FEF3C7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#F59E0B' },
+  pendingText: { color: '#B45309', fontWeight: 'bold', fontSize: 12 },
+  rejectedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#DC2626' },
+  rejectedText: { color: '#991B1B', fontWeight: 'bold', fontSize: 12 },
   
   ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#F57F17', marginRight: 6 },
@@ -264,6 +293,9 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
   
   actions: { padding: 20, gap: 12, marginBottom: 30 },
+  btnVerify: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#10B981', elevation: 2 },
+  btnVerifyDanger: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#DC2626', elevation: 2 },
+  btnVerifyText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   btnEdit: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFF' },
   btnEditText: { color: '#374151', fontSize: 16, fontWeight: 'bold' },
   btnDanger: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FFF' },

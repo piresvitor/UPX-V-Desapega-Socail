@@ -25,6 +25,7 @@ mobile/frontend/
 │   ├── user/             # Telas de perfis dinâmicos ([id].tsx Público)
 │   ├── _layout.tsx       # Layout Raiz (Providers de Autenticação e TanStack Query)
 │   └── onboarding.tsx    # Fluxo de boas-vindas
+│   ├── verification/     # Fluxo de verificação de identidade (index.tsx)
 ├── src/                  # Lógica de negócios e configurações
 │   ├── contexts/         # Contextos globais (ex: AuthContext)
 │   └── services/         # Clientes de API (ex: api.ts com Axios)
@@ -80,6 +81,14 @@ mobile/frontend/
 * **Edição de Perfil:** Modal interativo para alteração de nome e redefinição de senha.
 * **Deleção em Cascata (Soft Delete):** Exclusão de conta protegida por senha que, através de uma transação no banco de dados, remove automaticamente todos os itens do usuário da plataforma.
 * **Perfil Público:** Tela dedicada para interessados verificarem a reputação e histórico de avaliações de um doador antes do contato.
+
+### 🛡️ Verificação de Identidade (Fase 2)
+* **Privacidade Absoluta (LGPD):** Implementação de avisos e fluxos que garantem ao usuário que seus dados sensíveis (CPF e documentos) são processados em memória volátil e protegidos por criptografia de ponta a ponta.
+* **Máscara de Input Dinâmica:** Sistema de formatação automática de CPF em tempo real para evitar erros de digitação.
+* **Captura de Documentos:** Integração com a galeria e câmera para envio de fotos de identificação (RG/CNH) e comprovantes de renda.
+* **Comunicação de Baixo Nível (Fetch API):** Utilização do `fetch` nativo para o upload de arquivos `multipart/form-data`, contornando limitações conhecidas do Axios no Android e garantindo o envio correto do *boundary* da requisição.
+* **Status em Tempo Real:** Badges dinâmicos no perfil que mudam de cor e texto conforme o status da análise ("Pendente", "Em Análise", "Rejeitado" ou "Verificado").
+* **Fluxo de Reenvio Inteligente:** Caso a verificação seja rejeitada por baixa qualidade da imagem, o app permite o reenvio imediato com feedback visual sobre o erro identificado.
 
 ## 🛠️ Como Executar o Projeto
 

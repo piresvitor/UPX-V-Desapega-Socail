@@ -5,7 +5,7 @@ import { db } from '../../database/cliente';
 import { verificationRequests } from '../../database/schema';
 import { encryptCpf } from '../../utils/crypto';
 import { processOcrInBackground } from '../../services/ocr';
-import { isValidCPF } from '../../utils/validators-cpf'; 
+import { isValidCPF } from '../../utils/validators-cpf';
 import { authenticateToken } from '../../middleware/auth';
 
 // O Zod repassa o trabalho para a função de verificação de CPF
