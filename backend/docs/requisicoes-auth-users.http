@@ -17,10 +17,10 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "larissa",
-  "email": "larissa@exemplo.com",
+  "fullName": "administrador",
+  "email": "adm1@exemplo.com",
   "password": "senha123",
-  "role": "Beneficiário"
+  "role": "Admin"
 }
 
 

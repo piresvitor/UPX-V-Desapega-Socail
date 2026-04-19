@@ -214,7 +214,7 @@ export default function ChatRoomScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>{'< Voltar'}</Text>
+            <Ionicons name="arrow-back" size={24} color="#2196F3" />
           </TouchableOpacity>
         </View>
         
@@ -337,7 +337,7 @@ export default function ChatRoomScreen() {
           onPress={handleSendMessage}
           disabled={!inputText.trim()}
         >
-          <Text style={styles.sendBtnText}>Enviar</Text>
+          <Ionicons name="send" size={20} color="#FFF" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -345,44 +345,42 @@ export default function ChatRoomScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E5DDD5' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#DDD', elevation: 2, zIndex: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#D1D5DB', elevation: 2, zIndex: 10 },
   headerLeft: { flex: 1, alignItems: 'flex-start' },
   headerCenter: { flex: 2, alignItems: 'center' },
   headerRight: { flex: 1, alignItems: 'flex-end' },
   backBtn: { padding: 5 },
-  backBtnText: { fontSize: 16, color: '#2196F3', fontWeight: 'bold' },
   freightBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, marginBottom: 2 },
   freightBadgeText: { color: '#E65100', fontSize: 10, fontWeight: 'bold' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', textDecorationLine: 'underline' },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', textDecorationLine: 'underline' },
   subContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 4 },
-  headerSub: { fontSize: 12, color: '#666' },
+  headerSub: { fontSize: 12, color: '#6B7280' },
   requestFreightBtn: { backgroundColor: '#FF9800', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 2 },
   reviewBanner: { flexDirection: 'row', backgroundColor: '#FFF9C4', padding: 15, alignItems: 'center', borderBottomWidth: 1, borderColor: '#FBC02D', elevation: 1 },
   reviewBannerTextContainer: { flex: 1, paddingRight: 10 },
   reviewBannerTitle: { fontSize: 14, fontWeight: 'bold', color: '#F57F17' },
-  reviewBannerSub: { fontSize: 12, color: '#777', marginTop: 2 },
-  reviewBannerBtn: { backgroundColor: '#F57F17', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20 },
+  reviewBannerSub: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  reviewBannerBtn: { backgroundColor: '#FF9800', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20 },
   reviewBannerBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
   listContent: { padding: 15, gap: 10 },
   messageWrapper: { flexDirection: 'row', marginBottom: 10 },
   messageWrapperRight: { justifyContent: 'flex-end' },
   messageWrapperLeft: { justifyContent: 'flex-start' },
   messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, elevation: 1 },
-  myBubble: { backgroundColor: '#DCF8C6', borderBottomRightRadius: 4 }, 
+  myBubble: { backgroundColor: '#E8F5E9', borderBottomRightRadius: 4 }, 
   otherBubble: { backgroundColor: '#FFFFFF', borderBottomLeftRadius: 4 }, 
   otherBubbleFreight: { backgroundColor: '#FFF3E0', borderBottomLeftRadius: 4 }, 
-  messageText: { fontSize: 16, lineHeight: 22, color: '#303030' },
-  myMessageText: { color: '#303030' },
-  otherMessageText: { color: '#303030' },
+  messageText: { fontSize: 16, lineHeight: 22, color: '#1F2937' },
+  myMessageText: { color: '#1F2937' },
+  otherMessageText: { color: '#1F2937' },
   timeText: { fontSize: 11, alignSelf: 'flex-end', marginTop: 4 },
-  myTimeText: { color: '#555' },
-  otherTimeText: { color: '#999' },
-  inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#FFF', alignItems: 'flex-end' },
-  textInput: { flex: 1, backgroundColor: '#F0F0F0', borderRadius: 20, paddingHorizontal: 15, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#333' },
+  myTimeText: { color: '#6B7280' },
+  otherTimeText: { color: '#6B7280' },
+  inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#F3F4F6', alignItems: 'flex-end' },
+  textInput: { flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#111827' },
   sendBtn: { marginLeft: 10, backgroundColor: '#2196F3', width: 45, height: 45, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  sendBtnDisabled: { backgroundColor: '#B0BEC5' },
-  sendBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
+  sendBtnDisabled: { backgroundColor: '#9CA3AF' },
 });

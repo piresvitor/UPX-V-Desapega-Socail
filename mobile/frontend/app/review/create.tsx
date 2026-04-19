@@ -101,7 +101,10 @@ export default function CreateReviewScreen() {
         {submitReviewMutation.isPending ? (
           <ActivityIndicator color="#FFF" />
         ) : (
-          <Text style={styles.submitBtnText}>Enviar Avaliação</Text>
+          <>
+            <Ionicons name="send-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+            <Text style={styles.submitBtnText}>Enviar Avaliação</Text>
+          </>
         )}
       </TouchableOpacity>
     </View>
@@ -109,22 +112,23 @@ export default function CreateReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF', padding: 24 },
+  container: { flex: 1, backgroundColor: '#F3F4F6', padding: 24 },
   
   header: { alignItems: 'center', marginTop: 20, marginBottom: 30 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24 },
   highlight: { color: '#2196F3', fontWeight: 'bold' },
 
   starsContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
   starIcon: { marginHorizontal: 4 },
-  ratingText: { textAlign: 'center', fontSize: 16, color: '#4B5563', fontWeight: '500', marginBottom: 30 },
+  ratingText: { textAlign: 'center', fontSize: 16, color: '#4B5563', fontWeight: 'bold', marginBottom: 30 },
 
   inputContainer: { marginBottom: 30 },
-  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 8 },
-  textInput: { backgroundColor: '#F3F4F6', borderRadius: 12, padding: 16, fontSize: 16, minHeight: 120, textAlignVertical: 'top', color: '#111827' },
+  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
+  textInput: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 16, fontSize: 16, minHeight: 120, textAlignVertical: 'top', color: '#1F2937' },
 
-  submitBtn: { backgroundColor: '#2196F3', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  submitBtnDisabled: { backgroundColor: '#9CA3AF' },
+  submitBtn: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  submitBtnDisabled: { backgroundColor: '#D1D5DB' },
   submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 }
 });

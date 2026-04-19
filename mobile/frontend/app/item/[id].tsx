@@ -13,6 +13,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MapView, { Circle } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/services/api';
 
 // --- Interfaces ---
@@ -225,16 +226,19 @@ export default function ItemDetailsScreen() {
                 style={[styles.btnHalf, styles.btnEdit]} 
                 onPress={() => router.push(`/item/edit/${id}`)}
               >
+                <Ionicons name="pencil-outline" size={20} color="#FFF" style={styles.buttonIcon} />
                 <Text style={styles.btnTextWhite}>Editar</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.btnHalf, styles.btnOutline]} onPress={handleStatusChange}>
+                <Ionicons name="refresh-outline" size={20} color="#2196F3" style={styles.buttonIcon} />
                 <Text style={styles.btnTextOutline}>Status</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={confirmDelete}>
-              <Text style={styles.btnTextWhite}>Remover Doação</Text>
+              <Ionicons name="trash-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
+              <Text style={styles.btnDangerText}>Remover Doação</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -252,7 +256,8 @@ export default function ItemDetailsScreen() {
                 }
               })}
             >
-              <Text style={styles.btnTextOutline}>⭐ Avaliar Doador</Text>
+              <Ionicons name="star-outline" size={20} color="#2196F3" style={styles.buttonIcon} />
+              <Text style={styles.btnTextOutline}>Avaliar Doador</Text>
             </TouchableOpacity>
           ) : (
             /* Botão Padrão de Solicitação */
@@ -265,9 +270,12 @@ export default function ItemDetailsScreen() {
               {startChatMutation.isPending ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.btnTextWhite}>
-                  {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
-                </Text>
+                <>
+                  <Ionicons name="chatbubbles-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+                  <Text style={styles.btnTextWhite}>
+                    {isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}
+                  </Text>
+                </>
               )}
             </TouchableOpacity>
           )
@@ -278,7 +286,7 @@ export default function ItemDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   scrollContent: { paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
   
@@ -294,37 +302,39 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
   statusText: { fontSize: 12, fontWeight: '800' },
   
-  title: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A', marginBottom: 6 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 6 },
   categorySubText: { fontSize: 14, color: '#2196F3', fontWeight: 'bold', marginBottom: 6 },
-  divider: { height: 1, backgroundColor: '#F0F0F0', marginBottom: 20 },
+  divider: { height: 1, backgroundColor: '#D1D5DB', marginBottom: 20 },
   
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8 },
-  description: { fontSize: 16, color: '#444', lineHeight: 24, marginBottom: 25 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
+  description: { fontSize: 16, color: '#6B7280', lineHeight: 24, marginBottom: 25 },
   
   donorNameLink: { fontSize: 15, color: '#2196F3', fontWeight: 'bold', textDecorationLine: 'underline' },
 
-  mapContainer: { borderRadius: 12, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#EEE', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1 },
+  mapContainer: { borderRadius: 12, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#D1D5DB', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1 },
   map: { width: '100%', height: 200 },
 
   footer: { paddingHorizontal: 20, marginTop: 10 },
   
-  ownerTitle: { fontSize: 14, fontWeight: 'bold', color: '#777', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
+  ownerTitle: { fontSize: 15, fontWeight: 'bold', color: '#6B7280', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   ownerGrid: { gap: 10 },
   ownerActionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  btnHalf: { flex: 1, height: 50, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  btnEdit: { backgroundColor: '#4CAF50' }, 
+  btnHalf: { flex: 1, height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  btnEdit: { backgroundColor: '#10B981' }, 
   
-  btn: { height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', width: '100%' },
-  btnPrimary: { backgroundColor: '#2196F3' },
-  btnLocked: { backgroundColor: '#B0BEC5' },
+  btn: { height: 56, borderRadius: 12, padding: 16, justifyContent: 'center', alignItems: 'center', width: '100%', flexDirection: 'row' },
+  btnPrimary: { backgroundColor: '#FF9800' },
+  btnLocked: { backgroundColor: '#9CA3AF' },
   btnOutline: { backgroundColor: '#FFF', borderWidth: 2, borderColor: '#2196F3' },
-  btnDanger: { backgroundColor: '#FF5252' }, 
+  btnDanger: { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' }, 
   
   btnTextWhite: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   btnTextOutline: { color: '#2196F3', fontSize: 16, fontWeight: 'bold' },
+  btnDangerText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
 
-  errorText: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 10 },
-  errorSub: { fontSize: 16, textAlign: 'center', color: '#666', marginBottom: 25 },
-  backBtn: { paddingVertical: 12, paddingHorizontal: 24, backgroundColor: '#F0F0F0', borderRadius: 8 },
-  backBtnText: { color: '#333', fontWeight: 'bold' },
+  errorText: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 10 },
+  errorSub: { fontSize: 15, textAlign: 'center', color: '#6B7280', marginBottom: 25 },
+  backBtn: { paddingVertical: 12, paddingHorizontal: 24, backgroundColor: '#E5E7EB', borderRadius: 8 },
+  backBtnText: { color: '#1F2937', fontWeight: 'bold' },
 });

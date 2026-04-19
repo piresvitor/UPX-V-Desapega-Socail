@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Modal, TextInput, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/services/api';
@@ -186,25 +187,29 @@ export default function ProfileScreen() {
             style={verificationStatus?.status === 'Rejeitado' ? styles.btnVerifyDanger : styles.btnVerify} 
             onPress={() => router.push('/verification')}
           >
+            <Ionicons name="shield-checkmark" size={20} color="#FFF" style={styles.buttonIcon} />
             <Text style={styles.btnVerifyText}>
               {verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' 
-                ? '🔍 Acompanhar Verificação' 
+                ? 'Acompanhar Verificação' 
                 : verificationStatus?.status === 'Rejeitado' 
-                ? '⚠️ Tentar Verificação Novamente' 
-                : '🛡️ Enviar Documentos e Remover Trava'}
+                ? 'Tentar Verificação Novamente' 
+                : 'Enviar Documentos e Remover Trava'}
             </Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.btnEdit} onPress={handleOpenEditModal}>
+          <Ionicons name="pencil" size={20} color="#374151" style={styles.buttonIcon} />
           <Text style={styles.btnEditText}>Editar Perfil</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btnDanger} onPress={() => { setPasswordConfirm(''); setDeleteModalVisible(true); }}>
+          <Ionicons name="trash-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
           <Text style={styles.btnDangerText}>Desativar Conta</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btnLogout} onPress={() => signOut()}>
+          <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
           <Text style={styles.btnLogoutText}>Sair do App</Text>
         </TouchableOpacity>
       </View>
@@ -254,31 +259,31 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#f0f0f0', backgroundColor: '#FFF' },
+  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFF' },
   avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#2196F3', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 3 },
-  avatarText: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
-  name: { fontSize: 24, fontWeight: 'bold', color: '#111827' },
+  avatarText: { color: '#FFF', fontSize: 32, fontWeight: 'bold' },
+  name: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
   email: { color: '#6B7280', marginBottom: 12 },
   
-  freightBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#D1D5DB' },
-  freightText: { color: '#374151', fontWeight: 'bold', fontSize: 12 },
-  verifiedBadge: { backgroundColor: '#E0F2F1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#4DB6AC' },
-  verifiedText: { color: '#00796B', fontWeight: 'bold', fontSize: 12 },
+  freightBadge: { backgroundColor: '#FFF8E1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FF9800' },
+  freightText: { color: '#FF9800', fontWeight: 'bold', fontSize: 12 },
+  verifiedBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#10B981' },
+  verifiedText: { color: '#10B981', fontWeight: 'bold', fontSize: 12 },
   unverifiedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FCA5A5' },
-  unverifiedText: { color: '#B91C1C', fontWeight: 'bold', fontSize: 12 },
-  pendingBadge: { backgroundColor: '#FEF3C7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#F59E0B' },
-  pendingText: { color: '#B45309', fontWeight: 'bold', fontSize: 12 },
+  unverifiedText: { color: '#DC2626', fontWeight: 'bold', fontSize: 12 },
+  pendingBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FF9800' },
+  pendingText: { color: '#E65100', fontWeight: 'bold', fontSize: 12 },
   rejectedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#DC2626' },
   rejectedText: { color: '#991B1B', fontWeight: 'bold', fontSize: 12 },
   
   ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#F57F17', marginRight: 6 },
-  ratingLabel: { color: '#777', fontWeight: 'bold' },
+  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#FF9800', marginRight: 6 },
+  ratingLabel: { color: '#6B7280', fontWeight: 'bold' },
   
-  tabsHeader: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E7EB' },
+  tabsHeader: { flexDirection: 'row', backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB' },
   tabBtn: { flex: 1, padding: 16, alignItems: 'center', borderBottomWidth: 2, borderColor: 'transparent' },
   tabBtnActive: { borderColor: '#2196F3' },
   tabBtnText: { color: '#9CA3AF', fontWeight: 'bold', fontSize: 15 },
@@ -286,46 +291,47 @@ const styles = StyleSheet.create({
   
   listContainer: { padding: 20, minHeight: 200 },
   
-  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
-  freightCard: { flexDirection: 'row', backgroundColor: '#FFF8E1', padding: 15, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#FFE082', alignItems: 'center' },
-  itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#ddd' },
+  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, alignItems: 'center', elevation: 2 },
+  freightCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center' },
+  itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#E5E7EB' },
   itemThumbPlaceholder: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
   itemInfo: { marginLeft: 16, flex: 1 },
   itemTitle: { fontWeight: 'bold', fontSize: 16, color: '#1F2937' },
-  itemStatus: { color: '#4CAF50', fontSize: 13, fontWeight: 'bold', marginTop: 4 },
+  itemStatus: { color: '#10B981', fontSize: 13, fontWeight: 'bold', marginTop: 4 },
   
-  reviewCard: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#F3F4F6' },
+  reviewCard: { paddingVertical: 16, backgroundColor: '#FFF', padding: 20, borderRadius: 16, elevation: 2, marginBottom: 12 },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' },
   reviewerName: { fontWeight: 'bold', color: '#1F2937', fontSize: 15 },
-  reviewStars: { color: '#F59E0B', fontSize: 16, letterSpacing: 2 },
+  reviewStars: { color: '#FF9800', fontSize: 16, letterSpacing: 2 },
   emptyStars: { color: '#E5E7EB' },
-  reviewComment: { color: '#4B5563', fontSize: 14, lineHeight: 20 },
+  reviewComment: { color: '#6B7280', fontSize: 14, lineHeight: 20 },
   reviewDate: { color: '#9CA3AF', fontSize: 12, marginTop: 8 },
   
   emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
   
   actions: { padding: 20, gap: 12, marginBottom: 30 },
-  btnVerify: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#10B981', elevation: 2 },
-  btnVerifyDanger: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#DC2626', elevation: 2 },
+  btnVerify: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#10B981', elevation: 2 },
+  btnVerifyDanger: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#DC2626', elevation: 2 },
   btnVerifyText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  btnEdit: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFF' },
+  btnEdit: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#FFF', elevation: 2 },
   btnEditText: { color: '#374151', fontSize: 16, fontWeight: 'bold' },
-  btnDanger: { padding: 16, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FFF' },
-  btnDangerText: { color: '#EF4444', fontSize: 16, fontWeight: 'bold' },
-  btnLogout: { padding: 16, alignItems: 'center', borderRadius: 12, backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' },
-  btnLogoutText: { color: '#B91C1C', fontSize: 16, fontWeight: 'bold' },
+  btnDanger: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEE2E2' },
+  btnDangerText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
+  btnLogout: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' },
+  btnLogoutText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', padding: 24, borderRadius: 16, elevation: 5 },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 8, color: '#111827' },
+  modalContent: { backgroundColor: '#FFF', padding: 24, borderRadius: 16, elevation: 5 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: '#1F2937' },
   modalSubText: { marginBottom: 20, color: '#6B7280', fontSize: 15 },
   inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 6, marginTop: 10 },
   modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 15, fontSize: 16, backgroundColor: '#F9FAFB' },
   modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center', marginTop: 10 },
   modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
-  cancelText: { color: '#6B7280', fontWeight: '600', fontSize: 15 },
-  modalBtnConfirm: { backgroundColor: '#2196F3', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
-  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
-  modalBtnConfirmDanger: { backgroundColor: '#EF4444', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
-  confirmDangerText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 }
+  cancelText: { color: '#6B7280', fontWeight: 'bold', fontSize: 16 },
+  modalBtnConfirm: { backgroundColor: '#2196F3', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  modalBtnConfirmDanger: { backgroundColor: '#DC2626', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  confirmDangerText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 }
 });

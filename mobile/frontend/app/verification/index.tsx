@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/services/api';
 
 export default function VerificationScreen() {
@@ -206,7 +207,10 @@ export default function VerificationScreen() {
           {submitVerificationMutation.isPending ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.submitBtnText}>Reenviar para Análise</Text>
+            <>
+              <Ionicons name="cloud-upload-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+              <Text style={styles.submitBtnText}>Reenviar para Análise</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -215,39 +219,40 @@ export default function VerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#FFF' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#F3F4F6' },
   
-  header: { padding: 20, paddingTop: 40, backgroundColor: '#F8FAFC', borderBottomWidth: 1, borderColor: '#E2E8F0' },
+  header: { padding: 20, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
   closeBtn: { marginBottom: 10 },
-  closeBtnText: { color: '#64748B', fontWeight: 'bold' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#0F172A', marginBottom: 15 },
+  closeBtnText: { color: '#6B7280', fontWeight: 'bold' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 15 },
   
   // Estilo do Banner de Rejeição
-  rejectionBanner: { backgroundColor: '#FEF2F2', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#FECACA', marginBottom: 15 },
-  rejectionTitle: { fontWeight: 'bold', color: '#991B1B', marginBottom: 5 },
-  rejectionText: { fontSize: 13, color: '#B91C1C', lineHeight: 20 },
+  rejectionBanner: { backgroundColor: '#FEF2F2', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#FCA5A5', marginBottom: 15 },
+  rejectionTitle: { fontWeight: 'bold', color: '#DC2626', marginBottom: 5 },
+  rejectionText: { fontSize: 13, color: '#DC2626', lineHeight: 20 },
 
-  lgpdBanner: { backgroundColor: '#ECFDF5', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#A7F3D0' },
-  lgpdTitle: { fontWeight: 'bold', color: '#065F46', marginBottom: 5 },
+  lgpdBanner: { backgroundColor: '#E8F5E9', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#10B981' },
+  lgpdTitle: { fontWeight: 'bold', color: '#047857', marginBottom: 5 },
   lgpdText: { fontSize: 13, color: '#047857', lineHeight: 20 },
 
   form: { padding: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', color: '#334155', marginBottom: 5, marginTop: 15 },
-  subLabel: { fontSize: 13, color: '#64748B', marginBottom: 10 },
-  input: { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1', padding: 15, borderRadius: 10, fontSize: 16, color: '#0F172A' },
+  label: { fontSize: 16, fontWeight: 'bold', color: '#1F2937', marginBottom: 5, marginTop: 15 },
+  subLabel: { fontSize: 13, color: '#6B7280', marginBottom: 10 },
+  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, fontSize: 16, color: '#1F2937' },
   
-  uploadBox: { height: 120, backgroundColor: '#F8FAFC', borderWidth: 2, borderColor: '#CBD5E1', borderStyle: 'dashed', borderRadius: 10, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-  uploadText: { color: '#64748B', fontWeight: 'bold' },
+  uploadBox: { height: 120, backgroundColor: '#F9FAFB', borderWidth: 2, borderColor: '#D1D5DB', borderStyle: 'dashed', borderRadius: 10, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  uploadText: { color: '#6B7280', fontWeight: 'bold' },
   previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
 
-  submitBtn: { backgroundColor: '#10B981', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 30, elevation: 2 },
-  submitBtnDisabled: { backgroundColor: '#94A3B8', elevation: 0 },
+  submitBtn: { backgroundColor: '#10B981', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30, elevation: 2, flexDirection: 'row', justifyContent: 'center' },
+  submitBtnDisabled: { backgroundColor: '#9CA3AF', elevation: 0 },
   submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
 
-  statusTitle: { fontSize: 24, fontWeight: 'bold', color: '#0F172A', marginBottom: 10 },
-  statusText: { fontSize: 16, color: '#334155', textAlign: 'center', marginBottom: 10, lineHeight: 24 },
-  statusSub: { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 30 },
-  backBtn: { backgroundColor: '#F1F5F9', padding: 15, borderRadius: 10, width: '100%', alignItems: 'center' },
-  backBtnText: { color: '#475569', fontWeight: 'bold' }
+  statusTitle: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 10 },
+  statusText: { fontSize: 16, color: '#4B5563', textAlign: 'center', marginBottom: 10, lineHeight: 24 },
+  statusSub: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 30 },
+  backBtn: { backgroundColor: '#FFF', padding: 16, borderRadius: 12, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: '#D1D5DB' },
+  backBtnText: { color: '#1F2937', fontWeight: 'bold', fontSize: 16 }
 });

@@ -133,6 +133,7 @@ export default function DriverRadarScreen() {
               style={styles.acceptBtn}
               onPress={() => setSelectedFreight(item)}
             >
+              <Ionicons name="chatbubbles-outline" size={20} color="#FFF" style={styles.buttonIcon} />
               <Text style={styles.acceptBtnText}>Fazer Proposta</Text>
             </TouchableOpacity>
           </View>
@@ -174,30 +175,31 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: 30, paddingTop: 60, backgroundColor: '#FFF', alignItems: 'center', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
   title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginTop: 10 },
-  sub: { color: '#6B7280', marginTop: 5, textAlign: 'center' },
+  sub: { color: '#6B7280', marginTop: 5, textAlign: 'center', fontSize: 15 },
   filterRow: { flexDirection: 'row', marginTop: 20, gap: 10 },
   filterBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' },
   filterBtnActive: { backgroundColor: '#FFF3E0', borderColor: '#FF9800' },
-  filterBtnText: { color: '#4B5563', fontWeight: 'bold' },
+  filterBtnText: { color: '#6B7280', fontWeight: 'bold' },
   filterBtnTextActive: { color: '#E65100' },
   card: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, alignItems: 'center' },
   distanceText: { fontWeight: 'bold', color: '#FF9800', fontSize: 15 },
-  badge: { backgroundColor: '#E0F2F1', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#00796B', fontSize: 12, fontWeight: 'bold' },
-  itemName: { fontSize: 18, fontWeight: 'bold', color: '#111827', marginBottom: 20 },
-  acceptBtn: { backgroundColor: '#1F2937', padding: 15, borderRadius: 12, alignItems: 'center' },
+  badge: { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badgeText: { color: '#10B981', fontSize: 12, fontWeight: 'bold' },
+  itemName: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 20 },
+  acceptBtn: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
   acceptBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontStyle: 'italic', fontSize: 15 },
+  buttonIcon: { marginRight: 8 },
+  empty: { textAlign: 'center', color: '#6B7280', marginTop: 40, fontStyle: 'italic', fontSize: 15 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', padding: 24, borderRadius: 16, elevation: 5 },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 8, color: '#111827' },
+  modalContent: { backgroundColor: '#FFF', padding: 24, borderRadius: 16, elevation: 5 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: '#1F2937' },
   modalSubText: { marginBottom: 20, color: '#6B7280', fontSize: 15, lineHeight: 22 },
   inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 6 },
-  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 20, fontSize: 18, backgroundColor: '#F9FAFB', fontWeight: 'bold', color: '#10B981' },
+  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 20, fontSize: 16, backgroundColor: '#F9FAFB', fontWeight: 'bold', color: '#10B981' },
   modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center' },
   modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
-  cancelText: { color: '#6B7280', fontWeight: '600', fontSize: 15 },
-  modalBtnConfirm: { backgroundColor: '#FF9800', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
-  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+  cancelText: { color: '#6B7280', fontWeight: 'bold', fontSize: 16 },
+  modalBtnConfirm: { backgroundColor: '#FF9800', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 });
