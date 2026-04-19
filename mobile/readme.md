@@ -82,7 +82,7 @@ mobile/frontend/
 * **Deleção em Cascata (Soft Delete):** Exclusão de conta protegida por senha que, através de uma transação no banco de dados, remove automaticamente todos os itens do usuário da plataforma.
 * **Perfil Público:** Tela dedicada para interessados verificarem a reputação e histórico de avaliações de um doador antes do contato.
 
-### 🛡️ Verificação de Identidade (Fase 2)
+### 🛡️ Verificação de Identidade 
 * **Privacidade Absoluta (LGPD):** Implementação de avisos e fluxos que garantem ao usuário que seus dados sensíveis (CPF e documentos) são processados em memória volátil e protegidos por criptografia de ponta a ponta.
 * **Máscara de Input Dinâmica:** Sistema de formatação automática de CPF em tempo real para evitar erros de digitação.
 * **Captura de Documentos:** Integração com a galeria e câmera para envio de fotos de identificação (RG/CNH) e comprovantes de renda.
@@ -94,7 +94,7 @@ mobile/frontend/
 O sistema implementa regras estritas de permissão baseadas na `role` (Cargo) decodificada diretamente do Token JWT:
 * **Usuário Padrão (Doador/Beneficiário):** Tem acesso total ao Feed de Doações, Postagem de Itens e Caixa de Mensagens.
 * **Motorista (Freteiro):** UI adaptativa que oculta as abas de "Doação" e "Feed". A tela inicial é substituída automaticamente pelo **Radar Logístico**, focando a experiência exclusivamente na captação de corridas.
-* **Administrador:** Ganha acesso ao backoffice de moderação de LGPD e fluxo de banimento.
+* **Administrador**: Ganha acesso ao Dashboard com gráficos gerenciais, painel LGPD com zoom de imagens e lista paginada de controle de usuários.
 
 ### 🚚 Fluxo Logístico Frontend-Driven (Radar e Socket)
 O aplicativo possui um ecossistema inteligente e autossuficiente para orquestrar as entregas solidárias:

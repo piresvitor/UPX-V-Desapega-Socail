@@ -12,7 +12,7 @@ export default function TabLayout() {
       tabBarStyle: { height: 60, paddingBottom: 5 }
     }}>
       
-      {/* ABA 1: FEED GERAL (Escondida para Freteiros e Admins) */}
+      {/* ================= ABA NORMAL ================= */}
       <Tabs.Screen
         name="home"
         options={{
@@ -21,8 +21,6 @@ export default function TabLayout() {
           href: (userRole === 'Doador' || userRole === 'Beneficiário') ? '/home' : null,
         }}
       />
-
-      {/* ABA 2: CRIAR DOAÇÃO (Escondida para Freteiros e Admins) */}
       <Tabs.Screen
         name="create"
         options={{
@@ -31,18 +29,14 @@ export default function TabLayout() {
           href: (userRole === 'Doador' || userRole === 'Beneficiário') ? '/create' : null,
         }}
       />
-
-      {/* ABA EXCLUSIVA DO FRETEIRO */}
       <Tabs.Screen
         name="radar"
         options={{
-          title: 'Radar Fretes',
-          tabBarIcon: ({ color }) => <Ionicons name="map-outline" size={24} color={color} />,
+          title: 'Radar',
+          tabBarIcon: ({ color }) => <Ionicons name="location-outline" size={24} color={color} />,
           href: userRole === 'Freteiro' ? '/radar' : null,
         }}
       />
-
-      {/* ABA DE CHAT (Todo mundo vê, menos Admin) */}
       <Tabs.Screen
         name="chat"
         options={{
@@ -52,12 +46,39 @@ export default function TabLayout() {
         }}
       />
 
-      {/* ABA DE PERFIL (Todo mundo vê) */}
+      {/* ================= ABAS DO ADMIN ================= */}
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: 'Painel',
+          tabBarIcon: ({ color }) => <Ionicons name="pie-chart-outline" size={24} color={color} />,
+          href: userRole === 'Admin' ? '/dashboard' : null,
+        }}
+      />
+      <Tabs.Screen
+        name="verifications"
+        options={{
+          title: 'Auditoria',
+          tabBarIcon: ({ color }) => <Ionicons name="shield-checkmark-outline" size={24} color={color} />,
+          href: userRole === 'Admin' ? '/verifications' : null,
+        }}
+      />
+      <Tabs.Screen
+        name="admin-users"
+        options={{
+          title: 'Usuários',
+          tabBarIcon: ({ color }) => <Ionicons name="people-outline" size={24} color={color} />,
+          href: userRole === 'Admin' ? '/admin-users' : null,
+        }}
+      />
+
+      {/* ================= PERFIL GERAL ================= */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
+          href: userRole !== 'Admin' ? '/profile' : null,
         }}
       />
     </Tabs>
