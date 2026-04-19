@@ -98,6 +98,7 @@ export const freightRequests = pgTable('freight_requests', {
   freighterId: uuid('freighter_id').references(() => users.id),
   estimatedPrice: decimal('estimated_price', { precision: 10, scale: 2 }),
   status: freightStatusEnum('status').default('Pendente').notNull(),
+  destinationLocation: geometry('destination_location', { type: 'point', mode: 'xy', srid: 4326 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => ({
   itemIdIdx: index('freight_item_id_idx').on(table.itemId),

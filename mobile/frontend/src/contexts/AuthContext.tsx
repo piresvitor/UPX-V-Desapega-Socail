@@ -5,9 +5,10 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { api } from '../services/api';
 import Constants from 'expo-constants';
-
+import { jwtDecode } from 'jwt-decode'; 
 interface AuthContextType {
   token: string | null;
+  userRole: string | null; 
   isLoading: boolean;
   signIn: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -18,12 +19,12 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null); // <-- NOVO
   const [hasViewedOnboarding, setHasViewedOnboarding] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   
   const segments = useSegments();
   const router = useRouter();
-  
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
@@ -32,7 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedToken = await AsyncStorage.getItem('@DesapegaSocial:token');
         const viewed = await AsyncStorage.getItem('@DesapegaSocial:onboarding_viewed');
         
-        if (storedToken) setToken(storedToken);
+        if (storedToken) {
+          setToken(storedToken);
+          // Decodifica o Token para saber quem é a pessoa instantaneamente
+          const decoded: any = jwtDecode(storedToken);
+          setUserRole(decoded.role);
+        }
         if (viewed === 'true') setHasViewedOnboarding(true);
       } catch (error) {
         console.error('Erro ao ler dados', error);
@@ -44,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // O Guarda-Costas do Expo Router voltou!
     if (isLoading || !navigationState?.key) return;
 
     const rootSegment = segments[0];
@@ -55,25 +62,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.replace('/(auth)/login');
       }
     } else {
+      // O MENU MUTANTE (RBAC): Se está solto ou no Auth, joga pra Tab do seu cargo!
       if (rootSegment === '(auth)' || rootSegment === 'onboarding' || rootSegment === undefined) {
-        router.replace('/(tabs)/home');
+        if (userRole === 'Freteiro') {
+          router.replace('/(tabs)/radar');
+        } else if (userRole === 'Admin') {
+          router.replace('/(tabs)/dashboard'); // Vai bugar se essa tela não existir ainda
+        } else {
+          router.replace('/(tabs)/home'); // Doador e Beneficiário
+        }
       }
     }
-  }, [token, hasViewedOnboarding, segments, isLoading, navigationState?.key]);
+  }, [token, hasViewedOnboarding, segments, isLoading, navigationState?.key, userRole]);
 
-// Função isolada para gerenciar o Push Token
   const registerForPushNotificationsAsync = async () => {
-    // 1. Regra para Emuladores: O device precisa ser físico
-    if (!Device.isDevice) {
-      console.log('Push Notifications requerem um dispositivo físico.');
-      return;
-    }
-
-    // 2. 🛡️ O BYPASS DO EXPO GO: Se estiver no aplicativo de testes do Expo, ele pula fora pacificamente.
-    if (Constants.appOwnership === 'expo') {
-      console.log('No Expo Go (SDK 53+), Push Notifications não são suportadas nativamente. Pulando etapa de FCM Token.');
-      return;
-    }
+    if (!Device.isDevice) return;
+    if (Constants.appOwnership === 'expo') return;
 
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -84,16 +88,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         finalStatus = status;
       }
       
-      if (finalStatus !== 'granted') {
-        console.log('Permissão de notificação negada pelo usuário.');
-        return;
-      }
+      if (finalStatus !== 'granted') return;
 
       const tokenData = await Notifications.getDevicePushTokenAsync();
       const fcmToken = tokenData.data;
 
       await api.patch('/users/me/fcm-token', { fcmToken });
-      console.log('FCM Token atualizado com sucesso no BD.');
     } catch (error) {
       console.error('Erro ao registrar FCM token:', error);
     }
@@ -104,13 +104,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
-    // Dispara a coleta do token em background logo após o login
+    // Lemos a role no momento exato do login
+    const decoded: any = jwtDecode(newToken);
+    setUserRole(decoded.role);
+
     registerForPushNotificationsAsync();
   };
 
   const signOut = async () => {
     await AsyncStorage.removeItem('@DesapegaSocial:token');
     setToken(null);
+    setUserRole(null);
   };
 
   const completeOnboarding = async () => {
@@ -119,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, isLoading, signIn, signOut, completeOnboarding }}>
+    <AuthContext.Provider value={{ token, userRole, isLoading, signIn, signOut, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   );

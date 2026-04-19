@@ -1,14 +1,12 @@
-// app/(tabs)/chat.tsx
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
 
-// Tipagem atualizada
 interface ChatRoom {
   id: string;
-  type: string;
+  type: string; // 'DONATION' ou 'FREIGHT'
   status: string;
   item: {
     id: string;
@@ -23,27 +21,25 @@ interface ChatRoom {
     content: string;
     createdAt: string;
     readAt: string | null;
-    senderId: string; // <-- Precisamos saber quem enviou a última msg
+    senderId: string;
   } | null;
 }
 
 export default function ChatListScreen() {
   const router = useRouter();
 
-  // 1. Precisamos saber quem somos nós para o prefixo "Você:"
   const { data: me } = useQuery({
     queryKey: ['users', 'me'],
     queryFn: async () => (await api.get('/users/me')).data,
   });
 
-  // 2. Busca a lista de conversas
   const { data: chats, isLoading, isError } = useQuery<ChatRoom[]>({
     queryKey: ['chats'],
     queryFn: async () => {
       const response = await api.get('/chats');
       return response.data;
     },
-    refetchInterval: 5000 // Atualiza a cada 5 segundos para a "bolinha azul" aparecer rápido
+    refetchInterval: 5000 
   });
 
   if (isLoading) {
@@ -71,31 +67,30 @@ export default function ChatListScreen() {
           </View>
         }
         renderItem={({ item }) => {
-          // --- LÓGICA DE VISUALIZAÇÃO ---
           const isMyLastMessage = item.lastMessage?.senderId === me?.id;
-          
-          // É não lida se: existe uma msg + não fui eu que mandei + readAt está vazio (null)
           const isUnread = item.lastMessage && !isMyLastMessage && !item.lastMessage.readAt;
+          
+          // IDENTIFICADOR DE FRETE: Se for frete, destacamos com laranja
+          const isFreight = item.type === 'FREIGHT';
 
           return (
             <TouchableOpacity 
-              style={styles.chatCard} 
+              style={[styles.chatCard, isFreight && styles.chatCardFreight]} 
               activeOpacity={0.7}
               onPress={() => router.push(`/chat/${item.id}`)}
             >
               <View style={styles.avatarContainer}>
                 <Image 
                   source={{ uri: item.item.imageUrls?.[0] || 'https://via.placeholder.com/150' }} 
-                  style={styles.avatar} 
+                  style={[styles.avatar, isFreight && styles.avatarFreight]} 
                 />
-                {/* A Bolinha Azul de Não Lida em cima da foto */}
                 {isUnread && <View style={styles.unreadBadge} />}
               </View>
               
               <View style={styles.chatInfo}>
                 <View style={styles.chatHeaderRow}>
-                  <Text style={[styles.userName, isUnread && styles.textBold]} numberOfLines={1}>
-                    {item.otherUser.fullName}
+                  <Text style={[styles.userName, isUnread && styles.textBold, isFreight && {color: '#E65100'}]} numberOfLines={1}>
+                    {isFreight ? '🚚 ' : ''}{item.otherUser.fullName}
                   </Text>
                   {item.lastMessage && (
                     <Text style={[styles.timeText, isUnread && styles.timeTextUnread]}>
@@ -104,8 +99,8 @@ export default function ChatListScreen() {
                   )}
                 </View>
                 
-                <Text style={styles.itemTitle} numberOfLines={1}>
-                  📦 {item.item.title}
+                <Text style={[styles.itemTitle, isFreight && { color: '#FF9800' }]} numberOfLines={1}>
+                  {isFreight ? '📦 Transporte: ' : '📦 '}{item.item.title}
                 </Text>
                 
                 <Text style={[styles.lastMessage, isUnread && styles.textBold]} numberOfLines={1}>
@@ -132,24 +127,25 @@ const styles = StyleSheet.create({
   listContent: { padding: 10 },
   
   chatCard: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderColor: '#F0F0F0', alignItems: 'center' },
+  chatCardFreight: { backgroundColor: '#FFF8E1' }, // Fundo levemente alaranjado para Fretes
   
-  // Container do Avatar para posicionar a bolinha azul
   avatarContainer: { position: 'relative', marginRight: 15 },
   avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E0E0E0' },
+  avatarFreight: { borderWidth: 2, borderColor: '#FF9800' }, // Borda laranja para itens de frete
   unreadBadge: { position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#2196F3', borderWidth: 2, borderColor: '#FFF' },
   
   chatInfo: { flex: 1, justifyContent: 'center' },
   chatHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  userName: { fontSize: 16, color: '#111827', flex: 1, marginRight: 10 }, // Removido o fontWeight fixo para reagir ao isUnread
+  userName: { fontSize: 16, color: '#111827', flex: 1, marginRight: 10 },
   timeText: { fontSize: 12, color: '#6B7280' },
   timeTextUnread: { color: '#2196F3', fontWeight: 'bold' },
   
   itemTitle: { fontSize: 13, color: '#2196F3', fontWeight: '600', marginBottom: 4 },
   
   lastMessage: { fontSize: 14, color: '#6B7280' },
-  youPrefix: { color: '#9CA3AF', fontWeight: 'normal' }, // "Você:" fica clarinho igual no zap
+  youPrefix: { color: '#9CA3AF', fontWeight: 'normal' }, 
   
-  textBold: { fontWeight: 'bold', color: '#111827' }, // Escurece e engorda o texto se não lido
+  textBold: { fontWeight: 'bold', color: '#111827' }, 
 
   emptyContainer: { alignItems: 'center', marginTop: 100, padding: 20 },
   emptyText: { fontSize: 18, fontWeight: 'bold', color: '#374151', marginBottom: 8 },

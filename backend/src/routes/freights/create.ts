@@ -1,12 +1,14 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm'; // IMPORTANTE: Adicionamos o 'sql' aqui
 import { db } from '../../database/cliente';
 import { items, freightRequests } from '../../database/schema';
 import { authenticateToken } from '../../middleware/auth';
 
 const createFreightBodySchema = z.object({
-  itemId: z.uuid('O ID do item deve ser um UUID válido'),
+  itemId: z.string().uuid('O ID do item deve ser um UUID válido'),
+  destinationLat: z.number({ message: 'Latitude de destino é obrigatória' }),
+  destinationLng: z.number({ message: 'Longitude de destino é obrigatória' }),
 });
 
 export const createFreightRoute: FastifyPluginAsyncZod = async (server) => {
@@ -15,7 +17,7 @@ export const createFreightRoute: FastifyPluginAsyncZod = async (server) => {
     schema: {
       tags: ['Fretes'],
       summary: 'Solicitar Frete Solidário',
-      description: 'Cria um pedido de frete para um item. O usuário logado será registrado como o beneficiário que precisa do transporte.',
+      description: 'Cria um pedido de frete. O usuário logado será o beneficiário e sua localização atual será o destino.',
       headers: z.object({
         authorization: z.string().regex(/^Bearer .+/, 'Authorization header required')
       }),
@@ -32,7 +34,7 @@ export const createFreightRoute: FastifyPluginAsyncZod = async (server) => {
     }
   }, async (request, reply) => {
     try {
-      const { itemId } = request.body;
+      const { itemId, destinationLat, destinationLng } = request.body;
       const beneficiaryId = request.user.sub; 
 
       // Verifica se o item realmente existe e não foi deletado
@@ -47,12 +49,11 @@ export const createFreightRoute: FastifyPluginAsyncZod = async (server) => {
         return reply.status(404).send({ message: 'Item não encontrado ou indisponível.' });
       }
 
-      // Regra opcional: O doador não deveria pedir frete para o próprio item
       if (item.donorId === beneficiaryId) {
         return reply.status(400).send({ message: 'Você não pode solicitar frete para um item que você mesmo está doando.' });
       }
 
-      // Trava Anti-Spam: Verifica se já existe um pedido de frete PENDENTE para este item e este usuário
+      // Trava Anti-Spam
       const existingRequest = await db.query.freightRequests.findFirst({
         where: and(
           eq(freightRequests.itemId, itemId),
@@ -65,12 +66,14 @@ export const createFreightRoute: FastifyPluginAsyncZod = async (server) => {
         return reply.status(400).send({ message: 'Você já possui uma solicitação de frete pendente para este item.' });
       }
 
-      // Cria a solicitação no banco de dados
+      // =======================================================================
+      // A MÁGICA DO POSTGIS: Salvando o destino (Longitude primeiro, depois Latitude)
+      // =======================================================================
       const [newFreight] = await db.insert(freightRequests).values({
         itemId: itemId,
         beneficiaryId: beneficiaryId,
         status: 'Pendente',
-        // freighterId e estimatedPrice começam nulos, pois ninguém aceitou ainda
+        destinationLocation: sql`ST_MakePoint(${destinationLng}, ${destinationLat})`
       }).returning({ id: freightRequests.id });
 
       return reply.status(201).send({
