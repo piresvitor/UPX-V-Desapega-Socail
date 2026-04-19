@@ -5,16 +5,13 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-interface Item { id: string; title: string; status: string; category: string; imageUrls: string[]; }
-interface Review { id: string; rating: number; comment: string; createdAt: string; reviewer: { id: string; fullName: string; }; }
-interface UserProfile { id: string; fullName: string; email: string; isVerified: boolean; ratingAverage: string | null; ratingCount: string | null; }
-
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
+  const { signOut, userRole } = useAuth(); 
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'itens' | 'avaliacoes'>('itens');
+  // A aba padrão muda dependendo de quem é
+  const [activeTab, setActiveTab] = useState<'itens' | 'avaliacoes' | 'fretes'>(userRole === 'Freteiro' ? 'fretes' : 'itens');
   
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -23,43 +20,41 @@ export default function ProfileScreen() {
   const [editName, setEditName] = useState('');
   const [editPassword, setEditPassword] = useState('');
 
-  // Queries
-  const { data: profile, isLoading: loadingProfile } = useQuery<UserProfile>({
+  const { data: profile, isLoading: loadingProfile } = useQuery<any>({
     queryKey: ['users', 'me'],
     queryFn: async () => (await api.get('/users/me')).data
   });
 
-  const { data: myItems, isLoading: loadingItems } = useQuery<Item[]>({
+  const { data: myItems, isLoading: loadingItems } = useQuery<any>({
     queryKey: ['items', 'me'],
     queryFn: async () => (await api.get('/items/me')).data,
+    enabled: userRole !== 'Freteiro' // Freteiro não tem itens
   });
 
-  const { data: myReviews, isLoading: loadingReviews } = useQuery<Review[]>({
+  const { data: myReviews, isLoading: loadingReviews } = useQuery<any>({
     queryKey: ['reviews', 'me', profile?.id],
     queryFn: async () => (await api.get(`/reviews/${profile?.id}`)).data,
     enabled: !!profile?.id
   });
 
-  // NOVO: Busca o status da verificação para atualizar o selo em tempo real
+  const { data: myFreights, isLoading: loadingFreights } = useQuery<any>({
+    queryKey: ['freights', 'me'],
+    queryFn: async () => (await api.get('/freights/me')).data,
+    enabled: userRole === 'Freteiro' // Só baixa fretes se for Freteiro
+  });
+
   const { data: verificationStatus } = useQuery({
     queryKey: ['verifications', 'me'],
     queryFn: async () => {
-      try {
-        return (await api.get('/verifications/me')).data;
-      } catch (error: any) {
-        if (error.response?.status === 404) return null;
-        throw error;
-      }
-    }
+      try { return (await api.get('/verifications/me')).data; } 
+      catch (error: any) { if (error.response?.status === 404) return null; throw error; }
+    },
+    enabled: userRole !== 'Freteiro' // Freteiro não precisa de IA
   });
 
-  // Mutações
   const deactivateMutation = useMutation({
     mutationFn: async (password: string) => await api.delete('/users/me', { data: { password } }),
-    onSuccess: () => {
-      setDeleteModalVisible(false);
-      signOut();
-    },
+    onSuccess: () => { setDeleteModalVisible(false); signOut(); },
     onError: () => Alert.alert('Erro', 'Senha inválida.')
   });
 
@@ -68,7 +63,7 @@ export default function ProfileScreen() {
     onSuccess: () => {
       setEditModalVisible(false);
       setEditPassword('');
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      Alert.alert('Sucesso', 'Perfil atualizado!');
       queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
     },
     onError: () => Alert.alert('Erro', 'Não foi possível atualizar o perfil.')
@@ -92,12 +87,16 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
       {/* HEADER */}
       <View style={styles.header}>
-        <View style={styles.avatarPlaceholder}><Text style={styles.avatarText}>{profile?.fullName.charAt(0).toUpperCase()}</Text></View>
+        <View style={[styles.avatarPlaceholder, userRole === 'Freteiro' && {backgroundColor: '#FF9800'}]}>
+          <Text style={styles.avatarText}>{profile?.fullName.charAt(0).toUpperCase()}</Text>
+        </View>
         <Text style={styles.name}>{profile?.fullName}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
         
-        {/* SELOS DINÂMICOS DE VERIFICAÇÃO */}
-        {profile?.isVerified ? (
+        {/* SELOS DINÂMICOS */}
+        {userRole === 'Freteiro' ? (
+           <View style={styles.freightBadge}><Text style={styles.freightText}>🚚 Parceiro Logístico</Text></View>
+        ) : profile?.isVerified ? (
           <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Usuário Verificado</Text></View>
         ) : verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' ? (
           <View style={styles.pendingBadge}><Text style={styles.pendingText}>⏳ Documentos em Análise</Text></View>
@@ -113,19 +112,42 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* MENU DAS TABS */}
       <View style={styles.tabsHeader}>
-        <TouchableOpacity style={[styles.tabBtn, activeTab === 'itens' && styles.tabBtnActive]} onPress={() => setActiveTab('itens')}>
-          <Text style={[styles.tabBtnText, activeTab === 'itens' && styles.tabBtnTextActive]}>Meus Itens</Text>
-        </TouchableOpacity>
+        {userRole === 'Freteiro' ? (
+          <TouchableOpacity style={[styles.tabBtn, activeTab === 'fretes' && styles.tabBtnActive]} onPress={() => setActiveTab('fretes')}>
+            <Text style={[styles.tabBtnText, activeTab === 'fretes' && styles.tabBtnTextActive]}>Meus Fretes</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={[styles.tabBtn, activeTab === 'itens' && styles.tabBtnActive]} onPress={() => setActiveTab('itens')}>
+            <Text style={[styles.tabBtnText, activeTab === 'itens' && styles.tabBtnTextActive]}>Meus Itens</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={[styles.tabBtn, activeTab === 'avaliacoes' && styles.tabBtnActive]} onPress={() => setActiveTab('avaliacoes')}>
           <Text style={[styles.tabBtnText, activeTab === 'avaliacoes' && styles.tabBtnTextActive]}>Avaliações</Text>
         </TouchableOpacity>
       </View>
 
+      {/* CONTEÚDO */}
       <View style={styles.listContainer}>
-        {activeTab === 'itens' ? (
+        {activeTab === 'fretes' && (
+          loadingFreights ? <ActivityIndicator color="#FF9800" /> : (
+            myFreights?.length ? myFreights.map((freight: any) => (
+              <TouchableOpacity key={freight.id} style={styles.freightCard} onPress={() => router.push(`/freight/${freight.id}`)}>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemTitle}>📦 {freight.item?.title || 'Removido'}</Text>
+                  <Text style={{color: '#4CAF50', fontWeight: 'bold'}}>Status: {freight.status}</Text>
+                  <Text style={{color: '#FF9800', marginTop: 4}}>Proposta: R$ {Number(freight.estimatedPrice).toFixed(2)}</Text>
+                </View>
+                <Text style={{color: '#9CA3AF', fontSize: 24}}>{'>'}</Text>
+              </TouchableOpacity>
+            )) : <Text style={styles.emptyText}>Você ainda não realizou nenhum frete.</Text>
+          )
+        )}
+
+        {activeTab === 'itens' && (
           loadingItems ? <ActivityIndicator color="#2196F3" /> : (
-            myItems?.length ? myItems.map(item => (
+            myItems?.length ? myItems.map((item: any) => (
               <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => router.push(`/item/${item.id}`)}>
                 {item.imageUrls?.length > 0 ? (
                   <Image source={{ uri: item.imageUrls[0] }} style={styles.itemThumb} />
@@ -134,25 +156,23 @@ export default function ProfileScreen() {
                 )}
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: '#F44336' }, item.status === 'Reservado' && { color: '#FF9800' }]}>
-                    {item.status}
-                  </Text>
+                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: '#F44336' }, item.status === 'Reservado' && { color: '#FF9800' }]}>{item.status}</Text>
                 </View>
               </TouchableOpacity>
             )) : <Text style={styles.emptyText}>Você ainda não postou nada.</Text>
           )
-        ) : (
+        )}
+
+        {activeTab === 'avaliacoes' && (
           loadingReviews ? <ActivityIndicator color="#2196F3" /> : (
-            myReviews?.length ? myReviews.map(review => (
+            myReviews?.length ? myReviews.map((review: any) => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <Text style={styles.reviewerName}>{review.reviewer.fullName}</Text>
                   {renderStars(review.rating)}
                 </View>
                 <Text style={styles.reviewComment}>{review.comment}</Text>
-                <Text style={styles.reviewDate}>
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </Text>
+                <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
               </View>
             )) : <Text style={styles.emptyText}>Você ainda não recebeu avaliações.</Text>
           )
@@ -160,8 +180,8 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.actions}>
-        {/* BOTÃO MUDA DEPENDENDO DO STATUS */}
-        {!profile?.isVerified && (
+        {/* BOTÃO DE VERIFICAÇÃO SÓ APARECE PARA QUEM PRECISA */}
+        {userRole !== 'Freteiro' && !profile?.isVerified && (
           <TouchableOpacity 
             style={verificationStatus?.status === 'Rejeitado' ? styles.btnVerifyDanger : styles.btnVerify} 
             onPress={() => router.push('/verification')}
@@ -189,7 +209,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* MODAL DE DELETAR E EDITAR OMITIDOS POR ESPAÇO, SÃO IGUAIS AO ANTERIOR */}
       <Modal visible={deleteModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -198,13 +217,7 @@ export default function ProfileScreen() {
                 <TextInput style={styles.modalInput} placeholder="Sua senha" secureTextEntry value={passwordConfirm} onChangeText={setPasswordConfirm} />
                 <View style={styles.modalRow}>
                     <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => {
-                        if(!passwordConfirm) return Alert.alert('Atenção', 'Senha obrigatória');
-                        deactivateMutation.mutate(passwordConfirm);
-                      }} 
-                      style={styles.modalBtnConfirmDanger}
-                    >
+                    <TouchableOpacity onPress={() => { if(!passwordConfirm) return Alert.alert('Atenção', 'Senha obrigatória'); deactivateMutation.mutate(passwordConfirm); }} style={styles.modalBtnConfirmDanger}>
                       {deactivateMutation.isPending ? <ActivityIndicator color="#FFF" /> : <Text style={styles.confirmDangerText}>Confirmar</Text>}
                     </TouchableOpacity>
                 </View>
@@ -222,17 +235,13 @@ export default function ProfileScreen() {
                 <TextInput style={styles.modalInput} value={editPassword} onChangeText={setEditPassword} placeholder="Deixe em branco para não alterar" secureTextEntry />
                 <View style={styles.modalRow}>
                     <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.modalBtnConfirm}
-                      disabled={updateProfileMutation.isPending}
-                      onPress={() => {
+                    <TouchableOpacity style={styles.modalBtnConfirm} disabled={updateProfileMutation.isPending} onPress={() => {
                         const payload: any = {};
                         if (editName.trim() && editName !== profile?.fullName) payload.fullName = editName.trim();
                         if (editPassword.trim()) payload.password = editPassword.trim();
                         if (Object.keys(payload).length > 0) updateProfileMutation.mutate(payload);
                         else setEditModalVisible(false);
-                      }} 
-                    >
+                      }}>
                       {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmText}>Salvar</Text>}
                     </TouchableOpacity>
                 </View>
@@ -254,6 +263,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 24, fontWeight: 'bold', color: '#111827' },
   email: { color: '#6B7280', marginBottom: 12 },
   
+  freightBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#D1D5DB' },
+  freightText: { color: '#374151', fontWeight: 'bold', fontSize: 12 },
   verifiedBadge: { backgroundColor: '#E0F2F1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#4DB6AC' },
   verifiedText: { color: '#00796B', fontWeight: 'bold', fontSize: 12 },
   unverifiedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FCA5A5' },
@@ -275,7 +286,8 @@ const styles = StyleSheet.create({
   
   listContainer: { padding: 20, minHeight: 200 },
   
-  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', elevation: 1 },
+  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
+  freightCard: { flexDirection: 'row', backgroundColor: '#FFF8E1', padding: 15, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#FFE082', alignItems: 'center' },
   itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#ddd' },
   itemThumbPlaceholder: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
   itemInfo: { marginLeft: 16, flex: 1 },
@@ -309,7 +321,6 @@ const styles = StyleSheet.create({
   modalSubText: { marginBottom: 20, color: '#6B7280', fontSize: 15 },
   inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 6, marginTop: 10 },
   modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 15, fontSize: 16, backgroundColor: '#F9FAFB' },
-  
   modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center', marginTop: 10 },
   modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
   cancelText: { color: '#6B7280', fontWeight: '600', fontSize: 15 },

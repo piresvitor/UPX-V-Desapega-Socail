@@ -90,6 +90,19 @@ mobile/frontend/
 * **Status em Tempo Real:** Badges dinâmicos no perfil que mudam de cor e texto conforme o status da análise ("Pendente", "Em Análise", "Rejeitado" ou "Verificado").
 * **Fluxo de Reenvio Inteligente:** Caso a verificação seja rejeitada por baixa qualidade da imagem, o app permite o reenvio imediato com feedback visual sobre o erro identificado.
 
+### 🛡️ Role-Based Access Control (RBAC) e UI Dinâmica
+O sistema implementa regras estritas de permissão baseadas na `role` (Cargo) decodificada diretamente do Token JWT:
+* **Usuário Padrão (Doador/Beneficiário):** Tem acesso total ao Feed de Doações, Postagem de Itens e Caixa de Mensagens.
+* **Motorista (Freteiro):** UI adaptativa que oculta as abas de "Doação" e "Feed". A tela inicial é substituída automaticamente pelo **Radar Logístico**, focando a experiência exclusivamente na captação de corridas.
+* **Administrador:** Ganha acesso ao backoffice de moderação de LGPD e fluxo de banimento.
+
+### 🚚 Fluxo Logístico Frontend-Driven (Radar e Socket)
+O aplicativo possui um ecossistema inteligente e autossuficiente para orquestrar as entregas solidárias:
+* **Fallback de GPS Inteligente:** Utilização de `Promise.race()` ao solicitar fretes. Se o hardware/emulador demorar mais de 4 segundos para responder com o GPS real, o Frontend intercepta a requisição e aplica uma coordenada de fallback em background, garantindo que o usuário nunca fique preso em telas de carregamento.
+* **Radar Georreferenciado:** Freteiros visualizam um Feed de corridas utilizando cálculos nativos de distância PostGIS (`ST_DistanceSphere`) entre a localização atual deles (X) e a casa do beneficiário (Y). Modal nativo permite que os motoristas enviem suas estimativas financeiras.
+* **Orquestração Automática de Chat:** Quando um motorista aceita uma corrida, o Frontend dispara uma série de mutações (`PATCH` para aceitar, `POST` para criar sala de chat) e redireciona o usuário para a nova tela. Lá, a integração de WebSocket (`Socket.io`) entra em ação, disparando silenciosamente uma mensagem automática inicial com a proposta do frete, sem intervenção do servidor.
+* **Distinção Visual na UI:** As salas de chat geradas pelo sistema logístico possuem a tag `FREIGHT`. O Frontend intercepta essa flag e repinta os balões de diálogo e os banners com a cor Laranja, além de aplicar selos dinâmicos de "Parceiro Logístico" para o beneficiário saber com quem está conversando.
+
 ## 🛠️ Como Executar o Projeto
 
 1.  Instale as dependências:

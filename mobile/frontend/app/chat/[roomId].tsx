@@ -4,9 +4,11 @@ import {
   KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert 
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; 
 import { io, Socket } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { api } from '../../src/services/api';
 
 interface Message {
@@ -17,7 +19,7 @@ interface Message {
 }
 
 export default function ChatRoomScreen() {
-  const { roomId } = useLocalSearchParams();
+  const { roomId, autoMsg } = useLocalSearchParams<{ roomId: string, autoMsg?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient(); 
   
@@ -26,6 +28,7 @@ export default function ChatRoomScreen() {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   
   const socketRef = useRef<Socket | null>(null);
+  const hasSentAutoMsg = useRef(false); // Trava para enviar mensagem só 1x
 
   const { data: me } = useQuery({
     queryKey: ['users', 'me'],
@@ -38,6 +41,7 @@ export default function ChatRoomScreen() {
   });
 
   const currentChat = chats?.find((c: any) => c.id === roomId);
+  const isFreightChat = currentChat?.type === 'FREIGHT';
 
   const { data: itemDetails } = useQuery({
     queryKey: ['item', currentChat?.item?.id],
@@ -71,6 +75,42 @@ export default function ChatRoomScreen() {
     enabled: !!roomId,
   });
 
+  // MUTAÇÃO: SOLICITAR FRETE COM FALLBACK DE GPS
+  const requestFreightMutation = useMutation({
+    mutationFn: async () => {
+      let finalCoords = { lat: -23.5015, lng: -47.4581 }; // Fallback Padrão
+
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status === 'granted') {
+          // Corrida contra o tempo: GPS vs 4 Segundos
+          const loc = await Promise.race([
+            Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+          ]) as Location.LocationObject;
+
+          finalCoords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+        }
+      } catch (err) {
+        console.warn('GPS Lento/Falhou no Emulador. Aplicando Coordenadas de Fallback.');
+      }
+
+      await api.post('/freights', { 
+        itemId: currentChat?.item?.id,
+        destinationLat: finalCoords.lat,
+        destinationLng: finalCoords.lng
+      });
+    },
+    onSuccess: () => {
+      Alert.alert('Sucesso!', 'Frete solicitado com sucesso! O item já está no radar dos nossos motoristas parceiros.');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.message || error.message || 'Não foi possível solicitar o frete no momento.';
+      Alert.alert('Atenção', msg);
+    }
+  });
+
   useEffect(() => {
     const markMessagesAsRead = async () => {
       try {
@@ -80,10 +120,7 @@ export default function ChatRoomScreen() {
         console.error('Erro ao marcar mensagens como lidas', error);
       }
     };
-
-    if (roomId) {
-      markMessagesAsRead();
-    }
+    if (roomId) markMessagesAsRead();
   }, [roomId, queryClient]);
 
   useEffect(() => {
@@ -99,6 +136,17 @@ export default function ChatRoomScreen() {
       socketRef.current.on('connect', () => {
         setIsSocketConnected(true);
         socketRef.current?.emit('join_room', { roomId });
+
+        // LÓGICA DE BOT: Dispara a mensagem automática assim que o Socket abre
+        if (autoMsg && !hasSentAutoMsg.current) {
+          setTimeout(() => {
+            socketRef.current?.emit('send_message', {
+              roomId,
+              content: autoMsg,
+            });
+            hasSentAutoMsg.current = true;
+          }, 800); 
+        }
       });
 
       socketRef.current.on('receive_message', (newMessage: Message) => {
@@ -117,14 +165,12 @@ export default function ChatRoomScreen() {
       });
     };
 
-    if (me?.id) {
-       connectSocket();
-    }
+    if (me?.id) connectSocket();
 
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [roomId, me?.id, queryClient]);
+  }, [roomId, me?.id, queryClient, autoMsg]);
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
@@ -147,7 +193,7 @@ export default function ChatRoomScreen() {
 
     return (
       <View style={[styles.messageWrapper, isMyMessage ? styles.messageWrapperRight : styles.messageWrapperLeft]}>
-        <View style={[styles.messageBubble, isMyMessage ? styles.myBubble : styles.otherBubble]}>
+        <View style={[styles.messageBubble, isMyMessage ? styles.myBubble : (isFreightChat ? styles.otherBubbleFreight : styles.otherBubble)]}>
           <Text style={[styles.messageText, isMyMessage ? styles.myMessageText : styles.otherMessageText]}>
             {item.content}
           </Text>
@@ -165,38 +211,69 @@ export default function ChatRoomScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>{'< Voltar'}</Text>
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backBtnText}>{'< Voltar'}</Text>
+          </TouchableOpacity>
+        </View>
         
         <View style={styles.headerCenter}>
-          {/* NOVO: Nome agora é um botão clicável que leva ao Perfil Público */}
+          {isFreightChat && (
+            <View style={styles.freightBadge}>
+              <Text style={styles.freightBadgeText}>🚚 Parceiro Logístico</Text>
+            </View>
+          )}
+
           <TouchableOpacity 
             activeOpacity={0.7}
             onPress={() => {
-              if (currentChat?.otherUser?.id) {
-                router.push(`/user/${currentChat.otherUser.id}`);
-              }
+              if (currentChat?.otherUser?.id) router.push(`/user/${currentChat.otherUser.id}`);
             }}
           >
             <Text style={styles.headerTitle} numberOfLines={1}>
               {currentChat ? currentChat.otherUser.fullName : 'Carregando...'}
             </Text>
           </TouchableOpacity>
+
           {currentChat && (
-            <Text style={styles.headerSub} numberOfLines={1}>
-              📦 {currentChat.item.title}
-            </Text>
+            <View style={styles.subContainer}>
+              <View style={[styles.statusDot, { backgroundColor: isSocketConnected ? '#4CAF50' : '#F44336' }]} />
+              <Text style={styles.headerSub} numberOfLines={1}>
+                📦 {currentChat.item.title}
+              </Text>
+            </View>
           )}
         </View>
 
-        <View style={[styles.statusDot, { backgroundColor: isSocketConnected ? '#4CAF50' : '#F44336' }]} />
+        <View style={styles.headerRight}>
+          {currentChat?.type === 'DONATION' && (
+            <TouchableOpacity 
+              style={styles.requestFreightBtn}
+              disabled={requestFreightMutation.isPending}
+              onPress={() => {
+                Alert.alert(
+                  'Solicitar Frete Solidário', 
+                  'Deseja colocar este item no radar dos nossos freteiros parceiros?', 
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Sim, Solicitar', onPress: () => requestFreightMutation.mutate() }
+                  ]
+                );
+              }}
+            >
+              {requestFreightMutation.isPending ? (
+                 <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                 <Ionicons name="car-outline" size={24} color="#FFF" />
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {/* BANNER DE AVALIAÇÃO */}
-      {itemDetails?.status === 'Doado' && currentChat && !myReviewForThisItem && (
+      {/* BANNER DE AVALIAÇÃO DOAÇÃO */}
+      {currentChat?.type === 'DONATION' && itemDetails?.status === 'Doado' && !myReviewForThisItem && (
         <View style={styles.reviewBanner}>
           <View style={styles.reviewBannerTextContainer}>
             <Text style={styles.reviewBannerTitle}>Doação Concluída! 🎉</Text>
@@ -206,11 +283,26 @@ export default function ChatRoomScreen() {
             style={styles.reviewBannerBtn}
             onPress={() => router.push({
               pathname: '/review/create' as any,
-              params: { 
-                revieweeId: currentChat.otherUser.id, 
-                revieweeName: currentChat.otherUser.fullName,
-                itemId: currentChat.item.id 
-              }
+              params: { revieweeId: currentChat.otherUser.id, revieweeName: currentChat.otherUser.fullName, itemId: currentChat.item.id }
+            })}
+          >
+            <Text style={styles.reviewBannerBtnText}>⭐ Avaliar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* BANNER DE AVALIAÇÃO FRETE */}
+      {currentChat?.type === 'FREIGHT' && !myReviewForThisItem && (
+        <View style={[styles.reviewBanner, { backgroundColor: '#FFF3E0', borderColor: '#FFB74D' }]}>
+          <View style={styles.reviewBannerTextContainer}>
+            <Text style={[styles.reviewBannerTitle, { color: '#E65100' }]}>Corrida em Andamento 🚚</Text>
+            <Text style={styles.reviewBannerSub}>Avalie o motorista após a entrega ser concluída.</Text>
+          </View>
+          <TouchableOpacity 
+            style={[styles.reviewBannerBtn, { backgroundColor: '#FF9800' }]}
+            onPress={() => router.push({
+              pathname: '/review/create' as any,
+              params: { revieweeId: currentChat.otherUser.id, revieweeName: currentChat.otherUser.fullName, itemId: currentChat.item.id }
             })}
           >
             <Text style={styles.reviewBannerBtnText}>⭐ Avaliar</Text>
@@ -241,7 +333,7 @@ export default function ChatRoomScreen() {
           maxLength={500}
         />
         <TouchableOpacity 
-          style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]} 
+          style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled, isFreightChat && { backgroundColor: '#FF9800' }]} 
           onPress={handleSendMessage}
           disabled={!inputText.trim()}
         >
@@ -255,41 +347,39 @@ export default function ChatRoomScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E5DDD5' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  
-  header: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#DDD', elevation: 2, zIndex: 10 },
-  backBtn: { width: 70 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingTop: 40, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#DDD', elevation: 2, zIndex: 10 },
+  headerLeft: { flex: 1, alignItems: 'flex-start' },
+  headerCenter: { flex: 2, alignItems: 'center' },
+  headerRight: { flex: 1, alignItems: 'flex-end' },
+  backBtn: { padding: 5 },
   backBtnText: { fontSize: 16, color: '#2196F3', fontWeight: 'bold' },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  // Adicionei um leve sublinhado para o usuário saber que é clicável (opcional)
+  freightBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, marginBottom: 2 },
+  freightBadgeText: { color: '#E65100', fontSize: 10, fontWeight: 'bold' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', textDecorationLine: 'underline' },
-  headerSub: { fontSize: 13, color: '#666', marginTop: 2 },
-  statusDot: { width: 10, height: 10, borderRadius: 5, alignSelf: 'center', flex: 0 },
-
+  subContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 4 },
+  headerSub: { fontSize: 12, color: '#666' },
+  requestFreightBtn: { backgroundColor: '#FF9800', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 2 },
   reviewBanner: { flexDirection: 'row', backgroundColor: '#FFF9C4', padding: 15, alignItems: 'center', borderBottomWidth: 1, borderColor: '#FBC02D', elevation: 1 },
   reviewBannerTextContainer: { flex: 1, paddingRight: 10 },
   reviewBannerTitle: { fontSize: 14, fontWeight: 'bold', color: '#F57F17' },
   reviewBannerSub: { fontSize: 12, color: '#777', marginTop: 2 },
   reviewBannerBtn: { backgroundColor: '#F57F17', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20 },
   reviewBannerBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
-
   listContent: { padding: 15, gap: 10 },
-
   messageWrapper: { flexDirection: 'row', marginBottom: 10 },
   messageWrapperRight: { justifyContent: 'flex-end' },
   messageWrapperLeft: { justifyContent: 'flex-start' },
-  
-  messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, elevation: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } },
+  messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, elevation: 1 },
   myBubble: { backgroundColor: '#DCF8C6', borderBottomRightRadius: 4 }, 
   otherBubble: { backgroundColor: '#FFFFFF', borderBottomLeftRadius: 4 }, 
-
-  messageText: { fontSize: 16, lineHeight: 22 },
+  otherBubbleFreight: { backgroundColor: '#FFF3E0', borderBottomLeftRadius: 4 }, 
+  messageText: { fontSize: 16, lineHeight: 22, color: '#303030' },
   myMessageText: { color: '#303030' },
   otherMessageText: { color: '#303030' },
-  
   timeText: { fontSize: 11, alignSelf: 'flex-end', marginTop: 4 },
   myTimeText: { color: '#555' },
   otherTimeText: { color: '#999' },
-
   inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#FFF', alignItems: 'flex-end' },
   textInput: { flex: 1, backgroundColor: '#F0F0F0', borderRadius: 20, paddingHorizontal: 15, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#333' },
   sendBtn: { marginLeft: 10, backgroundColor: '#2196F3', width: 45, height: 45, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
