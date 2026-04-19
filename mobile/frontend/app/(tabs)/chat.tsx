@@ -117,26 +117,26 @@ export default function ChatListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: 'red', fontSize: 16 },
+  errorText: { color: '#DC2626', fontSize: 16 },
   
-  header: { padding: 20, paddingTop: 40, borderBottomWidth: 1, borderColor: '#F0F0F0', backgroundColor: '#FFF' },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#111827' },
+  header: { padding: 30, paddingTop: 60, borderBottomWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFF' },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
   
-  listContent: { padding: 10 },
+  listContent: { padding: 20 },
   
-  chatCard: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderColor: '#F0F0F0', alignItems: 'center' },
-  chatCardFreight: { backgroundColor: '#FFF8E1' }, // Fundo levemente alaranjado para Fretes
+  chatCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center' },
+  chatCardFreight: { backgroundColor: '#FFF8E1', borderWidth: 1, borderColor: '#FF9800' }, 
   
   avatarContainer: { position: 'relative', marginRight: 15 },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E0E0E0' },
-  avatarFreight: { borderWidth: 2, borderColor: '#FF9800' }, // Borda laranja para itens de frete
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E5E7EB' },
+  avatarFreight: { borderWidth: 2, borderColor: '#FF9800' }, 
   unreadBadge: { position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#2196F3', borderWidth: 2, borderColor: '#FFF' },
   
   chatInfo: { flex: 1, justifyContent: 'center' },
   chatHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  userName: { fontSize: 16, color: '#111827', flex: 1, marginRight: 10 },
+  userName: { fontSize: 16, color: '#1F2937', flex: 1, marginRight: 10 },
   timeText: { fontSize: 12, color: '#6B7280' },
   timeTextUnread: { color: '#2196F3', fontWeight: 'bold' },
   

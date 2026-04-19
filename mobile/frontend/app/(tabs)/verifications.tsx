@@ -75,10 +75,12 @@ export default function AdminVerificationsScreen() {
 
             <View style={styles.actions}>
               <TouchableOpacity style={styles.btnReject} onPress={() => setSelectedRequest(item)}>
+                <Ionicons name="close-circle-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
                 <Text style={styles.btnRejectText}>Rejeitar Mídia</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnApprove} onPress={() => handleApprove(item.id)}>
-                <Text style={styles.btnApproveText}>✓ Aprovar</Text>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+                <Text style={styles.btnApproveText}>Aprovar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -137,37 +139,38 @@ export default function AdminVerificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 30, paddingTop: 60, backgroundColor: '#FFF', alignItems: 'center', borderBottomWidth: 1, borderColor: '#E5E7EB' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#1F2937', marginTop: 10 },
-  sub: { color: '#6B7280', marginTop: 5 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontStyle: 'italic' },
+  header: { padding: 30, paddingTop: 60, backgroundColor: '#FFF', alignItems: 'center', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginTop: 10 },
+  sub: { color: '#6B7280', marginTop: 5, fontSize: 15 },
+  empty: { textAlign: 'center', color: '#6B7280', marginTop: 40, fontStyle: 'italic', fontSize: 15 },
   
   card: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 20, elevation: 2 },
-  userName: { fontSize: 18, fontWeight: 'bold', color: '#111827' },
+  userName: { fontSize: 18, fontWeight: 'bold', color: '#1F2937' },
   userEmail: { color: '#6B7280', marginBottom: 15 },
   
   imagesRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   imageContainer: { flex: 1 },
-  imageLabel: { fontSize: 12, fontWeight: 'bold', color: '#374151', marginBottom: 5 },
+  imageLabel: { fontSize: 12, fontWeight: 'bold', color: '#4B5563', marginBottom: 5 },
   docImage: { width: '100%', height: 120, borderRadius: 8, backgroundColor: '#E5E7EB', resizeMode: 'cover' },
   
   actions: { flexDirection: 'row', gap: 10 },
-  btnReject: { flex: 1, padding: 14, borderRadius: 8, borderWidth: 1, borderColor: '#FCA5A5', alignItems: 'center' },
-  btnRejectText: { color: '#DC2626', fontWeight: 'bold' },
-  btnApprove: { flex: 1, padding: 14, borderRadius: 8, backgroundColor: '#10B981', alignItems: 'center' },
-  btnApproveText: { color: '#FFF', fontWeight: 'bold' },
+  btnReject: { flex: 1, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEE2E2', alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+  btnRejectText: { color: '#DC2626', fontWeight: 'bold', fontSize: 16 },
+  btnApprove: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#10B981', alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+  btnApproveText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  buttonIcon: { marginRight: 8 },
   
   // Estilos do Modal de Rejeição
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', padding: 24, borderRadius: 16 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, color: '#111827' },
-  modalSubText: { marginBottom: 15, color: '#6B7280', fontSize: 14 },
-  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 20, minHeight: 80, textAlignVertical: 'top' },
-  modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  modalContent: { backgroundColor: '#FFF', padding: 24, borderRadius: 16, elevation: 5 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: '#1F2937' },
+  modalSubText: { marginBottom: 15, color: '#6B7280', fontSize: 15 },
+  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 20, minHeight: 80, textAlignVertical: 'top', backgroundColor: '#F9FAFB', fontSize: 16 },
+  modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center' },
   modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
-  cancelText: { color: '#6B7280', fontWeight: 'bold' },
-  modalBtnConfirmDanger: { backgroundColor: '#DC2626', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 },
-  confirmDangerText: { color: '#FFF', fontWeight: 'bold' },
+  cancelText: { color: '#6B7280', fontWeight: 'bold', fontSize: 16 },
+  modalBtnConfirmDanger: { backgroundColor: '#DC2626', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  confirmDangerText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 
   // Estilos do Modal de Zoom
   zoomOverlay: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },

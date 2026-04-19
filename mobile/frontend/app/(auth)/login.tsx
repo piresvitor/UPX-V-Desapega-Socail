@@ -1,8 +1,9 @@
 // app/(auth)/login.tsx
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { api } from '../../src/services/api';
 
@@ -59,9 +60,12 @@ export default function LoginScreen() {
       />
       
       {loginMutation.isPending ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#FF9800" />
       ) : (
-        <Button title="Acessar" onPress={handleLogin} />
+        <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+          <Ionicons name="log-in-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+          <Text style={styles.primaryButtonText}>Acessar</Text>
+        </TouchableOpacity>
       )}
 
       <Link href="/(auth)/register" style={styles.link}>
@@ -72,9 +76,12 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, gap: 16 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
-  subtitle: { fontSize: 16, textAlign: 'center', marginBottom: 20, color: '#666' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8, fontSize: 16 },
-  link: { textAlign: 'center', marginTop: 20, color: 'blue', fontWeight: 'bold' }
+  container: { flex: 1, justifyContent: 'center', padding: 20, gap: 16, backgroundColor: '#F3F4F6' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937' },
+  subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 20, color: '#6B7280', marginTop: 5 },
+  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16 },
+  primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
+  link: { textAlign: 'center', marginTop: 20, color: '#2196F3', fontWeight: 'bold' }
 });

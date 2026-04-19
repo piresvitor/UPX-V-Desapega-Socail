@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, 
   Image, Alert, ActivityIndicator, KeyboardAvoidingView, Platform 
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -252,7 +253,10 @@ export default function CreateDonationScreen() {
           {isUploading || createItemMutation.isPending ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.submitBtnText}>Publicar Doação</Text>
+            <>
+              <Ionicons name="cloud-upload-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+              <Text style={styles.submitBtnText}>Publicar Doação</Text>
+            </>
           )}
         </TouchableOpacity>
 
@@ -281,16 +285,17 @@ const styles = StyleSheet.create({
   removeImgBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: 'red', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   removeImgText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
 
-  input: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 15, fontSize: 16, color: '#1F2937' },
-  textArea: { minHeight: 100, paddingTop: 15 },
+  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 14, fontSize: 16, color: '#1F2937' },
+  textArea: { minHeight: 100, paddingTop: 14 },
   
   categoryScroll: { flexDirection: 'row' },
   chip: { backgroundColor: '#E5E7EB', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, marginRight: 10 },
   chipActive: { backgroundColor: '#2196F3' },
-  chipText: { color: '#4B5563', fontWeight: 'bold' },
+  chipText: { color: '#6B7280', fontWeight: 'bold' },
   chipTextActive: { color: '#FFF' },
 
-  submitBtn: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10, elevation: 2 },
+  submitBtn: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, elevation: 2 },
   submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+  submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 }
 });

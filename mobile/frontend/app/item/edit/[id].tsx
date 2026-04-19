@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../../src/services/api'; 
 
 const CATEGORIES = ['Móveis', 'Eletrônicos', 'Roupas', 'Alimentos', 'Outros'];
@@ -157,6 +158,7 @@ export default function EditItemScreen() {
             onPress={() => router.back()}
             disabled={updateItemMutation.isPending}
           >
+            <Ionicons name="close-circle-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
             <Text style={styles.btnTextCancel}>Cancelar</Text>
           </TouchableOpacity>
           
@@ -168,7 +170,10 @@ export default function EditItemScreen() {
             {updateItemMutation.isPending ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.btnTextWhite}>Salvar Alterações</Text>
+              <>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+                <Text style={styles.btnTextWhite}>Salvar</Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -178,17 +183,17 @@ export default function EditItemScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   scrollContent: { padding: 24, paddingBottom: 60 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#111827', marginBottom: 4 },
-  subHeader: { fontSize: 14, color: '#6B7280', marginBottom: 30 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 4 },
+  subHeader: { fontSize: 15, color: '#6B7280', marginBottom: 30, marginTop: 5 },
   
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { fontSize: 16, fontWeight: '600', color: '#1F2937', marginBottom: 8 },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 10,
@@ -202,24 +207,27 @@ const styles = StyleSheet.create({
   // Categorias
   categoryScroll: { flexDirection: 'row', paddingTop: 4, paddingBottom: 8 },
   chip: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 10,
   },
-  chipActive: { backgroundColor: '#2196F3' },
-  chipText: { color: '#4B5563', fontWeight: '600' },
+  chipActive: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
+  chipText: { color: '#6B7280', fontWeight: 'bold' },
   chipTextActive: { color: '#FFF' },
 
   // Rodapé e Botões
   footer: { flexDirection: 'row', gap: 12, marginTop: 20 },
-  btn: { flex: 1, height: 54, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  btnCancel: { backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' },
-  btnSave: { backgroundColor: '#4CAF50' }, // Verde para confirmar ação positiva
+  btn: { flex: 1, padding: 16, borderRadius: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  btnCancel: { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' },
+  btnSave: { backgroundColor: '#10B981' }, 
   btnDisabled: { opacity: 0.7 },
   
   btnTextWhite: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  btnTextCancel: { color: '#4B5563', fontSize: 16, fontWeight: 'bold' },
-  errorText: { color: 'red', fontSize: 16, fontWeight: 'bold' }
+  btnTextCancel: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
+  errorText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' }
 });

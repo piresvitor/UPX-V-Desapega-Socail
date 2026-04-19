@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   
   header: { backgroundColor: '#1F2937', padding: 20, paddingTop: 50, flexDirection: 'row', alignItems: 'center' },
   backBtn: { marginRight: 15 },
-  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { color: '#FFF', fontSize: 24, fontWeight: 'bold' },
 
   content: { padding: 20 },
   
@@ -141,21 +141,21 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, alignItems: 'center' },
   statusBadge: { backgroundColor: '#FFF3E0', color: '#E65100', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, fontWeight: 'bold', fontSize: 13 },
   priceText: { fontSize: 20, fontWeight: 'bold', color: '#10B981' },
-  itemTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827', marginBottom: 10 },
-  dateText: { color: '#9CA3AF', fontSize: 13 },
+  itemTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 10 },
+  dateText: { color: '#6B7280', fontSize: 14 },
 
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#374151', marginBottom: 15 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 15 },
   
   actionsContainer: { flexDirection: 'row', gap: 15, marginBottom: 20 },
-  actionBtn: { flex: 1, backgroundColor: '#FFF', padding: 20, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#D1D5DB' },
+  actionBtn: { flex: 1, backgroundColor: '#FFF', padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#D1D5DB' },
   actionBtnActive: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
   actionBtnActiveSuccess: { backgroundColor: '#10B981', borderColor: '#10B981' },
-  actionBtnText: { marginTop: 8, fontWeight: 'bold', color: '#374151' },
+  actionBtnText: { marginTop: 8, fontWeight: 'bold', color: '#374151', fontSize: 16 },
 
-  cancelBtn: { flexDirection: 'row', backgroundColor: '#FEE2E2', padding: 15, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 30, borderWidth: 1, borderColor: '#FCA5A5' },
+  cancelBtn: { flexDirection: 'row', backgroundColor: '#FEE2E2', padding: 16, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 30, borderWidth: 1, borderColor: '#FCA5A5' },
   cancelBtnText: { color: '#DC2626', fontWeight: 'bold', fontSize: 16, marginLeft: 8 },
 
-  chatBtn: { backgroundColor: '#2196F3', padding: 18, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 2 },
+  chatBtn: { backgroundColor: '#2196F3', padding: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 2 },
   chatBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 16, marginLeft: 10 },
-  helpText: { color: '#6B7280', fontSize: 12, textAlign: 'center', marginTop: 10 }
+  helpText: { color: '#6B7280', fontSize: 14, textAlign: 'center', marginTop: 10 }
 });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/services/api';
 
 interface PublicProfile {
@@ -96,6 +97,7 @@ export default function PublicProfileScreen() {
       
       {/* Botão flutuante para voltar */}
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Ionicons name="arrow-back-outline" size={20} color="#1F2937" style={{ marginRight: 8 }} />
         <Text style={styles.backBtnText}>Voltar</Text>
       </TouchableOpacity>
     </View>
@@ -103,36 +105,36 @@ export default function PublicProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   error: { color: 'red', fontSize: 16, fontWeight: 'bold' },
 
-  header: { backgroundColor: '#fff', padding: 30, alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', elevation: 2 },
-  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  avatarText: { color: '#fff', fontSize: 36, fontWeight: 'bold' },
-  name: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+  header: { backgroundColor: '#FFF', padding: 30, alignItems: 'center', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
+  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#2196F3', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  avatarText: { color: '#FFF', fontSize: 36, fontWeight: 'bold' },
+  name: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
   
-  verifiedBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: '#4CAF50' },
-  verifiedText: { color: '#2E7D32', fontWeight: 'bold', fontSize: 12 },
+  verifiedBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: '#10B981' },
+  verifiedText: { color: '#10B981', fontWeight: 'bold', fontSize: 12 },
 
-  statsRow: { flexDirection: 'row', marginTop: 20, backgroundColor: '#f9f9f9', borderRadius: 12, padding: 15, width: '100%', justifyContent: 'space-around' },
+  statsRow: { flexDirection: 'row', marginTop: 20, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 15, width: '100%', justifyContent: 'space-around' },
   statBox: { alignItems: 'center' },
-  statValue: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  statLabel: { color: '#777', fontSize: 12, marginTop: 4 },
-  dividerVertical: { width: 1, backgroundColor: '#ddd' },
+  statValue: { fontSize: 18, fontWeight: 'bold', color: '#1F2937' },
+  statLabel: { color: '#6B7280', fontSize: 12, marginTop: 4 },
+  dividerVertical: { width: 1, backgroundColor: '#D1D5DB' },
 
   listContainer: { flex: 1, padding: 20 },
-  listTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 },
+  listTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 15 },
   
-  reviewCard: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 12, elevation: 1 },
+  reviewCard: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2 },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
-  reviewerName: { fontWeight: 'bold', color: '#111', fontSize: 15 },
-  reviewDate: { color: '#999', fontSize: 12 },
-  reviewStars: { color: '#FFA000', fontSize: 16, marginBottom: 8 },
-  reviewComment: { color: '#555', fontSize: 14, lineHeight: 20 },
+  reviewerName: { fontWeight: 'bold', color: '#1F2937', fontSize: 15 },
+  reviewDate: { color: '#9CA3AF', fontSize: 12 },
+  reviewStars: { color: '#FF9800', fontSize: 16, marginBottom: 8 },
+  reviewComment: { color: '#6B7280', fontSize: 14, lineHeight: 20 },
   
-  emptyText: { textAlign: 'center', color: '#888', marginTop: 40, fontStyle: 'italic' },
+  emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 40, fontStyle: 'italic' },
 
-  backBtn: { position: 'absolute', bottom: 30, alignSelf: 'center', backgroundColor: '#333', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 30, elevation: 5 },
-  backBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+  backBtn: { position: 'absolute', bottom: 30, alignSelf: 'center', backgroundColor: '#FFF', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 30, elevation: 5, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#D1D5DB' },
+  backBtnText: { color: '#1F2937', fontWeight: 'bold', fontSize: 16 }
 });

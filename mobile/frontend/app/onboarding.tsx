@@ -1,6 +1,7 @@
-import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '../src/services/api';
 import { useAuth } from '../src/contexts/AuthContext';
 
@@ -65,28 +66,34 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button title="Criar Nova Conta" onPress={() => handleStart('/(auth)/register')} />
+        <TouchableOpacity style={styles.primaryButton} onPress={() => handleStart('/(auth)/register')}>
+          <Ionicons name="add-circle" size={20} color="#FFF" style={styles.buttonIcon} />
+          <Text style={styles.primaryButtonText}>Criar Nova Conta</Text>
+        </TouchableOpacity>
         <View style={styles.spacer} />
-        <Button title="Já tenho conta (Entrar)" color="gray" onPress={() => handleStart('/(auth)/login')} />
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => handleStart('/(auth)/login')}>
+          <Ionicons name="log-in-outline" size={20} color="#2196F3" style={styles.buttonIcon} />
+          <Text style={styles.secondaryButtonText}>Já tenho conta (Entrar)</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, textAlign: 'center', color: '#333' },
-  brand: { fontSize: 36, fontWeight: 'bold', textAlign: 'center', color: '#2196F3', marginBottom: 20 },
-  subtitle: { fontSize: 16, textAlign: 'center', color: '#666', marginBottom: 40 },
+  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#F3F4F6' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937' },
+  brand: { fontSize: 36, fontWeight: 'bold', textAlign: 'center', color: '#FF9800', marginBottom: 20 },
+  subtitle: { fontSize: 15, textAlign: 'center', color: '#6B7280', marginTop: 5, marginBottom: 40 },
   
   // Estilos do Card de Estatísticas
   statsCard: { 
-    backgroundColor: '#fff', 
+    backgroundColor: '#FFF', 
     paddingVertical: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderRadius: 16, 
     justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, elevation: 5,
+    elevation: 2,
     marginBottom: 40,
     minHeight: 120, 
   },
@@ -102,21 +109,26 @@ const styles = StyleSheet.create({
   statNumber: { 
     fontSize: 28, 
     fontWeight: '900', 
-    color: '#4CAF50',
+    color: '#10B981',
     marginBottom: 4
   },
   statLabel: { 
     fontSize: 12, 
-    color: '#777',
+    color: '#6B7280',
     textTransform: 'uppercase',
     fontWeight: '600'
   },
   divider: {
     width: 1,
     height: '70%',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#D1D5DB',
   },
-  errorText: { fontSize: 16, color: '#555', textAlign: 'center' },
+  errorText: { fontSize: 16, color: '#6B7280', textAlign: 'center' },
   buttonContainer: { marginTop: 10 },
+  primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  secondaryButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#2196F3', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  secondaryButtonText: { color: '#2196F3', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 },
   spacer: { height: 16 }
 });

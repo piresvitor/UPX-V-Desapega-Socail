@@ -96,11 +96,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  header: { padding: 30, paddingTop: 50, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB' },
+  header: { padding: 30, paddingTop: 50, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logoutBtn: { padding: 8, backgroundColor: '#FEE2E2', borderRadius: 8, borderWidth: 1, borderColor: '#FCA5A5' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginTop: 15 },
-  sub: { color: '#6B7280', marginTop: 5 },
+  sub: { color: '#6B7280', marginTop: 5, fontSize: 15 },
   
   grid: { padding: 15 },
   
@@ -109,11 +109,11 @@ const styles = StyleSheet.create({
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rowAlign: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   cardLabelFull: { fontSize: 18, color: '#374151', fontWeight: 'bold' },
-  cardNumberFull: { fontSize: 28, fontWeight: 'bold', color: '#111827' },
+  cardNumberFull: { fontSize: 28, fontWeight: 'bold', color: '#1F2937' },
   cardSubLabelFull: { fontSize: 13, color: '#6B7280', marginTop: 10 },
 
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#4B5563' },
-  cardValue: { fontSize: 24, fontWeight: 'bold', color: '#111827' },
+  cardValue: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
   
   chartLegend: { fontSize: 13, color: '#6B7280', marginTop: 5, marginBottom: 10 },
   chartTrack: { height: 12, backgroundColor: '#E5E7EB', borderRadius: 6, overflow: 'hidden' },

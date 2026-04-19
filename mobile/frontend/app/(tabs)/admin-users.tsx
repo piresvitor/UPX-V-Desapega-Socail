@@ -149,17 +149,17 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, paddingTop: 50, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB' },
+  header: { padding: 20, paddingTop: 50, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 },
   title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginTop: 10, marginBottom: 15 },
-  searchBox: { flexDirection: 'row', backgroundColor: '#F3F4F6', padding: 12, borderRadius: 10, alignItems: 'center' },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
+  searchBox: { flexDirection: 'row', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, alignItems: 'center' },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#1F2937' },
   
-  card: { flexDirection: 'row', backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 1, alignItems: 'center' },
+  card: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center' },
   cardBanned: { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5', borderWidth: 1 },
   
   cardInfo: { flex: 1, paddingRight: 10 },
   nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  userName: { fontSize: 16, fontWeight: 'bold', color: '#111827', flexShrink: 1, marginRight: 8 },
+  userName: { fontSize: 16, fontWeight: 'bold', color: '#1F2937', flexShrink: 1, marginRight: 8 },
   
   ratingBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   ratingText: { color: '#B45309', fontSize: 12, fontWeight: 'bold', marginLeft: 4 },
@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
   verifiedBadge: { backgroundColor: '#D1FAE5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, fontSize: 11, fontWeight: 'bold', color: '#047857' },
   bannedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, fontSize: 11, fontWeight: 'bold', color: '#B91C1C' },
   
-  banBtn: { padding: 10, backgroundColor: '#FEF2F2', borderRadius: 8, marginLeft: 10 },
-  restoreBtn: { backgroundColor: '#ECFDF5' },
+  banBtn: { padding: 10, backgroundColor: '#FEE2E2', borderRadius: 8, marginLeft: 10 },
+  restoreBtn: { backgroundColor: '#E8F5E9' },
 
   footerLoader: { paddingVertical: 20 }
 });

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, FlatList, Image, TextInput, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
@@ -103,7 +104,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Doações Próximas</Text>
-        <Text onPress={signOut} style={styles.logoutText}>Sair</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+          <Ionicons name="log-out-outline" size={16} color="#DC2626" style={{marginRight: 8}} />
+          <Text style={styles.logoutText}>Sair</Text>
+        </TouchableOpacity>
       </View>
 
       {/* --- SEÇÃO DE FILTROS --- */}
@@ -193,41 +197,42 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, paddingHorizontal: 16, marginBottom: 10 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  logoutText: { color: 'red', fontWeight: 'bold', fontSize: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12 },
+  logoutText: { color: '#DC2626', fontWeight: 'bold', fontSize: 14 },
   
   // Filtros
-  filtersContainer: { paddingHorizontal: 16, paddingBottom: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#eee', marginBottom: 10 },
-  searchInput: { backgroundColor: '#f0f0f0', borderRadius: 8, padding: 10, fontSize: 16, marginBottom: 10 },
+  filtersContainer: { paddingHorizontal: 16, paddingBottom: 10, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB', marginBottom: 10, elevation: 2, padding: 20 },
+  searchInput: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 14, fontSize: 16, marginBottom: 10 },
   scrollHorizontal: { marginBottom: 10 },
-  chip: { backgroundColor: '#e0e0e0', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
+  chip: { backgroundColor: '#F3F4F6', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
   chipActive: { backgroundColor: '#2196F3' },
-  chipText: { color: '#333', fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
+  chipText: { color: '#6B7280', fontWeight: '600' },
+  chipTextActive: { color: '#FFF' },
   
   radiusContainer: { flexDirection: 'row', alignItems: 'center' },
-  radiusLabel: { fontSize: 14, color: '#666', marginRight: 10, fontWeight: 'bold' },
-  radiusChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', marginRight: 8 },
-  radiusChipActive: { backgroundColor: '#E8F5E9', borderColor: '#4CAF50' },
-  radiusChipText: { color: '#666' },
-  radiusChipTextActive: { color: '#4CAF50', fontWeight: 'bold' },
+  radiusLabel: { fontSize: 14, color: '#6B7280', marginRight: 10, fontWeight: 'bold' },
+  radiusChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#D1D5DB', marginRight: 8 },
+  radiusChipActive: { backgroundColor: '#E8F5E9', borderColor: '#10B981' },
+  radiusChipText: { color: '#6B7280' },
+  radiusChipTextActive: { color: '#10B981', fontWeight: 'bold' },
 
-  text: { marginTop: 10, color: '#666' },
-  errorText: { color: 'red', textAlign: 'center', marginTop: 20 },
-  emptyText: { textAlign: 'center', color: '#666', marginTop: 40 },
+  text: { marginTop: 10, color: '#6B7280' },
+  errorText: { color: '#DC2626', textAlign: 'center', marginTop: 20 },
+  emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 40 },
   
   // Card
-  card: { backgroundColor: '#fff', borderRadius: 12, marginHorizontal: 16, marginBottom: 16, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1 },
-  cardImage: { width: '100%', height: 180, backgroundColor: '#e0e0e0' },
-  imagePlaceholder: { width: '100%', height: 180, backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
-  cardContent: { padding: 16 },
+  card: { backgroundColor: '#FFF', borderRadius: 16, marginHorizontal: 16, marginBottom: 16, overflow: 'hidden', elevation: 2 },
+  cardImage: { width: '100%', height: 180, backgroundColor: '#E5E7EB' },
+  imagePlaceholder: { width: '100%', height: 180, backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' },
+  cardContent: { padding: 20 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   categoryBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  categoryText: { color: '#1976D2', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
-  distanceText: { fontSize: 12, color: '#777', fontWeight: 'bold' },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  donorText: { fontSize: 14, color: '#777' }
+  categoryText: { color: '#2196F3', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
+  distanceText: { fontSize: 12, color: '#6B7280', fontWeight: 'bold' },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 4 },
+  donorText: { fontSize: 14, color: '#6B7280' }
 });

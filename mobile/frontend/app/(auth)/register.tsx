@@ -1,9 +1,10 @@
 // app/(auth)/register.tsx
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { api } from '../../src/services/api';
 
@@ -109,24 +110,35 @@ export default function RegisterScreen() {
       </View>
 
       {registerMutation.isPending ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#FF9800" />
       ) : (
-        <Button title="Criar Conta" onPress={handleRegister} />
+        <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
+          <Ionicons name="person-add-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+          <Text style={styles.primaryButtonText}>Criar Conta</Text>
+        </TouchableOpacity>
       )}
 
-      <Button title="Voltar" color="gray" onPress={() => router.back()} />
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
+        <Ionicons name="arrow-back-outline" size={20} color="#6B7280" style={styles.buttonIcon} />
+        <Text style={styles.secondaryButtonText}>Voltar</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, gap: 16 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, gap: 16, backgroundColor: '#F3F4F6' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937', marginBottom: 20 },
   inputWrapper: { marginBottom: 4 }, // Novo: Empacota o input e a mensagem de erro
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8, fontSize: 16 },
-  inputError: { borderColor: 'red', borderWidth: 2 }, // Novo: Borda vermelha para erro
-  errorText: { color: 'red', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo do erro
-  helperText: { color: '#666', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo da dica
-  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10 },
-  pickerContainer: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 10 }
+  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16 },
+  inputError: { borderColor: '#DC2626', borderWidth: 2 }, // Novo: Borda vermelha para erro
+  errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo do erro
+  helperText: { color: '#6B7280', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo da dica
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, color: '#1F2937' },
+  pickerContainer: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', borderRadius: 10, marginBottom: 10 },
+  primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  secondaryButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#6B7280', fontSize: 16, fontWeight: 'bold' },
+  buttonIcon: { marginRight: 8 }
 });
