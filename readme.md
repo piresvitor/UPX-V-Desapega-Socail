@@ -13,7 +13,7 @@
 <h1 align="center" style="font-weight: bold;">🤝 Desapega Social: Economia Circular e Impacto 📦</h1>
 
 ### 🔧 Backend
-![node][NODgitE__BADGE] ![fastify][FASTIFY__BADGE] ![typescript][TYPESCRIPT__BADGE] ![postgresql][POSTGRESQL__BADGE] ![drizzle][DRIZZLE__BADGE] ![socketio][SOCKETIO__BADGE] ![firebase][FIREBASE__BADGE] ![zod][ZOD__BADGE]
+![node][NODE__BADGE] ![fastify][FASTIFY__BADGE] ![typescript][TYPESCRIPT__BADGE] ![postgresql][POSTGRESQL__BADGE] ![drizzle][DRIZZLE__BADGE] ![socketio][SOCKETIO__BADGE] ![firebase][FIREBASE__BADGE] ![zod][ZOD__BADGE]
 
 ### 📱 Frontend Mobile
 ![react_native][REACT_NATIVE__BADGE] ![expo][EXPO__BADGE] ![typescript][TYPESCRIPT__BADGE] ![react_query][REACT_QUERY__BADGE] ![socketio][SOCKETIO__BADGE]
