@@ -33,6 +33,7 @@
 - [👥 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
 
 </details>
+
 ## 📋 Sobre o Projeto
 
 O **Desapega Social** é uma solução digital focada em economia circular e impacto social. O objetivo central é conectar doadores de itens usados a pessoas em condição de vulnerabilidade, priorizando quem mais precisa e resolvendo o problema logístico com uma rede de freteiros locais, tudo isso gerido por uma arquitetura moderna e escalável.
