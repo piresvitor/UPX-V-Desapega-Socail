@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,13 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Logo do Aplicativo */}
+      <Image 
+        source={require('../assets/icon.png')} 
+        style={styles.logo} 
+        resizeMode="contain" 
+      />
+
       <Text style={styles.title}>Bem-vindo ao</Text>
       <Text style={styles.brand}>Desapega Social</Text>
       
@@ -32,7 +39,7 @@ export default function OnboardingScreen() {
         Conectando quem quer doar com quem mais precisa.
       </Text>
 
-      {/* NOVO: Card de Estatísticas com os 3 dados */}
+      {/* Card de Estatísticas com os 3 dados */}
       <View style={styles.statsCard}>
         {isLoading ? (
           <ActivityIndicator color="#2196F3" size="large" />
@@ -82,6 +89,15 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#F3F4F6' },
+  
+  // Estilo da Logo
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937' },
   brand: { fontSize: 36, fontWeight: 'bold', textAlign: 'center', color: '#FF9800', marginBottom: 20 },
   subtitle: { fontSize: 15, textAlign: 'center', color: '#6B7280', marginTop: 5, marginBottom: 40 },
