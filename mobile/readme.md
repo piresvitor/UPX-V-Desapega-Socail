@@ -1,6 +1,33 @@
-# 📱 Desapega Social - Frontend Mobile
+[TYPESCRIPT__BADGE]: https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white
+[SOCKETIO__BADGE]: https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white
+[FIREBASE__BADGE]: https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black
+[EXPO__BADGE]: https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white
+[REACT_NATIVE__BADGE]: https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[REACT_QUERY__BADGE]: https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white
+[ZOD__BADGE]: https://img.shields.io/badge/Zod-3E63DD?style=for-the-badge&logo=zod&logoColor=white
+
+<h1 align="center" style="font-weight: bold;">📱 Desapega Social - Frontend Mobile</h1>
+
+<div align="center">
+
+![react_native][REACT_NATIVE__BADGE] ![expo][EXPO__BADGE] ![typescript][TYPESCRIPT__BADGE] ![react_query][REACT_QUERY__BADGE] ![socketio][SOCKETIO__BADGE] ![firebase][FIREBASE__BADGE]
+
+</div>
 
 Este é o aplicativo mobile do projeto **Desapega Social**, focado em conectar doadores e pessoas que precisam de doações através de geolocalização. Desenvolvido com React Native e Expo.
+
+
+<details open="open">
+<summary>📑 Sumário</summary>
+
+- [🚀 Tecnologias e Dependências Principais](#-tecnologias-e-dependências-principais)
+- [📂 Estrutura de Pastas](#-estrutura-de-pastas)
+- [✨ Funcionalidades](#-funcionalidades)
+- [👥 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
+- [🚚 Fluxo Logístico Frontend-Driven](#-fluxo-logístico-frontend-driven)
+- [🛠️ Como Executar o Projeto](#️-como-executar-o-projeto)
+
+</details>
 
 ## 🚀 Tecnologias e Dependências Principais
 
@@ -24,8 +51,8 @@ mobile/frontend/
 │   ├── item/             # Telas de itens dinâmicos ([id].tsx, edit/[id].tsx)
 │   ├── user/             # Telas de perfis dinâmicos ([id].tsx Público)
 │   ├── _layout.tsx       # Layout Raiz (Providers de Autenticação e TanStack Query)
-│   └── onboarding.tsx    # Fluxo de boas-vindas
-│   ├── verification/     # Fluxo de verificação de identidade (index.tsx)
+│   ├── onboarding.tsx    # Fluxo de boas-vindas
+│   └── verification/     # Fluxo de verificação de identidade (index.tsx)
 ├── src/                  # Lógica de negócios e configurações
 │   ├── contexts/         # Contextos globais (ex: AuthContext)
 │   └── services/         # Clientes de API (ex: api.ts com Axios)
@@ -34,7 +61,7 @@ mobile/frontend/
 └── README.md             # Documentação do Frontend
 ```
 
-## Funcionalidades Já Desenvolvidas
+## Funcionalidades 
 
 ### 🛡️ Autenticação e Segurança
 * **Onboarding:** Fluxo de apresentação do app para novos usuários.

@@ -14,6 +14,7 @@
 
 <details open="open">
 <summary>📑 Sumário</summary>
+
 - [📋 Sobre o Projeto](#-sobre-o-projeto)
   - [🎯 Objetivos](#-objetivos)
   - [✨ Funcionalidades Principais](#-funcionalidades-principais)
@@ -23,6 +24,7 @@
 - [🔧 Configuração de Variáveis de Ambiente](#-configuração-de-variáveis-de-ambiente)
 - [📍 Endpoints da API](#-endpoints-da-api)
 - [👥 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
+
 </details>
 
 ## 📋 Sobre o Projeto

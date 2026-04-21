@@ -13,13 +13,14 @@
 <h1 align="center" style="font-weight: bold;">🤝 Desapega Social: Economia Circular e Impacto 📦</h1>
 
 ### 🔧 Backend
-![node][NODE__BADGE] ![fastify][FASTIFY__BADGE] ![typescript][TYPESCRIPT__BADGE] ![postgresql][POSTGRESQL__BADGE] ![drizzle][DRIZZLE__BADGE] ![socketio][SOCKETIO__BADGE] ![firebase][FIREBASE__BADGE] ![zod][ZOD__BADGE]
+![node][NODgitE__BADGE] ![fastify][FASTIFY__BADGE] ![typescript][TYPESCRIPT__BADGE] ![postgresql][POSTGRESQL__BADGE] ![drizzle][DRIZZLE__BADGE] ![socketio][SOCKETIO__BADGE] ![firebase][FIREBASE__BADGE] ![zod][ZOD__BADGE]
 
 ### 📱 Frontend Mobile
 ![react_native][REACT_NATIVE__BADGE] ![expo][EXPO__BADGE] ![typescript][TYPESCRIPT__BADGE] ![react_query][REACT_QUERY__BADGE] ![socketio][SOCKETIO__BADGE]
 
 <details open="open">
 <summary>📑 Sumário</summary>
+
 - [📋 Sobre o Projeto](#-sobre-o-projeto)
   - [🎯 Objetivos](#-objetivos)
   - [✨ Funcionalidades Principais](#-funcionalidades-principais)
@@ -30,8 +31,8 @@
 - [📍 Endpoints da API](#-endpoints-da-api)
 - [📱 Fluxos do Sistema](#-fluxos-do-sistema)
 - [👥 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
-</details>
 
+</details>
 ## 📋 Sobre o Projeto
 
 O **Desapega Social** é uma solução digital focada em economia circular e impacto social. O objetivo central é conectar doadores de itens usados a pessoas em condição de vulnerabilidade, priorizando quem mais precisa e resolvendo o problema logístico com uma rede de freteiros locais, tudo isso gerido por uma arquitetura moderna e escalável.
