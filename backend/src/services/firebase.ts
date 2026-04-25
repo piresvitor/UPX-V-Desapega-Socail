@@ -1,14 +1,28 @@
 import * as admin from 'firebase-admin';
+import 'dotenv/config';
 
 // Função para inicializar o Firebase apenas uma vez
 export function initializeFirebase() {
   if (!admin.apps.length) {
     try {
-      // Em produção, as credenciais vêm de variáveis de ambiente.
-      // Para desenvolvimento local, ele buscará o arquivo JSON que vamos baixar depois.
+      let credential;
+
+      // 1. Estratégia Dupla de Autenticação
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        // AMBIENTE DE PRODUÇÃO (Render): Lê o JSON injetado direto da variável de ambiente
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        credential = admin.credential.cert(serviceAccount);
+      } else {
+        // AMBIENTE LOCAL (Sua Máquina): Usa o arquivo apontado no GOOGLE_APPLICATION_CREDENTIALS do .env
+        credential = admin.credential.applicationDefault();
+      }
+
+      // 2. Inicialização com o Storage Bucket OBRIGATÓRIO
       admin.initializeApp({
-        credential: admin.credential.applicationDefault(), 
+        credential,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET, 
       });
+
       console.log('Firebase Admin inicializado com sucesso!');
     } catch (error) {
       console.error('Erro ao inicializar o Firebase Admin:', error);
@@ -34,17 +48,18 @@ export async function sendPushNotification(token: string, title: string, body: s
   }
 }
 
+// Função utilitária para apagar arquivos físicos (LGPD / Soft Delete)
 export async function deleteFirebaseFileByUrl(fileUrl: string) {
   try {
-    //Extrai o nome do arquivo da URL pública do Firebase Storage
+    // Extrai o nome do arquivo da URL pública do Firebase Storage
     const regex = /\/o\/(.*?)\?alt=media/;
     const match = fileUrl.match(regex);
     
     if (match && match[1]) {
-      //O decodeURIComponent transforma %2F em barras normais, etc.
+      // O decodeURIComponent transforma %2F em barras normais, etc.
       const filePath = decodeURIComponent(match[1]); 
       
-      //Manda o Firebase Admin deletar o arquivo silenciosamente
+      // Agora o Firebase sabe em qual bucket procurar, pois passamos na inicialização!
       await admin.storage().bucket().file(filePath).delete();
       console.log(`Arquivo apagado do Firebase Storage (LGPD): ${filePath}`);
     } else {
