@@ -7,15 +7,15 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL não encontrada no arquivo .env');
 }
 
-// Inicializa o cliente do Postgres moderno com as configurações otimizadas para o Supabase
+// Configuração blindada para Supabase na Nuvem
 const client = postgres(process.env.DATABASE_URL, { 
-  max: 20, // Máximo de conexões simultâneas
+  max: 20, 
   idle_timeout: 30,
-  connect_timeout: 2,
-  prepare: false // Evita o crash no pooler do Supabase!
+  connect_timeout: 10,
+  prepare: false,      // Necessário para o Pooler do Supabase
+  ssl: 'require'       // Força a criptografia para o Render não ser bloqueado
 });
 
-// Mensagem de sucesso ao carregar o arquivo
-console.log('Cliente PostgreSQL (postgres.js) configurado para Supabase!');
+console.log('Cliente PostgreSQL configurado com SSL para a Nuvem!');
 
 export const db = drizzle(client, { schema });
