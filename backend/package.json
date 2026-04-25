@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "Em construção...",
   "main": "index.js",
-  "scripts": {
+"scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "echo 'Build ignorado, usando tsx em producao'",
+    "start": "npx tsx src/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
