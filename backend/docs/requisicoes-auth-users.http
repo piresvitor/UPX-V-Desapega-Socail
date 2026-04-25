@@ -1,4 +1,4 @@
-@baseUrl = https://desapega-social-api.onrender.com
+@baseUrl = http://127.0.0.1:3333
 # Cole o token recebido no Login aqui para testar as rotas protegidas
 @userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxODZhMWUyZi05MGVlLTQwY2YtYTFkNS0wMDY3ZThlNTMxMjIiLCJyb2xlIjoiQmVuZWZpY2nDoXJpbyIsImlhdCI6MTc3NDgzODkzOH0.NZZxfL70ikZg_0_An9uoSOH_Jwn_GNpvjpbsW6MtbX8
 
@@ -17,7 +17,7 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "Administrador",
+  "fullName": "Adm",
   "email": "adm1@exemplo.com",
   "password": "senha123",
   "role": "Admin"

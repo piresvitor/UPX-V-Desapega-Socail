@@ -24,34 +24,43 @@ export const registerRoute: FastifyPluginAsyncZod = async (server) => {
         409: z.object({
           message: z.string(),
         }),
+        500: z.object({
+          message: z.string(),
+        })
       },
     },
   }, async (request, reply) => {
-    const { fullName, email, password, role } = request.body;
+    try {
+      const { fullName, email, password, role } = request.body;
 
-    // Verificação de usuário existente
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+      // Verificação de usuário existente
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
 
-    if (existingUser) {
-      return reply.status(409).send({ message: 'Credenciais inválidas' });
+      if (existingUser) {
+        return reply.status(409).send({ message: 'E-mail já cadastrado na plataforma' });
+      }
+
+      // Criação do hash da senha com Argon2
+      const passwordHash = await hash(password);
+
+      // Inserção no banco de dados
+      await db.insert(users).values({
+        fullName,
+        email,
+        passwordHash,
+        role: role ?? 'Beneficiário', 
+      });
+
+      return reply.status(201).send({ message: 'Usuário cadastrado com sucesso!' });
+      
+    } catch (error) {
+
+      console.error("ERRO FATAL NO DB (Register):", error);
+      return reply.status(500).send({ message: 'Erro interno ao processar o cadastro' });
     }
-
-    // Criação do hash da senha com Argon2
-    const passwordHash = await hash(password);
-
-    // Inserção no banco de dados
-    await db.insert(users).values({
-      fullName,
-      email,
-      passwordHash,
-      role: role ?? 'Beneficiário', 
-      // isVerified, fcmToken e createdAt são tratados pelos valores default do DB
-    });
-
-    return reply.status(201).send({ message: 'Usuário cadastrado com sucesso!' });
   });
 };
