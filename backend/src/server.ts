@@ -2,20 +2,17 @@ import 'dotenv/config';
 import { app } from './app';
 
 const PORT = Number(process.env.PORT) || 3333;
-const HOST = '0.0.0.0'; // 
+const HOST = '0.0.0.0'; 
 
 const start = async () => {
   try {
-    await app.listen({ 
+    const address = await app.listen({ 
       port: PORT, 
       host: HOST 
     });
     
-    console.log(`
-    Servidor Fastify Rodando!
-    Porta: ${PORT}
-    Local: http://localhost:${PORT}
-    `);
+    console.log(`Desapega Social API rodando com sucesso!`);
+    console.log(`Escutando em: ${address}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
