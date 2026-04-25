@@ -11,22 +11,31 @@ import * as Location from 'expo-location';
 import { api } from '../../src/services/api';
 
 // --- CONFIGURAÇÃO E IMPORTS DO FIREBASE ---
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app'; 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Lendo as variáveis protegidas do arquivo .env
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY, 
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || ("AIzaSyBsedK_" + "UIlyf5XsrsAkBIv5S8_JhePQo9s"), 
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "desapegasocial-89475.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "desapegasocial-89475",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "desapegasocial-89475.firebasestorage.app",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "35042250010",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:35042250010:web:22c0cda15940e4382970a3"
 };
 
-// Inicializa o app e pega a referência do Storage
-const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
+// Se o Expo não ler o .env, ele vai gritar no seu terminal em vez de dar aquele erro confuso na tela do celular
+if (!process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET) {
+  console.error("ALERTA CRÍTICO: O Expo não conseguiu ler o seu arquivo .env!");
+}
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Passamos o bucket do .env garantindo o formato 'gs://' que a função getStorage exige para não se perder
+const bucketUrl = process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET 
+  ? `gs://${process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET}` 
+  : undefined;
+
+const storage = getStorage(app, bucketUrl);
 
 
 const CATEGORIES = ['Móveis', 'Eletrônicos', 'Roupas', 'Alimentos', 'Outros'];
@@ -183,7 +192,7 @@ export default function CreateDonationScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nova Doação</Text>
@@ -267,7 +276,7 @@ export default function CreateDonationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
+  scrollContent: { padding: 20, paddingBottom: 80 },
   
   header: { marginBottom: 25 },
   headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#111827' },

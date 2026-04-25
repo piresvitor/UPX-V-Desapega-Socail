@@ -1,6 +1,6 @@
 // app/(auth)/register.tsx
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
@@ -15,9 +15,11 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('Doador');
   
-  // Novos estados para controle visual de erros
+  // Novos estados para controle visual de erros e exibição de senha
   const [passwordError, setPasswordError] = useState('');
   const [confirmError, setConfirmError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { signIn } = useAuth();
   const router = useRouter();
@@ -65,22 +67,28 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Criar Conta</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Criar Conta</Text>
       
       <TextInput style={styles.input} placeholder="Nome Completo" value={fullName} onChangeText={setFullName} />
       <TextInput style={styles.input} placeholder="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
       
       {/* Campo de Senha com UX Melhorado */}
       <View style={styles.inputWrapper}>
-        <TextInput 
-          style={[styles.input, passwordError ? styles.inputError : null]} 
-          placeholder="Senha" 
-          value={password} 
-          // Limpa o erro assim que o usuário volta a digitar
-          onChangeText={(text) => { setPassword(text); setPasswordError(''); }} 
-          secureTextEntry 
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput 
+            style={[styles.input, { paddingRight: 50 }, passwordError ? styles.inputError : null]} 
+            placeholder="Senha" 
+            value={password} 
+            // Limpa o erro assim que o usuário volta a digitar
+            onChangeText={(text) => { setPassword(text); setPasswordError(''); }} 
+            secureTextEntry={!showPassword} 
+          />
+          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+            <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
         {passwordError ? (
           <Text style={styles.errorText}>{passwordError}</Text>
         ) : (
@@ -90,13 +98,18 @@ export default function RegisterScreen() {
 
       {/* Campo de Confirmar Senha */}
       <View style={styles.inputWrapper}>
-        <TextInput 
-          style={[styles.input, confirmError ? styles.inputError : null]} 
-          placeholder="Confirmar Senha" 
-          value={confirmPassword} 
-          onChangeText={(text) => { setConfirmPassword(text); setConfirmError(''); }} 
-          secureTextEntry 
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput 
+            style={[styles.input, { paddingRight: 50 }, confirmError ? styles.inputError : null]} 
+            placeholder="Confirmar Senha" 
+            value={confirmPassword} 
+            onChangeText={(text) => { setConfirmPassword(text); setConfirmError(''); }} 
+            secureTextEntry={!showConfirmPassword} 
+          />
+          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+            <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
         {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
       </View>
 
@@ -122,16 +135,19 @@ export default function RegisterScreen() {
         <Ionicons name="arrow-back-outline" size={20} color="#6B7280" style={styles.buttonIcon} />
         <Text style={styles.secondaryButtonText}>Voltar</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, gap: 16, backgroundColor: '#F3F4F6' },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, gap: 16, backgroundColor: '#F3F4F6' },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937', marginBottom: 20 },
   inputWrapper: { marginBottom: 4 }, // Novo: Empacota o input e a mensagem de erro
   input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16 },
   inputError: { borderColor: '#DC2626', borderWidth: 2 }, // Novo: Borda vermelha para erro
+  passwordContainer: { position: 'relative', justifyContent: 'center' },
+  eyeIcon: { position: 'absolute', right: 15 },
   errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo do erro
   helperText: { color: '#6B7280', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo da dica
   label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, color: '#1F2937' },

@@ -1,10 +1,9 @@
-// src/services/api.ts
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const api = axios.create({
-  // Para acessar o localhost do seu computador vamos usar o IP especial 10.0.2.2
-  baseURL: 'http://10.0.2.2:3333', 
+  // Apontando para o backend em produção no Render
+  baseURL: 'https://desapega-social-api.onrender.com', 
   timeout: 10000, // Aborta se demorar mais de 10 segundos
 });
 

@@ -198,15 +198,15 @@ export default function ItemDetailsScreen() {
             initialRegion={{
               latitude: parseFloat(item.latitude),
               longitude: parseFloat(item.longitude),
-              latitudeDelta: 0.02,
-              longitudeDelta: 0.02,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
             }}
             scrollEnabled={false}
             zoomEnabled={false}
           >
             <Circle
               center={{ latitude: parseFloat(item.latitude), longitude: parseFloat(item.longitude) }}
-              radius={700}
+              radius={150}
               fillColor="rgba(33, 150, 243, 0.2)"
               strokeColor="rgba(33, 150, 243, 0.6)"
               strokeWidth={2}

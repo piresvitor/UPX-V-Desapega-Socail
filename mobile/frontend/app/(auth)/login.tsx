@@ -1,6 +1,5 @@
-// app/(auth)/login.tsx
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, Platform, Image } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,20 +9,17 @@ import { api } from '../../src/services/api';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
 
-  // TanStack Query: Gerencia toda a lógica assíncrona da API de forma limpa
   const loginMutation = useMutation({
     mutationFn: async () => {
       const response = await api.post('/auth/login', { email, password });
-      return response.data; // Espera retornar { token: "eyJ..." }
+      return response.data; 
     },
     onSuccess: async (data) => {
-      // Login com sucesso! Salva o token (o AuthContext vai redirecionar para a Home)
       await signIn(data.token);
-      
-      // Aqui entraria a chamada PATCH /users/fcm-token no futuro!
     },
     onError: () => {
       Alert.alert('Erro', 'Credenciais inválidas. Verifique seu e-mail e senha.');
@@ -38,9 +34,18 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Desapega Social</Text>
-      <Text style={styles.subtitle}>Faça login para continuar</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        
+        {/* Logo adicionada aqui */}
+        <Image 
+          source={require('../../assets/icon.png')} 
+          style={styles.logo} 
+          resizeMode="contain" 
+        />
+
+        <Text style={styles.title}>Desapega Social</Text>
+        <Text style={styles.subtitle}>Faça login para continuar</Text>
       
       <TextInput
         style={styles.input}
@@ -51,13 +56,18 @@ export default function LoginScreen() {
         keyboardType="email-address"
       />
       
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={[styles.input, { paddingRight: 50 }]}
+          placeholder="Senha"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color="#6B7280" />
+        </TouchableOpacity>
+      </View>
       
       {loginMutation.isPending ? (
         <ActivityIndicator size="large" color="#FF9800" />
@@ -71,15 +81,27 @@ export default function LoginScreen() {
       <Link href="/(auth)/register" style={styles.link}>
         Não tem uma conta? Crie aqui.
       </Link>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, gap: 16, backgroundColor: '#F3F4F6' },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, gap: 16, backgroundColor: '#F3F4F6' },
+  
+  // Estilo da logo adicionado
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937' },
   subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 20, color: '#6B7280', marginTop: 5 },
-  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16 },
+  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16, width: '100%' },
+  passwordContainer: { position: 'relative', justifyContent: 'center', width: '100%' },
+  eyeIcon: { position: 'absolute', right: 15 },
   primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 },

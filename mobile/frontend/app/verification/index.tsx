@@ -51,7 +51,7 @@ export default function VerificationScreen() {
         } as any);
       }
 
-      const response = await fetch('http://10.0.2.2:3333/verifications', {
+      const response = await fetch('https://desapega-social-api.onrender.com/verifications', {
         method: 'POST',
         body: formData,
         headers: {
@@ -70,6 +70,7 @@ export default function VerificationScreen() {
     onSuccess: () => {
       Alert.alert('Enviado com Sucesso', 'Seus documentos foram reenviados para análise.');
       queryClient.invalidateQueries({ queryKey: ['verifications', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
       router.back(); 
     },
     onError: (error: any) => {

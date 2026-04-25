@@ -1,15 +1,17 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { userRole } = useAuth();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs screenOptions={{ 
       tabBarActiveTintColor: '#2196F3',
       headerShown: false,
-      tabBarStyle: { height: 60, paddingBottom: 5 }
+      tabBarStyle: { height: 60 + insets.bottom, paddingBottom: 5 + insets.bottom }
     }}>
       
       {/* ================= ABA NORMAL ================= */}

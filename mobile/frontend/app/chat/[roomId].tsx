@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, FlatList, 
   KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert 
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; 
 import { io, Socket } from 'socket.io-client';
@@ -22,6 +23,7 @@ export default function ChatRoomScreen() {
   const { roomId, autoMsg } = useLocalSearchParams<{ roomId: string, autoMsg?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient(); 
+  const insets = useSafeAreaInsets();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -126,11 +128,12 @@ export default function ChatRoomScreen() {
   useEffect(() => {
     const connectSocket = async () => {
       const token = await AsyncStorage.getItem('@DesapegaSocial:token');
-      const BACKEND_URL = 'http://10.0.2.2:3333'; 
+      // Nova URL de Produção com suporte implícito a "wss://" pelo protocolo seguro
+      const BACKEND_URL = 'https://desapega-social-api.onrender.com';
 
       socketRef.current = io(BACKEND_URL, {
         auth: { token },
-        transports: ['websocket'],
+        transports: ['websocket'], // Forçando websockets para evitar overhead de polling no Render
       });
 
       socketRef.current.on('connect', () => {
@@ -206,11 +209,12 @@ export default function ChatRoomScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -320,10 +324,12 @@ export default function ChatRoomScreen() {
           contentContainerStyle={styles.listContent}
           inverted 
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         />
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
         <TextInput
           style={styles.textInput}
           placeholder="Digite sua mensagem..."
@@ -340,7 +346,8 @@ export default function ChatRoomScreen() {
           <Ionicons name="send" size={20} color="#FFF" />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -379,7 +386,7 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 11, alignSelf: 'flex-end', marginTop: 4 },
   myTimeText: { color: '#6B7280' },
   otherTimeText: { color: '#6B7280' },
-  inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#F3F4F6', alignItems: 'flex-end' },
+  inputContainer: { flexDirection: 'row', padding: 10, paddingBottom: Platform.OS === 'android' ? 20 : 10, backgroundColor: '#F3F4F6', alignItems: 'flex-end' },
   textInput: { flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#111827' },
   sendBtn: { marginLeft: 10, backgroundColor: '#2196F3', width: 45, height: 45, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#9CA3AF' },
