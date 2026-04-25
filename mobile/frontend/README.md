@@ -9,8 +9,10 @@
 ### 📱 Módulos Core Frontend
 ![react_native][REACT_NATIVE__BADGE] ![expo][EXPO__BADGE] ![typescript][TYPESCRIPT__BADGE] ![react_query][REACT_QUERY__BADGE] ![socketio][SOCKETIO__BADGE]
 
+
 <details open="open">
 <summary>📑 Sumário</summary>
+
 - [📋 Sobre o Projeto](#-sobre-o-projeto)
   - [🎯 Objetivos](#-objetivos)
   - [✨ Funcionalidades Principais](#-funcionalidades-principais)
@@ -21,6 +23,7 @@
 - [📱 Fluxos do Frontend Mobile](#-fluxos-do-frontend-mobile)
 - [👥 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
 </details>
+
 
 ## 📋 Sobre o Projeto
 
