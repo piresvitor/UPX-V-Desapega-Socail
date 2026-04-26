@@ -26,8 +26,7 @@
       "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDummyKeyParaOAndroidNaoFecharOApp"
-        }
+        "apiKey": "CHAVE_FALSA_APENAS_PARA_EVITAR_CRASH"        }
       }
     },
     "web": { "favicon": "./assets/favicon.png" },

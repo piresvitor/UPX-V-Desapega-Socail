@@ -201,7 +201,7 @@ export default function ItemDetailsScreen() {
                 urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
                 maximumZ={19}
                 flipY={false}
-                zIndex={-1} 
+                zIndex={1} 
               />
               <Circle
                 center={{ latitude: lat, longitude: lng }}
@@ -209,6 +209,7 @@ export default function ItemDetailsScreen() {
                 fillColor="rgba(33, 150, 243, 0.2)" 
                 strokeColor="rgba(33, 150, 243, 0.8)" 
                 strokeWidth={2} 
+                zIndex={2}
               />
             </MapView>
           ) : (
