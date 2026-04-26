@@ -30,7 +30,7 @@ export default function ChatRoomScreen() {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   
   const socketRef = useRef<Socket | null>(null);
-  const hasSentAutoMsg = useRef(false); // Trava para enviar mensagem só 1x
+  const hasSentAutoMsg = useRef(false);
 
   const { data: me } = useQuery({
     queryKey: ['users', 'me'],
@@ -77,16 +77,14 @@ export default function ChatRoomScreen() {
     enabled: !!roomId,
   });
 
-  // MUTAÇÃO: SOLICITAR FRETE COM FALLBACK DE GPS
   const requestFreightMutation = useMutation({
     mutationFn: async () => {
-      let finalCoords = { lat: -23.5015, lng: -47.4581 }; // Fallback Padrão
+      let finalCoords = { lat: -23.5015, lng: -47.4581 };
 
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         
         if (status === 'granted') {
-          // Corrida contra o tempo: GPS vs 4 Segundos
           const loc = await Promise.race([
             Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
@@ -128,19 +126,17 @@ export default function ChatRoomScreen() {
   useEffect(() => {
     const connectSocket = async () => {
       const token = await AsyncStorage.getItem('@DesapegaSocial:token');
-      // Nova URL de Produção com suporte implícito a "wss://" pelo protocolo seguro
       const BACKEND_URL = 'https://desapega-social-api.onrender.com';
 
       socketRef.current = io(BACKEND_URL, {
         auth: { token },
-        transports: ['websocket'], // Forçando websockets para evitar overhead de polling no Render
+        transports: ['websocket'], 
       });
 
       socketRef.current.on('connect', () => {
         setIsSocketConnected(true);
         socketRef.current?.emit('join_room', { roomId });
 
-        // LÓGICA DE BOT: Dispara a mensagem automática assim que o Socket abre
         if (autoMsg && !hasSentAutoMsg.current) {
           setTimeout(() => {
             socketRef.current?.emit('send_message', {
@@ -251,7 +247,8 @@ export default function ChatRoomScreen() {
         </View>
 
         <View style={styles.headerRight}>
-          {currentChat?.type === 'DONATION' && (
+          {/* 🔥 CORREÇÃO: O ÍCONE SÓ APARECE SE NÃO FOR FRETEIRO 🔥 */}
+          {currentChat?.type === 'DONATION' && me?.role !== 'Freteiro' && (
             <TouchableOpacity 
               style={styles.requestFreightBtn}
               disabled={requestFreightMutation.isPending}
@@ -330,9 +327,11 @@ export default function ChatRoomScreen() {
       )}
 
       <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+        {/* 🔥 CORREÇÃO: COR DO TEXTO E PLACEHOLDER BLINDADOS PARA DISPOSITIVO FÍSICO 🔥 */}
         <TextInput
           style={styles.textInput}
           placeholder="Digite sua mensagem..."
+          placeholderTextColor="#9CA3AF"
           value={inputText}
           onChangeText={setInputText}
           multiline
@@ -386,8 +385,11 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 11, alignSelf: 'flex-end', marginTop: 4 },
   myTimeText: { color: '#6B7280' },
   otherTimeText: { color: '#6B7280' },
-  inputContainer: { flexDirection: 'row', padding: 10, paddingBottom: Platform.OS === 'android' ? 20 : 10, backgroundColor: '#F3F4F6', alignItems: 'flex-end' },
-  textInput: { flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#111827' },
+  inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#F3F4F6', alignItems: 'flex-end' },
+  
+  //Cor fixa e fundo reforçado para evitar bug de UI no Android
+  textInput: { flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, minHeight: 45, maxHeight: 100, fontSize: 16, color: '#000000' },
+  
   sendBtn: { marginLeft: 10, backgroundColor: '#2196F3', width: 45, height: 45, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#9CA3AF' },
 });

@@ -23,20 +23,17 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:35042250010:web:22c0cda15940e4382970a3"
 };
 
-// Se o Expo não ler o .env, ele vai gritar no seu terminal em vez de dar aquele erro confuso na tela do celular
 if (!process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET) {
   console.error("ALERTA CRÍTICO: O Expo não conseguiu ler o seu arquivo .env!");
 }
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Passamos o bucket do .env garantindo o formato 'gs://' que a função getStorage exige para não se perder
 const bucketUrl = process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET 
   ? `gs://${process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET}` 
   : undefined;
 
 const storage = getStorage(app, bucketUrl);
-
 
 const CATEGORIES = ['Móveis', 'Eletrônicos', 'Roupas', 'Alimentos', 'Outros'];
 
@@ -44,14 +41,12 @@ export default function CreateDonationScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Estados do Formulário
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  // --- 1. SELEÇÃO DE IMAGENS (Expo Image Picker) ---
   const handleAddImage = async () => {
     if (images.length >= 3) {
       return Alert.alert('Limite atingido', 'Você pode adicionar no máximo 3 fotos.');
@@ -92,7 +87,6 @@ export default function CreateDonationScreen() {
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
 
-  // --- 2. UPLOAD REAL PARA O FIREBASE STORAGE  ---
   const uploadImagesToFirebase = async (uris: string[]): Promise<string[]> => {
     const uploadedUrls: string[] = [];
     
@@ -100,17 +94,14 @@ export default function CreateDonationScreen() {
        const uri = uris[i];
        
        try {
-         // 1. Fetch nativo do Expo 
          const response = await fetch(uri);
          const blob = await response.blob();
          
          const filename = `doacoes/item-${Date.now()}-${i}.jpg`;
          const storageRef = ref(storage, filename);
          
-         // 2. O crachá de identificação para passar na catraca das Regras do Firebase!
          const metadata = { contentType: 'image/jpeg' };
          
-         // 3. Envia o arquivo e o crachá
          await uploadBytes(storageRef, blob, metadata);
          
          const downloadURL = await getDownloadURL(storageRef);
@@ -119,14 +110,12 @@ export default function CreateDonationScreen() {
        } catch (uploadError: any) {
          console.error("ERRO REAL DO FIREBASE:", uploadError);
          Alert.alert("Detalhes do Erro", uploadError?.message || "Erro desconhecido ao enviar foto.");
-         
          throw new Error("Falha no upload");
        }
     }
     return uploadedUrls;
   };
 
-  // --- 3. MUTAÇÃO PARA O BACKEND ---
   const createItemMutation = useMutation({
     mutationFn: async (data: any) => await api.post('/items', data),
     onSuccess: () => {
@@ -140,7 +129,6 @@ export default function CreateDonationScreen() {
     onError: () => Alert.alert('Erro', 'Não foi possível publicar a doação no banco de dados.')
   });
 
-  // --- 4. FLUXO PRINCIPAL DE SUBMISSÃO ---
   const handleSubmit = async () => {
     if (!title.trim() || !category) {
       return Alert.alert('Atenção', 'Título e Categoria são obrigatórios.');
@@ -152,27 +140,22 @@ export default function CreateDonationScreen() {
     setIsUploading(true);
 
     try {
-      // A: Pegar GPS (Isolado para não quebrar o app se o GPS falhar)
-      let latitude = -23.501533;  // Fallback padrão
+      let latitude = -23.501533;  
       let longitude = -47.458112; 
 
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
-          // Tenta pegar a localização atual
           const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
           latitude = location.coords.latitude;
           longitude = location.coords.longitude;
         }
       } catch (locationError) {
         console.warn('GPS indisponível no momento. Usando coordenadas de fallback.', locationError);
-        // O código continua rodando daqui para baixo mesmo se o GPS der erro!
       }
 
-      // B: Upload pro Firebase
       const imageUrls = await uploadImagesToFirebase(images);
 
-      // C: Salvar no Backend
       createItemMutation.mutate({
         title,
         description,
@@ -225,6 +208,7 @@ export default function CreateDonationScreen() {
           <TextInput 
             style={styles.input} 
             placeholder="Ex: Cadeira de Banho em bom estado" 
+            placeholderTextColor="#9CA3AF"
             value={title} onChangeText={setTitle} maxLength={100} 
           />
         </View>
@@ -249,6 +233,7 @@ export default function CreateDonationScreen() {
           <TextInput 
             style={[styles.input, styles.textArea]} 
             placeholder="Regras para retirada, detalhes de conservação..." 
+            placeholderTextColor="#9CA3AF"
             value={description} onChangeText={setDescription} 
             multiline numberOfLines={4} textAlignVertical="top" 
           />
@@ -294,7 +279,7 @@ const styles = StyleSheet.create({
   removeImgBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: 'red', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   removeImgText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
 
-  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 14, fontSize: 16, color: '#1F2937' },
+  input: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, padding: 14, fontSize: 16, color: '#1F2937' },
   textArea: { minHeight: 100, paddingTop: 14 },
   
   categoryScroll: { flexDirection: 'row' },

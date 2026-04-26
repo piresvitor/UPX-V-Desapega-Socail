@@ -6,6 +6,7 @@ import * as Device from 'expo-device';
 import { api } from '../services/api';
 import Constants from 'expo-constants';
 import { jwtDecode } from 'jwt-decode'; 
+
 interface AuthContextType {
   token: string | null;
   userRole: string | null; 
@@ -19,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null); // <-- NOVO
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [hasViewedOnboarding, setHasViewedOnboarding] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -35,7 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (storedToken) {
           setToken(storedToken);
-          // Decodifica o Token para saber quem é a pessoa instantaneamente
           const decoded: any = jwtDecode(storedToken);
           setUserRole(decoded.role);
         }
@@ -50,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // O Guarda-Costas do Expo Router voltou!
     if (isLoading || !navigationState?.key) return;
 
     const rootSegment = segments[0];
@@ -62,14 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.replace('/(auth)/login');
       }
     } else {
-      // O MENU MUTANTE (RBAC): Se está solto ou no Auth, joga pra Tab do seu cargo!
       if (rootSegment === '(auth)' || rootSegment === 'onboarding' || rootSegment === undefined) {
         if (userRole === 'Freteiro') {
           router.replace('/(tabs)/radar');
         } else if (userRole === 'Admin') {
-          router.replace('/(tabs)/dashboard'); // Vai bugar se essa tela não existir ainda
+          router.replace('/(tabs)/dashboard'); 
         } else {
-          router.replace('/(tabs)/home'); // Doador e Beneficiário
+          router.replace('/(tabs)/home'); 
         }
       }
     }
@@ -93,9 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const tokenData = await Notifications.getDevicePushTokenAsync();
       const fcmToken = tokenData.data;
 
-      await api.patch('/users/me/fcm-token', { fcmToken });
+      // Endpoint corrigido 
+      await api.patch('/users/fcm-token', { fcmToken });
+      console.log('FCM Token salvo com sucesso!');
     } catch (error) {
-      console.error('Erro ao registrar FCM token:', error);
+      console.warn('Não foi possível gerar/salvar o Token FCM neste dispositivo:', error);
     }
   };
   
@@ -104,10 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
-    // Lemos a role no momento exato do login
     const decoded: any = jwtDecode(newToken);
     setUserRole(decoded.role);
 
+    // Agora o Token tenta ser registrado logo após o login
     registerForPushNotificationsAsync();
   };
 
