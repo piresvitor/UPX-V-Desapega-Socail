@@ -24,8 +24,8 @@ interface ItemDetails {
   imageUrls: string[];
   status: 'Disponível' | 'Reservado' | 'Doado' | 'Cancelado';
   createdAt: string;
-  latitude: string;
-  longitude: string;
+  latitude: string | number;
+  longitude: string | number;
   donor: { id: string; fullName: string };
 }
 
@@ -81,7 +81,7 @@ export default function ItemDetailsScreen() {
     if (!item || !me) return { isOwner: false, isLocked: false };
 
     const ownerCheck = String(me.id) === String(item.donor?.id);
-    const createdAtDate = new Date(item.createdAt).getTime();
+    const createdAtDate = item.createdAt ? new Date(item.createdAt).getTime() : Date.now();
     const hoursOld = (Date.now() - createdAtDate) / (1000 * 60 * 60);
     
     const lockedCheck = !ownerCheck && !me.isVerified && hoursOld < 24;
@@ -143,9 +143,10 @@ export default function ItemDetailsScreen() {
   };
   const statusColors = getStatusColor(item.status);
 
-  const lat = item.latitude ? parseFloat(item.latitude) : 0;
-  const lng = item.longitude ? parseFloat(item.longitude) : 0;
-  const hasValidLocation = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+  // Coordenadas Convertidas com Segurança 
+  const lat = Number(item?.latitude) || 0;
+  const lng = Number(item?.longitude) || 0;
+  const hasValidLocation = lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -188,13 +189,13 @@ export default function ItemDetailsScreen() {
               initialRegion={{
                 latitude: lat,
                 longitude: lng,
-                latitudeDelta: 0.004, // Mais próximo para mostrar detalhes das ruas
+                latitudeDelta: 0.004, 
                 longitudeDelta: 0.004, 
               }}
-              scrollEnabled={true} // Permite arrastar o mapa
-              zoomEnabled={true}   // Permite dar zoom
-              pitchEnabled={false} // Trava inclinação 3D para manter o visual limpo
-              rotateEnabled={false} // Trava rotação para não deixar o usuário confuso
+              scrollEnabled={true} 
+              zoomEnabled={true}   
+              pitchEnabled={false} 
+              rotateEnabled={false} 
             >
               <UrlTile
                 urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
@@ -204,7 +205,7 @@ export default function ItemDetailsScreen() {
               />
               <Circle
                 center={{ latitude: lat, longitude: lng }}
-                radius={100} // Raio levemente menor para caber bem no novo zoom
+                radius={100} 
                 fillColor="rgba(33, 150, 243, 0.2)" 
                 strokeColor="rgba(33, 150, 243, 0.8)" 
                 strokeWidth={2} 

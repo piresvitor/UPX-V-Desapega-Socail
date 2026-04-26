@@ -23,7 +23,12 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.desapegasocial",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDummyKeyParaOAndroidNaoFecharOApp"
+        }
+      }
     },
     "web": { "favicon": "./assets/favicon.png" },
     "extra": {
