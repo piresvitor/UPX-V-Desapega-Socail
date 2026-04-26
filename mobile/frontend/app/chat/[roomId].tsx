@@ -247,7 +247,7 @@ export default function ChatRoomScreen() {
         </View>
 
         <View style={styles.headerRight}>
-          {/* 🔥 CORREÇÃO: O ÍCONE SÓ APARECE SE NÃO FOR FRETEIRO 🔥 */}
+          {/* CORREÇÃO: O ÍCONE SÓ APARECE SE NÃO FOR FRETEIRO*/}
           {currentChat?.type === 'DONATION' && me?.role !== 'Freteiro' && (
             <TouchableOpacity 
               style={styles.requestFreightBtn}
@@ -327,7 +327,7 @@ export default function ChatRoomScreen() {
       )}
 
       <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-        {/* 🔥 CORREÇÃO: COR DO TEXTO E PLACEHOLDER BLINDADOS PARA DISPOSITIVO FÍSICO 🔥 */}
+        {/* CORREÇÃO: COR DO TEXTO E PLACEHOLDER BLINDADOS PARA DISPOSITIVO FÍSICO */}
         <TextInput
           style={styles.textInput}
           placeholder="Digite sua mensagem..."

@@ -188,24 +188,26 @@ export default function ItemDetailsScreen() {
               initialRegion={{
                 latitude: lat,
                 longitude: lng,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
+                latitudeDelta: 0.004, // Mais próximo para mostrar detalhes das ruas
+                longitudeDelta: 0.004, 
               }}
-              scrollEnabled={false}
-              zoomEnabled={false}
+              scrollEnabled={true} // Permite arrastar o mapa
+              zoomEnabled={true}   // Permite dar zoom
+              pitchEnabled={false} // Trava inclinação 3D para manter o visual limpo
+              rotateEnabled={false} // Trava rotação para não deixar o usuário confuso
             >
-              {/*INJETA O MAPA OPEN-SOURCE GRATUITO */}
               <UrlTile
-                urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
                 maximumZ={19}
                 flipY={false}
+                zIndex={-1} 
               />
               <Circle
                 center={{ latitude: lat, longitude: lng }}
-                radius={150}
-                fillColor="rgba(33, 150, 243, 0.2)"
-                strokeColor="rgba(33, 150, 243, 0.6)"
-                strokeWidth={2}
+                radius={100} // Raio levemente menor para caber bem no novo zoom
+                fillColor="rgba(33, 150, 243, 0.2)" 
+                strokeColor="rgba(33, 150, 243, 0.8)" 
+                strokeWidth={2} 
               />
             </MapView>
           ) : (

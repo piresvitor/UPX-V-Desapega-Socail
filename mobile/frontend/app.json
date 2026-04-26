@@ -3,6 +3,7 @@
     "name": "Desapega Social",
     "slug": "desapega-social",
     "version": "1.0.0",
+    "scheme": "desapegasocial",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
