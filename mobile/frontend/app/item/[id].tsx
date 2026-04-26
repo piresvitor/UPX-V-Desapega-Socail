@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import MapView, { Circle } from 'react-native-maps';
+import MapView, { Circle, UrlTile } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/services/api';
 
@@ -184,6 +184,7 @@ export default function ItemDetailsScreen() {
           {hasValidLocation ? (
             <MapView
               style={styles.map}
+              mapType="none" 
               initialRegion={{
                 latitude: lat,
                 longitude: lng,
@@ -193,6 +194,12 @@ export default function ItemDetailsScreen() {
               scrollEnabled={false}
               zoomEnabled={false}
             >
+              {/*INJETA O MAPA OPEN-SOURCE GRATUITO */}
+              <UrlTile
+                urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maximumZ={19}
+                flipY={false}
+              />
               <Circle
                 center={{ latitude: lat, longitude: lng }}
                 radius={150}

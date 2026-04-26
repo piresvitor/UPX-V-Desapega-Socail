@@ -113,8 +113,9 @@ export default function HomeScreen() {
       {/* --- SEÇÃO DE FILTROS --- */}
       <View style={styles.filtersContainer}>
         <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar item..."
+          style={[styles.searchInput, { color: '#000000' }]} // Força texto preto
+          placeholder="Buscar itens..."
+          placeholderTextColor="#9CA3AF" // Força o placeholder cinza
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

@@ -1,4 +1,3 @@
-// app/(auth)/register.tsx
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,7 +14,6 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('Doador');
   
-  // Novos estados para controle visual de erros e exibição de senha
   const [passwordError, setPasswordError] = useState('');
   const [confirmError, setConfirmError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +38,6 @@ export default function RegisterScreen() {
   });
 
   const handleRegister = () => {
-    // Reseta os erros visuais antes de testar novamente
     setPasswordError('');
     setConfirmError('');
     let isValid = true;
@@ -60,7 +57,6 @@ export default function RegisterScreen() {
       isValid = false;
     }
     
-    // Só chama a API se não houver nenhum erro nos inputs
     if (isValid) {
       registerMutation.mutate();
     }
@@ -71,17 +67,41 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Criar Conta</Text>
       
-      <TextInput style={styles.input} placeholder="Nome Completo" value={fullName} onChangeText={setFullName} />
-      <TextInput style={styles.input} placeholder="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+      {/* Campo: Nome Completo */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Nome Completo</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: Maria Silva" 
+          placeholderTextColor="#9CA3AF"
+          value={fullName} 
+          onChangeText={setFullName} 
+        />
+      </View>
+
+      {/* Campo: E-mail */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>E-mail</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="exemplo@email.com" 
+          placeholderTextColor="#9CA3AF"
+          value={email} 
+          onChangeText={setEmail} 
+          autoCapitalize="none" 
+          keyboardType="email-address" 
+        />
+      </View>
       
-      {/* Campo de Senha com UX Melhorado */}
-      <View style={styles.inputWrapper}>
+      {/* Campo: Senha */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Senha</Text>
         <View style={styles.passwordContainer}>
           <TextInput 
-            style={[styles.input, { paddingRight: 50 }, passwordError ? styles.inputError : null]} 
-            placeholder="Senha" 
+            style={[styles.input, { paddingRight: 50, width: '100%' }, passwordError ? styles.inputError : null]} 
+            placeholder="Sua senha" 
+            placeholderTextColor="#9CA3AF"
             value={password} 
-            // Limpa o erro assim que o usuário volta a digitar
             onChangeText={(text) => { setPassword(text); setPasswordError(''); }} 
             secureTextEntry={!showPassword} 
           />
@@ -96,12 +116,14 @@ export default function RegisterScreen() {
         )}
       </View>
 
-      {/* Campo de Confirmar Senha */}
-      <View style={styles.inputWrapper}>
+      {/* Campo: Confirmar Senha */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Confirmar Senha</Text>
         <View style={styles.passwordContainer}>
           <TextInput 
-            style={[styles.input, { paddingRight: 50 }, confirmError ? styles.inputError : null]} 
-            placeholder="Confirmar Senha" 
+            style={[styles.input, { paddingRight: 50, width: '100%' }, confirmError ? styles.inputError : null]} 
+            placeholder="Repita sua senha" 
+            placeholderTextColor="#9CA3AF"
             value={confirmPassword} 
             onChangeText={(text) => { setConfirmPassword(text); setConfirmError(''); }} 
             secureTextEntry={!showConfirmPassword} 
@@ -115,7 +137,11 @@ export default function RegisterScreen() {
 
       <Text style={styles.label}>Como você deseja usar o app?</Text>
       <View style={styles.pickerContainer}>
-        <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)}>
+        <Picker 
+          selectedValue={role} 
+          onValueChange={(itemValue) => setRole(itemValue)}
+          style={{ color: '#000000' }} // Evita bug de cor no dark mode do Picker
+        >
           <Picker.Item label="Quero Doar Itens (Doador)" value="Doador" />
           <Picker.Item label="Preciso de Doações (Beneficiário)" value="Beneficiário" />
           <Picker.Item label="Sou Motorista (Freteiro)" value="Freteiro" />
@@ -123,7 +149,7 @@ export default function RegisterScreen() {
       </View>
 
       {registerMutation.isPending ? (
-        <ActivityIndicator size="large" color="#FF9800" />
+        <ActivityIndicator size="large" color="#FF9800" style={{ marginTop: 10 }} />
       ) : (
         <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
           <Ionicons name="person-add-outline" size={20} color="#FFF" style={styles.buttonIcon} />
@@ -141,17 +167,22 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, gap: 16, backgroundColor: '#F3F4F6' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937', marginBottom: 20 },
-  inputWrapper: { marginBottom: 4 }, // Novo: Empacota o input e a mensagem de erro
-  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16 },
-  inputError: { borderColor: '#DC2626', borderWidth: 2 }, // Novo: Borda vermelha para erro
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F3F4F6' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937', marginBottom: 25 },
+  
+  inputGroup: { marginBottom: 16, width: '100%' }, 
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginLeft: 4 }, 
+  
+  // Atualizado para texto escuro e fundo branco garantido
+  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, fontSize: 16, color: '#000000' },
+  
+  inputError: { borderColor: '#DC2626', borderWidth: 2 }, 
   passwordContainer: { position: 'relative', justifyContent: 'center' },
   eyeIcon: { position: 'absolute', right: 15 },
-  errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo do erro
-  helperText: { color: '#6B7280', fontSize: 12, marginTop: 4, marginLeft: 4 }, // Novo: Estilo da dica
-  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, color: '#1F2937' },
-  pickerContainer: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', borderRadius: 10, marginBottom: 10 },
+  errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
+  helperText: { color: '#6B7280', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 10, color: '#1F2937' },
+  pickerContainer: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', borderRadius: 10, marginBottom: 20 },
   primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   secondaryButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
