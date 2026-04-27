@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import MapView, { Circle, UrlTile } from 'react-native-maps';
+import { WebView } from 'react-native-webview'; 
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/services/api';
 
@@ -143,10 +143,48 @@ export default function ItemDetailsScreen() {
   };
   const statusColors = getStatusColor(item.status);
 
-  // Coordenadas Convertidas com Segurança 
   const lat = Number(item?.latitude) || 0;
   const lng = Number(item?.longitude) || 0;
   const hasValidLocation = lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng);
+
+  const mapHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            body { padding: 0; margin: 0; background-color: #F3F4F6; }
+            #map { width: 100%; height: 100vh; }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            // Inicializa o mapa com zoom 15 (ideal para bairros)
+            var map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([${lat}, ${lng}], 15);
+
+            // Puxa as imagens do servidor super rápido e grátis do CartoDB
+            L.tileLayer('https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Desenha o círculo azul semitransparente
+            L.circle([${lat}, ${lng}], {
+                color: '#2196F3',
+                fillColor: '#2196F3',
+                fillOpacity: 0.2,
+                weight: 2,
+                radius: 150
+            }).addTo(map);
+        </script>
+    </body>
+    </html>
+  `;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -183,35 +221,12 @@ export default function ItemDetailsScreen() {
         <Text style={styles.sectionTitle}>Localização Aproximada</Text>
         <View style={styles.mapContainer}>
           {hasValidLocation ? (
-            <MapView
+            <WebView
+              originWhitelist={['*']}
+              source={{ html: mapHtml }}
               style={styles.map}
-              mapType="none" 
-              initialRegion={{
-                latitude: lat,
-                longitude: lng,
-                latitudeDelta: 0.004, 
-                longitudeDelta: 0.004, 
-              }}
-              scrollEnabled={true} 
-              zoomEnabled={true}   
-              pitchEnabled={false} 
-              rotateEnabled={false} 
-            >
-              <UrlTile
-                urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
-                maximumZ={19}
-                flipY={false}
-                zIndex={1} 
-              />
-              <Circle
-                center={{ latitude: lat, longitude: lng }}
-                radius={100} 
-                fillColor="rgba(33, 150, 243, 0.2)" 
-                strokeColor="rgba(33, 150, 243, 0.8)" 
-                strokeWidth={2} 
-                zIndex={2}
-              />
-            </MapView>
+              scrollEnabled={false} // Desabilita o scroll da "página" para o usuário só mexer no mapa
+            />
           ) : (
             <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#E5E7EB' }]}>
               <Ionicons name="location-outline" size={32} color="#9CA3AF" />
@@ -296,7 +311,7 @@ const styles = StyleSheet.create({
   description: { fontSize: 16, color: '#6B7280', lineHeight: 24, marginBottom: 25 },
   donorNameLink: { fontSize: 15, color: '#2196F3', fontWeight: 'bold', textDecorationLine: 'underline' },
   mapContainer: { borderRadius: 12, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#D1D5DB', elevation: 2 },
-  map: { width: '100%', height: 200 },
+  map: { width: '100%', height: 200, backgroundColor: '#F3F4F6' },
   footer: { paddingHorizontal: 20, marginTop: 10 },
   ownerTitle: { fontSize: 15, fontWeight: 'bold', color: '#6B7280', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   ownerGrid: { gap: 10 },
