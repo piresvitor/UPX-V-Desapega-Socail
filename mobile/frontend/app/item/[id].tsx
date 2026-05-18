@@ -155,8 +155,8 @@ export default function ItemDetailsScreen() {
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
-            body { padding: 0; margin: 0; background-color: #F3F4F6; }
-            #map { width: 100%; height: 100vh; }
+            body { padding: 0; margin: 0; background-color: #F8FAFC; }
+            #map { width: 100%; height: 100%; min-height: 100%; }
         </style>
     </head>
     <body>

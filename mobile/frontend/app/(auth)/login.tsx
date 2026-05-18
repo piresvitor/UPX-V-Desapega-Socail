@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, Platform, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,8 +35,9 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         
         <Image 
           source={require('../../assets/icon.png')} 
@@ -92,24 +94,24 @@ export default function LoginScreen() {
       </Link>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F3F4F6' },
-  logo: { width: 150, height: 150, alignSelf: 'center', marginBottom: 10 },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937' },
-  subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 30, color: '#6B7280', marginTop: 5 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F8FAFC', maxWidth: 520, alignSelf: 'center' },
+  logo: { width: 140, height: 140, alignSelf: 'center', marginBottom: 14 },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111827' },
+  subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 30, color: '#475569', marginTop: 8 },
   
-  // Estilos para agrupar as Labels
-  inputGroup: { marginBottom: 16, width: '100%' },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginLeft: 4 },
+  inputGroup: { marginBottom: 18, width: '100%' },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginLeft: 4 },
   
-  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', padding: 14, borderRadius: 10, fontSize: 16, color: '#1F2937' },
+  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 14, fontSize: 16, color: '#111827' },
   passwordContainer: { position: 'relative', justifyContent: 'center' },
   eyeIcon: { position: 'absolute', right: 15 },
-  primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  primaryButton: { backgroundColor: '#2563EB', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, shadowColor: '#2563EB', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 3 },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 },
-  link: { textAlign: 'center', marginTop: 25, color: '#2196F3', fontWeight: 'bold' }
+  link: { textAlign: 'center', marginTop: 28, color: '#2563EB', fontWeight: 'bold' }
 });
