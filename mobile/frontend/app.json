@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
-      "backgroundColor": "#EB681E" 
+      "backgroundColor": "#EB681E"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -23,10 +23,11 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.desapegasocial",
-      "googleServicesFile": "./google-services.json",
+      // "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
-        "apiKey": "CHAVE_FALSA_APENAS_PARA_EVITAR_CRASH"        }
+          "apiKey": "CHAVE_FALSA_APENAS_PARA_EVITAR_CRASH"
+        }
       }
     },
     "web": { "favicon": "./assets/favicon.png" },

@@ -9,9 +9,22 @@ export default function TabLayout() {
 
   return (
     <Tabs screenOptions={{ 
-      tabBarActiveTintColor: '#2196F3',
+      tabBarActiveTintColor: '#2563EB',
+      tabBarInactiveTintColor: '#64748B',
+      tabBarLabelStyle: { fontSize: 12, paddingBottom: 4 },
       headerShown: false,
-      tabBarStyle: { height: 60 + insets.bottom, paddingBottom: 5 + insets.bottom }
+      tabBarStyle: {
+        height: 60 + insets.bottom,
+        paddingBottom: 8 + insets.bottom,
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E2E8F0',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      }
     }}>
       
       {/* ================= ABA NORMAL ================= */}

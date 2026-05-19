@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
@@ -63,9 +64,10 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Criar Conta</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Criar Conta</Text>
       
       {/* Campo: Nome Completo */}
       <View style={styles.inputGroup}>
@@ -163,29 +165,29 @@ export default function RegisterScreen() {
       </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F3F4F6' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1F2937', marginBottom: 25 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F8FAFC', maxWidth: 520, alignSelf: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111827', marginBottom: 25 },
   
-  inputGroup: { marginBottom: 16, width: '100%' }, 
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginLeft: 4 }, 
+  inputGroup: { marginBottom: 18, width: '100%' }, 
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginLeft: 4 }, 
   
-  // Atualizado para texto escuro e fundo branco garantido
-  input: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, fontSize: 16, color: '#000000' },
+  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 14, fontSize: 16, color: '#111827' },
   
   inputError: { borderColor: '#DC2626', borderWidth: 2 }, 
   passwordContainer: { position: 'relative', justifyContent: 'center' },
   eyeIcon: { position: 'absolute', right: 15 },
   errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
-  helperText: { color: '#6B7280', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
-  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 10, color: '#1F2937' },
-  pickerContainer: { borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', borderRadius: 10, marginBottom: 20 },
-  primaryButton: { backgroundColor: '#FF9800', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  secondaryButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D1D5DB', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#6B7280', fontSize: 16, fontWeight: 'bold' },
+  helperText: { color: '#64748B', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 10, color: '#334155' },
+  pickerContainer: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', borderRadius: 14, marginBottom: 20 },
+  primaryButton: { backgroundColor: '#2563EB', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: '#2563EB', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 3 },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+  secondaryButton: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#475569', fontSize: 16, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 }
 });
