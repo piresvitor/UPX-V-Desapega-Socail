@@ -236,8 +236,8 @@ export default function HomeScreen() {
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
-          numColumns={2} // 🔥 GRID DE 2 COLUNAS
-          columnWrapperStyle={styles.rowWrapper} // 🔥 ESPAÇAMENTO ENTRE AS COLUNAS
+          numColumns={2} // GRID DE 2 COLUNAS
+          columnWrapperStyle={styles.rowWrapper} // ESPAÇAMENTO ENTRE AS COLUNAS
           contentContainerStyle={{ paddingBottom: 80, paddingTop: 10 }}
           refreshControl={
             <RefreshControl
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   
-  // 🔥 Header Padronizado
+  // Header Padronizado
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: "#DC2626", fontWeight: "bold", fontSize: 13 },
 
-  // 🔥 Filtros
+  // Filtros
   filtersContainer: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   errorText: { color: "#DC2626", textAlign: "center", marginTop: 20, fontWeight: "bold" },
   emptyText: { textAlign: "center", color: "#94A3B8", marginTop: 40, fontSize: 15 },
 
-  // 🔥 Estilos do GRID (2 Colunas)
+  // Estilos do GRID (2 Colunas)
   rowWrapper: {
     justifyContent: "space-between",
     paddingHorizontal: 16,
