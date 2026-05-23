@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
@@ -43,7 +43,7 @@ export default function ChatListScreen() {
   });
 
   if (isLoading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#2196F3" /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color="#EB681E" /></View>;
   }
 
   if (isError) {
@@ -52,6 +52,8 @@ export default function ChatListScreen() {
 
   return (
     <View style={styles.container}>
+      
+      {/* HEADER PADRONIZADO */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mensagens</Text>
       </View>
@@ -70,7 +72,7 @@ export default function ChatListScreen() {
           const isMyLastMessage = item.lastMessage?.senderId === me?.id;
           const isUnread = item.lastMessage && !isMyLastMessage && !item.lastMessage.readAt;
           
-          // IDENTIFICADOR DE FRETE: Se for frete, destacamos com laranja
+          // IDENTIFICADOR DE FRETE
           const isFreight = item.type === 'FREIGHT';
 
           return (
@@ -89,7 +91,7 @@ export default function ChatListScreen() {
               
               <View style={styles.chatInfo}>
                 <View style={styles.chatHeaderRow}>
-                  <Text style={[styles.userName, isUnread && styles.textBold, isFreight && {color: '#E65100'}]} numberOfLines={1}>
+                  <Text style={[styles.userName, isUnread && styles.textBold, isFreight && {color: '#1F2937'}]} numberOfLines={1}>
                     {isFreight ? '🚚 ' : ''}{item.otherUser.fullName}
                   </Text>
                   {item.lastMessage && (
@@ -99,7 +101,7 @@ export default function ChatListScreen() {
                   )}
                 </View>
                 
-                <Text style={[styles.itemTitle, isFreight && { color: '#FF9800' }]} numberOfLines={1}>
+                <Text style={[styles.itemTitle, isFreight && { color: '#F59E0B' }]} numberOfLines={1}>
                   {isFreight ? '📦 Transporte: ' : '📦 '}{item.item.title}
                 </Text>
                 
@@ -117,37 +119,57 @@ export default function ChatListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: '#DC2626', fontSize: 16 },
+  errorText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
   
-  header: { padding: 30, paddingTop: 60, borderBottomWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFF' },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
+  // Header com Padding ajustado (Idêntico ao app)
+  header: { 
+    padding: 24, 
+    borderBottomWidth: 1, 
+    borderColor: '#E2E8F0', 
+    backgroundColor: '#FFFFFF', 
+    paddingTop: Platform.OS === 'ios' ? 60 : 40 
+  },
+  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#0F172A' },
   
   listContent: { padding: 20 },
   
-  chatCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center' },
-  chatCardFreight: { backgroundColor: '#FFF8E1', borderWidth: 1, borderColor: '#FF9800' }, 
+  // Card Premium Padronizado
+  chatCard: { 
+    flexDirection: 'row', 
+    backgroundColor: '#FFFFFF', 
+    padding: 16, 
+    borderRadius: 16, 
+    marginBottom: 12, 
+    elevation: 2, 
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9'
+  },
+  chatCardFreight: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }, 
   
-  avatarContainer: { position: 'relative', marginRight: 15 },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E5E7EB' },
-  avatarFreight: { borderWidth: 2, borderColor: '#FF9800' }, 
-  unreadBadge: { position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#2196F3', borderWidth: 2, borderColor: '#FFF' },
+  avatarContainer: { position: 'relative', marginRight: 16 },
+  avatar: { width: 64, height: 64, borderRadius: 16, backgroundColor: '#E2E8F0' },
+  avatarFreight: { borderWidth: 2, borderColor: '#F59E0B' }, 
+  
+  // Badge Laranja para mensagens novas
+  unreadBadge: { position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, backgroundColor: '#EB681E', borderWidth: 2, borderColor: '#FFF' },
   
   chatInfo: { flex: 1, justifyContent: 'center' },
-  chatHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  userName: { fontSize: 16, color: '#1F2937', flex: 1, marginRight: 10 },
-  timeText: { fontSize: 12, color: '#6B7280' },
-  timeTextUnread: { color: '#2196F3', fontWeight: 'bold' },
+  chatHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  userName: { fontSize: 16, color: '#334155', flex: 1, marginRight: 10, fontWeight: '600' },
+  timeText: { fontSize: 12, color: '#94A3B8' },
+  timeTextUnread: { color: '#EB681E', fontWeight: 'bold' },
   
-  itemTitle: { fontSize: 13, color: '#2196F3', fontWeight: '600', marginBottom: 4 },
+  itemTitle: { fontSize: 13, color: '#EB681E', fontWeight: 'bold', marginBottom: 4 },
   
-  lastMessage: { fontSize: 14, color: '#6B7280' },
-  youPrefix: { color: '#9CA3AF', fontWeight: 'normal' }, 
+  lastMessage: { fontSize: 14, color: '#64748B' },
+  youPrefix: { color: '#94A3B8', fontWeight: 'normal' }, 
   
-  textBold: { fontWeight: 'bold', color: '#111827' }, 
+  textBold: { fontWeight: 'bold', color: '#0F172A' }, 
 
   emptyContainer: { alignItems: 'center', marginTop: 100, padding: 20 },
-  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#374151', marginBottom: 8 },
-  emptySubText: { fontSize: 14, color: '#6B7280', textAlign: 'center' }
+  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#334155', marginBottom: 8 },
+  emptySubText: { fontSize: 15, color: '#94A3B8', textAlign: 'center' }
 });

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Modal, TextInput, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Modal, TextInput, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
@@ -11,7 +11,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // A aba padrão muda dependendo de quem é
   const [activeTab, setActiveTab] = useState<'itens' | 'avaliacoes' | 'fretes'>(userRole === 'Freteiro' ? 'fretes' : 'itens');
   
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -21,37 +20,56 @@ export default function ProfileScreen() {
   const [editName, setEditName] = useState('');
   const [editPassword, setEditPassword] = useState('');
 
-  const { data: profile, isLoading: loadingProfile } = useQuery<any>({
+  // 1. Dados Principais do Perfil
+  const { data: profile, isLoading: loadingProfile, refetch: refetchProfile } = useQuery<any>({
     queryKey: ['users', 'me'],
     queryFn: async () => (await api.get('/users/me')).data
   });
 
-  const { data: myItems, isLoading: loadingItems } = useQuery<any>({
+  // 2. Itens do Doador/Beneficiário
+  const { data: myItems, isLoading: loadingItems, refetch: refetchItems } = useQuery<any>({
     queryKey: ['items', 'me'],
     queryFn: async () => (await api.get('/items/me')).data,
-    enabled: userRole !== 'Freteiro' // Freteiro não tem itens
+    enabled: userRole !== 'Freteiro'
   });
 
-  const { data: myReviews, isLoading: loadingReviews } = useQuery<any>({
+  // 3. Avaliações
+  const { data: myReviews, isLoading: loadingReviews, refetch: refetchReviews } = useQuery<any>({
     queryKey: ['reviews', 'me', profile?.id],
     queryFn: async () => (await api.get(`/reviews/${profile?.id}`)).data,
     enabled: !!profile?.id
   });
 
-  const { data: myFreights, isLoading: loadingFreights } = useQuery<any>({
+  // 4. Fretes (Apenas Freteiros)
+  const { data: myFreights, isLoading: loadingFreights, refetch: refetchFreights } = useQuery<any>({
     queryKey: ['freights', 'me'],
     queryFn: async () => (await api.get('/freights/me')).data,
-    enabled: userRole === 'Freteiro' // Só baixa fretes se for Freteiro
+    enabled: userRole === 'Freteiro' 
   });
 
-  const { data: verificationStatus } = useQuery({
+  // 5. Status da IA
+  const { data: verificationStatus, refetch: refetchVerification } = useQuery({
     queryKey: ['verifications', 'me'],
     queryFn: async () => {
       try { return (await api.get('/verifications/me')).data; } 
       catch (error: any) { if (error.response?.status === 404) return null; throw error; }
     },
-    enabled: userRole !== 'Freteiro' // Freteiro não precisa de IA
+    enabled: userRole !== 'Freteiro'
   });
+
+  // 🔥 SOLUÇÃO DO BUG: Recarrega todos os dados automaticamente quando a tela ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      refetchProfile();
+      if (userRole !== 'Freteiro') {
+        refetchItems();
+        refetchVerification();
+      } else {
+        refetchFreights();
+      }
+      if (profile?.id) refetchReviews();
+    }, [userRole, profile?.id])
+  );
 
   const deactivateMutation = useMutation({
     mutationFn: async (password: string) => await api.delete('/users/me', { data: { password } }),
@@ -82,13 +100,24 @@ export default function ProfileScreen() {
     return <Text style={styles.reviewStars}>{filled}<Text style={styles.emptyStars}>{empty}</Text></Text>;
   };
 
-  if (loadingProfile) return <View style={styles.center}><ActivityIndicator size="large" color="#2196F3" /></View>;
+  if (loadingProfile) return <View style={styles.center}><ActivityIndicator size="large" color="#EB681E" /></View>;
 
   return (
     <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
-      {/* HEADER */}
+      {/* HEADER PRINCIPAL */}
       <View style={styles.header}>
-        <View style={[styles.avatarPlaceholder, userRole === 'Freteiro' && {backgroundColor: '#FF9800'}]}>
+        {/* Botão de Sair Realocado para Cima */}
+        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+            <Ionicons
+              name="log-out-outline"
+              size={16}
+              color="#DC2626"
+              style={{ marginRight: 8 }}
+            />
+          <Text style={styles.logoutText}>Sair</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.avatarPlaceholder, userRole === 'Freteiro' && {backgroundColor: '#334155'}]}>
           <Text style={styles.avatarText}>{profile?.fullName.charAt(0).toUpperCase()}</Text>
         </View>
         <Text style={styles.name}>{profile?.fullName}</Text>
@@ -132,13 +161,13 @@ export default function ProfileScreen() {
       {/* CONTEÚDO */}
       <View style={styles.listContainer}>
         {activeTab === 'fretes' && (
-          loadingFreights ? <ActivityIndicator color="#FF9800" /> : (
+          loadingFreights ? <ActivityIndicator color="#EB681E" /> : (
             myFreights?.length ? myFreights.map((freight: any) => (
               <TouchableOpacity key={freight.id} style={styles.freightCard} onPress={() => router.push(`/freight/${freight.id}`)}>
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>📦 {freight.item?.title || 'Removido'}</Text>
-                  <Text style={{color: '#4CAF50', fontWeight: 'bold'}}>Status: {freight.status}</Text>
-                  <Text style={{color: '#FF9800', marginTop: 4}}>Proposta: R$ {Number(freight.estimatedPrice).toFixed(2)}</Text>
+                  <Text style={{color: '#10B981', fontWeight: 'bold'}}>Status: {freight.status}</Text>
+                  <Text style={{color: '#EB681E', marginTop: 4}}>Proposta: R$ {Number(freight.estimatedPrice).toFixed(2)}</Text>
                 </View>
                 <Text style={{color: '#9CA3AF', fontSize: 24}}>{'>'}</Text>
               </TouchableOpacity>
@@ -147,17 +176,17 @@ export default function ProfileScreen() {
         )}
 
         {activeTab === 'itens' && (
-          loadingItems ? <ActivityIndicator color="#2196F3" /> : (
+          loadingItems ? <ActivityIndicator color="#EB681E" /> : (
             myItems?.length ? myItems.map((item: any) => (
               <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => router.push(`/item/${item.id}`)}>
                 {item.imageUrls?.length > 0 ? (
                   <Image source={{ uri: item.imageUrls[0] }} style={styles.itemThumb} />
                 ) : (
-                  <View style={styles.itemThumbPlaceholder}><Text style={{color: '#999', fontSize: 10}}>Sem foto</Text></View>
+                  <View style={styles.itemThumbPlaceholder}><Text style={{color: '#94A3B8', fontSize: 10}}>Sem foto</Text></View>
                 )}
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: '#F44336' }, item.status === 'Reservado' && { color: '#FF9800' }]}>{item.status}</Text>
+                  <Text style={[styles.itemStatus, item.status === 'Doado' && { color: '#3B82F6' }, item.status === 'Reservado' && { color: '#F59E0B' }]}>{item.status}</Text>
                 </View>
               </TouchableOpacity>
             )) : <Text style={styles.emptyText}>Você ainda não postou nada.</Text>
@@ -165,7 +194,7 @@ export default function ProfileScreen() {
         )}
 
         {activeTab === 'avaliacoes' && (
-          loadingReviews ? <ActivityIndicator color="#2196F3" /> : (
+          loadingReviews ? <ActivityIndicator color="#EB681E" /> : (
             myReviews?.length ? myReviews.map((review: any) => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
@@ -198,58 +227,72 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.btnEdit} onPress={handleOpenEditModal}>
-          <Ionicons name="pencil" size={20} color="#374151" style={styles.buttonIcon} />
-          <Text style={styles.btnEditText}>Editar Perfil</Text>
-        </TouchableOpacity>
+        {/* MENU DE CONFIGURAÇÕES  */}
+        <View style={styles.settingsCard}>
+          <TouchableOpacity style={styles.settingsRow} onPress={handleOpenEditModal}>
+            <View style={styles.settingsRowLeft}>
+              <Ionicons name="person-outline" size={22} color="#334155" />
+              <Text style={styles.settingsText}>Editar Perfil</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.btnDanger} onPress={() => { setPasswordConfirm(''); setDeleteModalVisible(true); }}>
-          <Ionicons name="trash-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
-          <Text style={styles.btnDangerText}>Desativar Conta</Text>
-        </TouchableOpacity>
+          <View style={styles.settingsDivider} />
 
-        <TouchableOpacity style={styles.btnLogout} onPress={() => signOut()}>
-          <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
-          <Text style={styles.btnLogoutText}>Sair do App</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingsRow} onPress={() => { setPasswordConfirm(''); setDeleteModalVisible(true); }}>
+            <View style={styles.settingsRowLeft}>
+              <Ionicons name="trash-outline" size={22} color="#DC2626" />
+              <Text style={[styles.settingsText, { color: '#DC2626' }]}>Desativar Conta</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#FCA5A5" />
+          </TouchableOpacity>
+        </View>
+
       </View>
 
+      {/* MODAL EXCLUSÃO DE CONTA */}
       <Modal visible={deleteModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
-                <Text style={styles.modalSubText}>Digite sua senha para desativar a conta:</Text>
+                <Text style={styles.modalSubText}>Digite sua senha para desativar a conta permanentemente:</Text>
                 <TextInput style={styles.modalInput} placeholder="Sua senha" secureTextEntry value={passwordConfirm} onChangeText={setPasswordConfirm} />
                 <View style={styles.modalRow}>
                     <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
                     <TouchableOpacity onPress={() => { if(!passwordConfirm) return Alert.alert('Atenção', 'Senha obrigatória'); deactivateMutation.mutate(passwordConfirm); }} style={styles.modalBtnConfirmDanger}>
-                      {deactivateMutation.isPending ? <ActivityIndicator color="#FFF" /> : <Text style={styles.confirmDangerText}>Confirmar</Text>}
+                      {deactivateMutation.isPending ? <ActivityIndicator color="#FFF" /> : <Text style={styles.confirmDangerText}>Desativar</Text>}
                     </TouchableOpacity>
                 </View>
             </View>
         </View>
       </Modal>
 
+      {/* MODAL DE EDIÇÃO DE PERFIL - DESIGN REFINADO */}
       <Modal visible={editModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Editar Perfil</Text>
+                <View style={styles.modalHeaderRow}>
+                  <Text style={styles.modalTitle}>Editar Perfil</Text>
+                  <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                    <Ionicons name="close-circle" size={28} color="#94A3B8" />
+                  </TouchableOpacity>
+                </View>
+                
                 <Text style={styles.inputLabel}>Nome Completo</Text>
                 <TextInput style={styles.modalInput} value={editName} onChangeText={setEditName} placeholder="Seu nome" />
+                
                 <Text style={styles.inputLabel}>Nova Senha (Opcional)</Text>
                 <TextInput style={styles.modalInput} value={editPassword} onChangeText={setEditPassword} placeholder="Deixe em branco para não alterar" secureTextEntry />
-                <View style={styles.modalRow}>
-                    <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalBtnCancel}><Text style={styles.cancelText}>Cancelar</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.modalBtnConfirm} disabled={updateProfileMutation.isPending} onPress={() => {
-                        const payload: any = {};
-                        if (editName.trim() && editName !== profile?.fullName) payload.fullName = editName.trim();
-                        if (editPassword.trim()) payload.password = editPassword.trim();
-                        if (Object.keys(payload).length > 0) updateProfileMutation.mutate(payload);
-                        else setEditModalVisible(false);
-                      }}>
-                      {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmText}>Salvar</Text>}
-                    </TouchableOpacity>
-                </View>
+                
+                <TouchableOpacity style={styles.modalBtnPrimary} disabled={updateProfileMutation.isPending} onPress={() => {
+                    const payload: any = {};
+                    if (editName.trim() && editName !== profile?.fullName) payload.fullName = editName.trim();
+                    if (editPassword.trim()) payload.password = editPassword.trim();
+                    if (Object.keys(payload).length > 0) updateProfileMutation.mutate(payload);
+                    else setEditModalVisible(false);
+                  }}>
+                  {updateProfileMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmText}>Salvar Alterações</Text>}
+                </TouchableOpacity>
             </View>
         </View>
       </Modal>
@@ -259,79 +302,98 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFF' },
-  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#2196F3', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 3 },
-  avatarText: { color: '#FFF', fontSize: 32, fontWeight: 'bold' },
-  name: { fontSize: 24, fontWeight: 'bold', color: '#1F2937' },
-  email: { color: '#6B7280', marginBottom: 12 },
+  header: { alignItems: 'center', padding: 30, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'ios' ? 60 : 40 },
   
-  freightBadge: { backgroundColor: '#FFF8E1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FF9800' },
-  freightText: { color: '#FF9800', fontWeight: 'bold', fontSize: 12 },
-  verifiedBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#10B981' },
+  logoutButton: {
+    position: 'absolute', top: Platform.OS === 'ios' ? 50 : 30, right: 20, zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+  },
+  logoutText: { color: "#DC2626", fontWeight: "bold", fontSize: 14 },
+  
+  avatarPlaceholder: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#EB681E', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 3 },
+  avatarText: { color: '#FFF', fontSize: 32, fontWeight: 'bold' },
+  name: { fontSize: 24, fontWeight: 'bold', color: '#0F172A' },
+  email: { color: '#64748B', marginBottom: 12 },
+  
+  freightBadge: { backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#334155' },
+  freightText: { color: '#334155', fontWeight: 'bold', fontSize: 12 },
+  verifiedBadge: { backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#10B981' },
   verifiedText: { color: '#10B981', fontWeight: 'bold', fontSize: 12 },
-  unverifiedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FCA5A5' },
+  unverifiedBadge: { backgroundColor: '#FEF2F2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FCA5A5' },
   unverifiedText: { color: '#DC2626', fontWeight: 'bold', fontSize: 12 },
-  pendingBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#FF9800' },
-  pendingText: { color: '#E65100', fontWeight: 'bold', fontSize: 12 },
-  rejectedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#DC2626' },
+  pendingBadge: { backgroundColor: '#FFFBEB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#F59E0B' },
+  pendingText: { color: '#D97706', fontWeight: 'bold', fontSize: 12 },
+  rejectedBadge: { backgroundColor: '#FEF2F2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#DC2626' },
   rejectedText: { color: '#991B1B', fontWeight: 'bold', fontSize: 12 },
   
-  ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#FF9800', marginRight: 6 },
-  ratingLabel: { color: '#6B7280', fontWeight: 'bold' },
+  ratingBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  ratingValue: { fontSize: 18, fontWeight: 'bold', color: '#D97706', marginRight: 6 },
+  ratingLabel: { color: '#64748B', fontWeight: 'bold' },
   
-  tabsHeader: { flexDirection: 'row', backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E5E7EB' },
-  tabBtn: { flex: 1, padding: 16, alignItems: 'center', borderBottomWidth: 2, borderColor: 'transparent' },
-  tabBtnActive: { borderColor: '#2196F3' },
-  tabBtnText: { color: '#9CA3AF', fontWeight: 'bold', fontSize: 15 },
-  tabBtnTextActive: { color: '#2196F3' },
+  tabsHeader: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderColor: '#E2E8F0' },
+  tabBtn: { flex: 1, padding: 16, alignItems: 'center', borderBottomWidth: 3, borderColor: 'transparent' },
+  tabBtnActive: { borderColor: '#EB681E' },
+  tabBtnText: { color: '#94A3B8', fontWeight: 'bold', fontSize: 15 },
+  tabBtnTextActive: { color: '#EB681E' },
   
   listContainer: { padding: 20, minHeight: 200 },
   
-  itemCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, alignItems: 'center', elevation: 2 },
-  freightCard: { flexDirection: 'row', backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center' },
-  itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#E5E7EB' },
-  itemThumbPlaceholder: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  itemCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16, marginBottom: 12, alignItems: 'center', elevation: 2, borderWidth: 1, borderColor: '#F1F5F9' },
+  freightCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16, marginBottom: 12, elevation: 2, alignItems: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
+  itemThumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#E2E8F0' },
+  itemThumbPlaceholder: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
   itemInfo: { marginLeft: 16, flex: 1 },
-  itemTitle: { fontWeight: 'bold', fontSize: 16, color: '#1F2937' },
+  itemTitle: { fontWeight: 'bold', fontSize: 16, color: '#0F172A' },
   itemStatus: { color: '#10B981', fontSize: 13, fontWeight: 'bold', marginTop: 4 },
   
-  reviewCard: { paddingVertical: 16, backgroundColor: '#FFF', padding: 20, borderRadius: 16, elevation: 2, marginBottom: 12 },
+  reviewCard: { paddingVertical: 16, backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16, elevation: 2, marginBottom: 12, borderWidth: 1, borderColor: '#F1F5F9' },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' },
-  reviewerName: { fontWeight: 'bold', color: '#1F2937', fontSize: 15 },
-  reviewStars: { color: '#FF9800', fontSize: 16, letterSpacing: 2 },
-  emptyStars: { color: '#E5E7EB' },
-  reviewComment: { color: '#6B7280', fontSize: 14, lineHeight: 20 },
-  reviewDate: { color: '#9CA3AF', fontSize: 12, marginTop: 8 },
+  reviewerName: { fontWeight: 'bold', color: '#0F172A', fontSize: 15 },
+  reviewStars: { color: '#F59E0B', fontSize: 16, letterSpacing: 2 },
+  emptyStars: { color: '#E2E8F0' },
+  reviewComment: { color: '#475569', fontSize: 14, lineHeight: 20 },
+  reviewDate: { color: '#94A3B8', fontSize: 12, marginTop: 8 },
   
-  emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
+  emptyText: { textAlign: 'center', color: '#94A3B8', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
   
   actions: { padding: 20, gap: 12, marginBottom: 30 },
-  btnVerify: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#10B981', elevation: 2 },
-  btnVerifyDanger: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#DC2626', elevation: 2 },
-  btnVerifyText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  btnEdit: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#FFF', elevation: 2 },
-  btnEditText: { color: '#374151', fontSize: 16, fontWeight: 'bold' },
-  btnDanger: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEE2E2' },
-  btnDangerText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
-  btnLogout: { padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 12, backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' },
-  btnLogoutText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
+  btnVerify: { padding: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 14, backgroundColor: '#10B981', elevation: 2, marginBottom: 12 },
+  btnVerifyDanger: { padding: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 14, backgroundColor: '#DC2626', elevation: 2, marginBottom: 12 },
+  btnVerifyText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 },
   
+  // Estilos do Novo Menu Moderno
+  settingsCard: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden', elevation: 1 },
+  settingsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 20, backgroundColor: '#FFFFFF' },
+  settingsRowLeft: { flexDirection: 'row', alignItems: 'center' },
+  settingsText: { fontSize: 16, fontWeight: '600', color: '#334155', marginLeft: 12 },
+  settingsDivider: { height: 1, backgroundColor: '#F1F5F9', marginLeft: 54 }, 
+
+  // Modais Refinados
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#FFF', padding: 24, borderRadius: 16, elevation: 5 },
-  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: '#1F2937' },
-  modalSubText: { marginBottom: 20, color: '#6B7280', fontSize: 15 },
-  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#374151', marginBottom: 6, marginTop: 10 },
-  modalInput: { borderWidth: 1, borderColor: '#D1D5DB', padding: 14, borderRadius: 10, marginBottom: 15, fontSize: 16, backgroundColor: '#F9FAFB' },
+  modalContent: { backgroundColor: '#FFFFFF', padding: 24, borderRadius: 16, elevation: 5 },
+  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#0F172A' },
+  modalSubText: { marginBottom: 20, color: '#64748B', fontSize: 15 },
+  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#334155', marginBottom: 6, marginTop: 10 },
+  modalInput: { borderWidth: 1, borderColor: '#CBD5E1', padding: 16, borderRadius: 12, marginBottom: 15, fontSize: 16, backgroundColor: '#F8FAFC' },
   modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center', marginTop: 10 },
   modalBtnCancel: { paddingVertical: 12, paddingHorizontal: 16 },
-  cancelText: { color: '#6B7280', fontWeight: 'bold', fontSize: 16 },
-  modalBtnConfirm: { backgroundColor: '#2196F3', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
-  confirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  cancelText: { color: '#64748B', fontWeight: 'bold', fontSize: 16 },
+  
+  modalBtnPrimary: { backgroundColor: '#EB681E', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 10 },
+  confirmText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
+  
   modalBtnConfirmDanger: { backgroundColor: '#DC2626', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
   confirmDangerText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 }
 });

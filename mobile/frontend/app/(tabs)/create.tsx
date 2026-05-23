@@ -244,7 +244,7 @@ export default function CreateDonationScreen() {
                   style={styles.removeImgBtn}
                   onPress={() => removeImage(index)}
                 >
-                  <Text style={styles.removeImgText}>X</Text>
+                  <Ionicons name="close" size={16} color="#FFF" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -254,7 +254,7 @@ export default function CreateDonationScreen() {
                 style={styles.addImgBtn}
                 onPress={handleAddImage}
               >
-                <Text style={styles.addImgPlus}>+</Text>
+                <Ionicons name="camera-outline" size={32} color="#94A3B8" />
                 <Text style={styles.addImgLabel}>Adicionar</Text>
               </TouchableOpacity>
             )}
@@ -266,7 +266,7 @@ export default function CreateDonationScreen() {
           <TextInput
             style={styles.input}
             placeholder="Ex: Cadeira de Banho em bom estado"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#94A3B8"
             value={title}
             onChangeText={setTitle}
             maxLength={100}
@@ -285,6 +285,7 @@ export default function CreateDonationScreen() {
                 key={cat}
                 style={[styles.chip, category === cat && styles.chipActive]}
                 onPress={() => setCategory(cat)}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
@@ -304,7 +305,7 @@ export default function CreateDonationScreen() {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Regras para retirada, detalhes de conservação..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#94A3B8"
             value={description}
             onChangeText={setDescription}
             multiline
@@ -321,14 +322,15 @@ export default function CreateDonationScreen() {
           ]}
           onPress={handleSubmit}
           disabled={isUploading || createItemMutation.isPending}
+          activeOpacity={0.8}
         >
           {isUploading || createItemMutation.isPending ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
               <Ionicons
-                name="cloud-upload-outline"
-                size={20}
+                name="heart-outline"
+                size={22}
                 color="#FFF"
                 style={styles.buttonIcon}
               />
@@ -342,84 +344,104 @@ export default function CreateDonationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
-  scrollContent: { padding: 20, paddingBottom: 80 },
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
+  
+  // 🔥 Ajuste do espaçamento do topo igual ao Perfil
+  scrollContent: { 
+    paddingHorizontal: 24, 
+    paddingBottom: 80, 
+    paddingTop: Platform.OS === 'ios' ? 60 : 40 
+  },
 
-  header: { marginBottom: 25 },
-  headerTitle: { fontSize: 28, fontWeight: "bold", color: "#111827" },
-  headerSub: { fontSize: 15, color: "#6B7280", marginTop: 5 },
+  header: { marginBottom: 30 },
+  headerTitle: { fontSize: 32, fontWeight: "bold", color: "#0F172A" },
+  headerSub: { fontSize: 16, color: "#64748B", marginTop: 6 },
 
-  section: { marginBottom: 20 },
+  section: { marginBottom: 24 },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#334155",
     marginBottom: 10,
+    marginLeft: 4,
   },
 
   imageScroll: { flexDirection: "row", paddingBottom: 5 },
   addImgBtn: {
-    width: 100,
-    height: 100,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 12,
+    width: 110,
+    height: 110,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
     borderStyle: "dashed",
   },
-  addImgPlus: { fontSize: 32, color: "#9CA3AF", fontWeight: "300" },
-  addImgLabel: { fontSize: 12, color: "#6B7280", marginTop: 4 },
+  addImgLabel: { fontSize: 13, color: "#64748B", marginTop: 8, fontWeight: "600" },
   imagePreviewContainer: { marginRight: 15, position: "relative" },
-  imagePreview: { width: 100, height: 100, borderRadius: 12 },
+  imagePreview: { width: 110, height: 110, borderRadius: 16 },
   removeImgBtn: {
     position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "red",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: -8,
+    right: -8,
+    backgroundColor: "#EF4444",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFF",
   },
-  removeImgText: { color: "#FFF", fontSize: 12, fontWeight: "bold" },
 
+  // Inputs Padronizados
   input: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    padding: 14,
+    borderColor: "#CBD5E1",
+    borderRadius: 14,
+    padding: 18,
     fontSize: 16,
-    color: "#1F2937",
+    color: "#0F172A",
   },
-  textArea: { minHeight: 100, paddingTop: 14 },
+  textArea: { minHeight: 120, paddingTop: 18 },
 
+  // Categorias 
   categoryScroll: { flexDirection: "row" },
   chip: {
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  chipActive: { backgroundColor: "#2196F3" },
-  chipText: { color: "#6B7280", fontWeight: "bold" },
-  chipTextActive: { color: "#FFF" },
-
-  submitBtn: {
-    backgroundColor: "#FF9800",
-    padding: 16,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderRadius: 12,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  chipActive: { 
+    backgroundColor: "#FFF3EB", 
+    borderColor: "#EB681E",
+    borderWidth: 2 
+  },
+  chipText: { color: "#64748B", fontWeight: "600", fontSize: 14 },
+  chipTextActive: { color: "#EB681E", fontWeight: "bold" },
+
+  // Botão Principal Padronizado
+  submitBtn: {
+    backgroundColor: "#EB681E",
+    padding: 18,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
-    elevation: 2,
+    shadowColor: "#EB681E",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 3,
   },
   submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { color: "#FFF", fontSize: 16, fontWeight: "bold" },
+  submitBtnText: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
   buttonIcon: { marginRight: 8 },
 });
