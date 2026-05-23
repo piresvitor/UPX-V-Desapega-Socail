@@ -15,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from "react-native";
 import {
   SafeAreaView,
@@ -42,6 +43,9 @@ export default function ChatRoomScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  
+  // 🔥 Novo estado para controlar o Modal de Frete
+  const [isFreightModalVisible, setIsFreightModalVisible] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const hasSentAutoMsg = useRef(false);
@@ -131,12 +135,14 @@ export default function ChatRoomScreen() {
       });
     },
     onSuccess: () => {
+      setIsFreightModalVisible(false); // Fecha o modal após sucesso
       Alert.alert(
         "Sucesso!",
         "Frete solicitado com sucesso! O item já está no radar dos nossos motoristas parceiros.",
       );
     },
     onError: (error: any) => {
+      setIsFreightModalVisible(false); // Fecha o modal em caso de erro também
       const msg =
         error.response?.data?.message ||
         error.message ||
@@ -227,6 +233,11 @@ export default function ChatRoomScreen() {
   const renderMessage = ({ item }: { item: Message }) => {
     const isMyMessage = String(item.senderId) === String(me?.id);
 
+    const msgDate = new Date(item.createdAt);
+    const isToday = msgDate.toDateString() === new Date().toLocaleDateString();
+    const timeString = msgDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dateString = isToday ? timeString : `${msgDate.toLocaleDateString([], {day: '2-digit', month: '2-digit'})} ${timeString}`;
+
     return (
       <View
         style={[
@@ -258,10 +269,7 @@ export default function ChatRoomScreen() {
               isMyMessage ? styles.myTimeText : styles.otherTimeText,
             ]}
           >
-            {new Date(item.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {dateString}
           </Text>
         </View>
       </View>
@@ -269,7 +277,8 @@ export default function ChatRoomScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+    // 🔥 Removemos o "top" do edges para não duplicar a margem superior
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -281,7 +290,7 @@ export default function ChatRoomScreen() {
               style={styles.backBtn}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="#2196F3" />
+              <Ionicons name="arrow-back" size={24} color="#EB681E" />
             </TouchableOpacity>
           </View>
 
@@ -313,8 +322,8 @@ export default function ChatRoomScreen() {
                     styles.statusDot,
                     {
                       backgroundColor: isSocketConnected
-                        ? "#4CAF50"
-                        : "#F44336",
+                        ? "#10B981" 
+                        : "#EF4444", 
                     },
                   ]}
                 />
@@ -326,30 +335,13 @@ export default function ChatRoomScreen() {
           </View>
 
           <View style={styles.headerRight}>
-            {/* CORREÇÃO: O ÍCONE SÓ APARECE SE NÃO FOR FRETEIRO*/}
             {currentChat?.type === "DONATION" && me?.role !== "Freteiro" && (
               <TouchableOpacity
                 style={styles.requestFreightBtn}
-                disabled={requestFreightMutation.isPending}
-                onPress={() => {
-                  Alert.alert(
-                    "Solicitar Frete Solidário",
-                    "Deseja colocar este item no radar dos nossos freteiros parceiros?",
-                    [
-                      { text: "Cancelar", style: "cancel" },
-                      {
-                        text: "Sim, Solicitar",
-                        onPress: () => requestFreightMutation.mutate(),
-                      },
-                    ],
-                  );
-                }}
+                onPress={() => setIsFreightModalVisible(true)} // 🔥 Abre o novo Modal
               >
-                {requestFreightMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Ionicons name="car-outline" size={24} color="#FFF" />
-                )}
+                <Ionicons name="car-outline" size={20} color="#EB681E" />
+                <Text style={styles.requestFreightBtnText}>Frete</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -422,7 +414,7 @@ export default function ChatRoomScreen() {
 
         {loadingHistory ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#2196F3" />
+            <ActivityIndicator size="large" color="#EB681E" />
           </View>
         ) : (
           <FlatList
@@ -443,11 +435,10 @@ export default function ChatRoomScreen() {
             { paddingBottom: Math.max(insets.bottom, 10) },
           ]}
         >
-          {/* CORREÇÃO: COR DO TEXTO E PLACEHOLDER BLINDADOS PARA DISPOSITIVO FÍSICO */}
           <TextInput
             style={styles.textInput}
             placeholder="Digite sua mensagem..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#94A3B8"
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -457,7 +448,6 @@ export default function ChatRoomScreen() {
             style={[
               styles.sendBtn,
               !inputText.trim() && styles.sendBtnDisabled,
-              isFreightChat && { backgroundColor: "#FF9800" },
             ]}
             onPress={handleSendMessage}
             disabled={!inputText.trim()}
@@ -466,6 +456,50 @@ export default function ChatRoomScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* 🔥 MODAL DE SOLICITAÇÃO DE FRETE (NOVO) 🔥 */}
+      <Modal visible={isFreightModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.freightModalContent}>
+            <View style={styles.modalHeaderRow}>
+              <View>
+                <Text style={styles.modalTitle}>Solicitar Frete Solidário</Text>
+                <Text style={styles.modalSub}>Coloque este item no radar dos motoristas.</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsFreightModalVisible(false)}>
+                <Ionicons name="close-circle" size={28} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.freightModalBody}>
+              <View style={styles.freightIconCircle}>
+                <Ionicons name="car-outline" size={42} color="#EB681E" />
+              </View>
+              <Text style={styles.freightModalText}>
+                Ao confirmar, nossos motoristas parceiros serão notificados e poderão enviar propostas para transportar sua doação com segurança.
+              </Text>
+            </View>
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setIsFreightModalVisible(false)}>
+                <Text style={styles.modalBtnCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtnConfirm}
+                onPress={() => requestFreightMutation.mutate()}
+                disabled={requestFreightMutation.isPending}
+              >
+                {requestFreightMutation.isPending ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.modalBtnConfirmText}>Sim, Solicitar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -473,12 +507,13 @@ export default function ChatRoomScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 40,
-    paddingBottom: 14,
+    paddingTop: Platform.OS === 'ios' ? 50 : 40, // 🔥 Margin superior ajustada
+    paddingBottom: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderColor: "#E2E8F0",
@@ -486,9 +521,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerLeft: { flex: 1, alignItems: "flex-start" },
-  headerCenter: { flex: 2, alignItems: "center" },
+  headerCenter: { flex: 3, alignItems: "center" }, // Aumentado para o título caber melhor
   headerRight: { flex: 1, alignItems: "flex-end" },
   backBtn: { padding: 6 },
+  
   freightBadge: {
     backgroundColor: "#FFF3E0",
     paddingHorizontal: 9,
@@ -496,100 +532,124 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 2,
   },
-  freightBadgeText: { color: "#E65100", fontSize: 10, fontWeight: "bold" },
+  freightBadgeText: { color: "#EB681E", fontSize: 10, fontWeight: "bold" },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111827",
-    textDecorationLine: "underline",
+    color: "#0F172A",
   },
   subContainer: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 4 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   headerSub: { fontSize: 12, color: "#64748B" },
+  
   requestFreightBtn: {
-    backgroundColor: "#FF9800",
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    backgroundColor: "#FFF3EB",
+    borderColor: "#EB681E",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 36,
+    borderRadius: 18,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 2,
   },
+  requestFreightBtnText: { color: "#EB681E", fontWeight: "bold", marginLeft: 4, fontSize: 12 },
+
+  // 🔥 Estilos do Novo Modal de Frete
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  freightModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 24 },
+  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#0F172A' },
+  modalSub: { fontSize: 14, color: '#64748B', marginTop: 4 },
+  freightModalBody: { alignItems: 'center', marginBottom: 24, backgroundColor: '#F8FAFC', padding: 20, borderRadius: 16 },
+  freightIconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FFF3EB', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  freightModalText: { fontSize: 15, color: '#334155', textAlign: 'center', lineHeight: 22 },
+  modalActionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  modalBtnCancel: { flex: 1, paddingVertical: 16, backgroundColor: '#F1F5F9', borderRadius: 14, alignItems: 'center' },
+  modalBtnCancelText: { color: '#64748B', fontWeight: 'bold', fontSize: 16 },
+  modalBtnConfirm: { flex: 1, paddingVertical: 16, backgroundColor: '#EB681E', borderRadius: 14, alignItems: 'center', shadowColor: '#EB681E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 2 },
+  modalBtnConfirmText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
+
   reviewBanner: {
     flexDirection: "row",
-    backgroundColor: "#FFF9C4",
+    backgroundColor: "#FEF3C7",
     padding: 16,
     alignItems: "center",
     borderBottomWidth: 1,
-    borderColor: "#FBC02D",
+    borderColor: "#FCD34D",
     elevation: 1,
   },
   reviewBannerTextContainer: { flex: 1, paddingRight: 10 },
-  reviewBannerTitle: { fontSize: 14, fontWeight: "bold", color: "#F57F17" },
-  reviewBannerSub: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  reviewBannerTitle: { fontSize: 14, fontWeight: "bold", color: "#D97706" },
+  reviewBannerSub: { fontSize: 12, color: "#475569", marginTop: 2 },
   reviewBannerBtn: {
-    backgroundColor: "#FF9800",
+    backgroundColor: "#F59E0B",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
   reviewBannerBtnText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 12 },
+  
   listContent: { paddingHorizontal: 16, paddingBottom: 20, paddingTop: 10 },
   messageWrapper: { flexDirection: "row", marginBottom: 12 },
   messageWrapperRight: { justifyContent: "flex-end" },
   messageWrapperLeft: { justifyContent: "flex-start" },
+  
   messageBubble: {
     maxWidth: "80%",
-    padding: 14,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
     elevation: 1,
   },
-  myBubble: { backgroundColor: "#E8F5E9", borderBottomRightRadius: 6 },
-  otherBubble: { backgroundColor: "#FFFFFF", borderBottomLeftRadius: 6 },
-  otherBubbleFreight: { backgroundColor: "#FFF3E0", borderBottomLeftRadius: 6 },
-  messageText: { fontSize: 16, lineHeight: 24, color: "#111827" },
-  myMessageText: { color: "#111827" },
-  otherMessageText: { color: "#111827" },
+  myBubble: { backgroundColor: "#FFF3EB", borderBottomRightRadius: 6 }, 
+  otherBubble: { backgroundColor: "#FFFFFF", borderBottomLeftRadius: 6 }, 
+  otherBubbleFreight: { backgroundColor: "#FEF3C7", borderBottomLeftRadius: 6 },
+  
+  messageText: { fontSize: 15, lineHeight: 22, color: "#0F172A" },
+  myMessageText: { color: "#0F172A" },
+  otherMessageText: { color: "#0F172A" },
+  
   timeText: {
-    fontSize: 11,
+    fontSize: 10,
     alignSelf: "flex-end",
-    marginTop: 6,
-    color: "#64748B",
+    marginTop: 4,
+    color: "#94A3B8",
   },
-  myTimeText: { color: "#64748B" },
-  otherTimeText: { color: "#64748B" },
+  myTimeText: { color: "#EB681E", opacity: 0.8 }, 
+  otherTimeText: { color: "#94A3B8" },
+  
   inputContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     alignItems: "flex-end",
+    borderTopWidth: 1,
+    borderColor: "#E2E8F0"
   },
-
-  //Cor fixa e fundo reforçado para evitar bug de UI no Android
   textInput: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    borderRadius: 16,
+    borderRadius: 20,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,
     minHeight: 48,
     maxHeight: 110,
     fontSize: 16,
-    color: "#111827",
+    color: "#0F172A",
   },
-
   sendBtn: {
     marginLeft: 12,
-    backgroundColor: "#2563EB",
+    backgroundColor: "#EB681E",
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  sendBtnDisabled: { backgroundColor: "#94A3B8" },
+  sendBtnDisabled: { backgroundColor: "#CBD5E1" },
 });

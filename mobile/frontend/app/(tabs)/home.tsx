@@ -14,6 +14,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { api } from "../../src/services/api";
@@ -47,9 +48,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   // Estados do GPS e Filtros
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,7 +104,7 @@ export default function HomeScreen() {
           lng: location?.lng,
           radius: radiusKm * 1000,
           category: selectedCategory !== "Todos" ? selectedCategory : undefined,
-          page: 1, // Base para o Infinite Scroll no futuro
+          page: 1, 
           limit: 10,
         },
       });
@@ -129,7 +128,7 @@ export default function HomeScreen() {
   if (!location && !locationError) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2196F3" />
+        <ActivityIndicator size="large" color="#EB681E" />
         <Text style={styles.text}>
           Buscando sua localização via satélite...
         </Text>
@@ -139,6 +138,8 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      
+      {/* --- HEADER PADRONIZADO --- */}
       <View style={styles.header}>
         <Text style={styles.title}>Doações Próximas</Text>
         <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
@@ -155,9 +156,9 @@ export default function HomeScreen() {
       {/* --- SEÇÃO DE FILTROS --- */}
       <View style={styles.filtersContainer}>
         <TextInput
-          style={[styles.searchInput, { color: "#000000" }]} // Força texto preto
+          style={styles.searchInput}
           placeholder="Buscar itens..."
-          placeholderTextColor="#9CA3AF" // Força o placeholder cinza
+          placeholderTextColor="#94A3B8"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -176,6 +177,7 @@ export default function HomeScreen() {
                 selectedCategory === cat && styles.chipActive,
               ]}
               onPress={() => setSelectedCategory(cat)}
+              activeOpacity={0.7}
             >
               <Text
                 style={[
@@ -201,6 +203,7 @@ export default function HomeScreen() {
                   radiusKm === km && styles.radiusChipActive,
                 ]}
                 onPress={() => setRadiusKm(km)}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
@@ -222,7 +225,7 @@ export default function HomeScreen() {
       ) : isLoading ? (
         <ActivityIndicator
           size="large"
-          color="#4CAF50"
+          color="#EB681E"
           style={{ marginTop: 20 }}
         />
       ) : isError ? (
@@ -233,19 +236,21 @@ export default function HomeScreen() {
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          // Pull-to-refresh nativo
+          numColumns={2} // 🔥 GRID DE 2 COLUNAS
+          columnWrapperStyle={styles.rowWrapper} // 🔥 ESPAÇAMENTO ENTRE AS COLUNAS
+          contentContainerStyle={{ paddingBottom: 80, paddingTop: 10 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#2196F3"]}
+              colors={["#EB681E"]} // Laranja
             />
           }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
               onPress={() => router.push(`/item/${item.id}`)}
+              activeOpacity={0.9}
             >
               {item.imageUrls && item.imageUrls.length > 0 ? (
                 <Image
@@ -254,16 +259,15 @@ export default function HomeScreen() {
                 />
               ) : (
                 <View style={styles.imagePlaceholder}>
-                  <Text style={{ color: "#999" }}>Sem foto</Text>
+                  <Ionicons name="image-outline" size={24} color="#94A3B8" />
                 </View>
               )}
 
               <View style={styles.cardContent}>
-                <View style={styles.rowBetween}>
+                <View style={styles.cardHeaderRow}>
                   <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryText}>{item.category}</Text>
+                    <Text style={styles.categoryText} numberOfLines={1}>{item.category}</Text>
                   </View>
-                  {/* Exibindo a distância que vem do PostGIS */}
                   {item.distance && (
                     <Text style={styles.distanceText}>
                       📍 {Math.round(item.distance / 1000)} km
@@ -271,8 +275,8 @@ export default function HomeScreen() {
                   )}
                 </View>
 
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.donorText}>Por: {item.donor.fullName}</Text>
+                <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                <Text style={styles.donorText} numberOfLines={1}>De: {item.donor.fullName}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -288,64 +292,70 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  
+  // 🔥 Header Padronizado
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 30,
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  title: { fontSize: 26, fontWeight: "bold", color: "#111827" },
+  title: { fontSize: 24, fontWeight: "bold", color: "#0F172A" },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#FEF2F2",
     borderWidth: 1,
     borderColor: "#FCA5A5",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
   },
-  logoutText: { color: "#DC2626", fontWeight: "bold", fontSize: 14 },
+  logoutText: { color: "#DC2626", fontWeight: "bold", fontSize: 13 },
 
-  // Filtros
+  // 🔥 Filtros
   filtersContainer: {
     marginHorizontal: 16,
-    marginBottom: 10,
+    marginTop: 16,
+    marginBottom: 4,
     padding: 20,
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    elevation: 4,
+    borderColor: "#F1F5F9",
+    elevation: 2,
   },
   searchInput: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 14,
-    fontSize: 16,
+    fontSize: 15,
     marginBottom: 12,
-    color: "#111827",
+    color: "#0F172A",
   },
   scrollHorizontal: { marginBottom: 12 },
   chip: {
     backgroundColor: "#F1F5F9",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 12,
     marginRight: 8,
   },
-  chipActive: { backgroundColor: "#2563EB" },
-  chipText: { color: "#475569", fontWeight: "600" },
-  chipTextActive: { color: "#FFFFFF" },
+  chipActive: { backgroundColor: "#EB681E" },
+  chipText: { color: "#475569", fontWeight: "600", fontSize: 13 },
+  chipTextActive: { color: "#FFFFFF", fontWeight: "bold" },
 
   radiusContainer: { flexDirection: "row", alignItems: "center" },
   radiusLabel: {
-    fontSize: 14,
-    color: "#64748B",
+    fontSize: 13,
+    color: "#475569",
     marginRight: 10,
     fontWeight: "bold",
   },
@@ -358,58 +368,66 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: "#F8FAFC",
   },
-  radiusChipActive: { backgroundColor: "#E0F2FE", borderColor: "#2563EB" },
-  radiusChipText: { color: "#475569" },
-  radiusChipTextActive: { color: "#2563EB", fontWeight: "bold" },
+  radiusChipActive: { backgroundColor: "#FFF3EB", borderColor: "#EB681E" },
+  radiusChipText: { color: "#64748B", fontSize: 13 },
+  radiusChipTextActive: { color: "#EB681E", fontWeight: "bold" },
 
   text: { marginTop: 10, color: "#64748B" },
-  errorText: { color: "#DC2626", textAlign: "center", marginTop: 20 },
-  emptyText: { textAlign: "center", color: "#64748B", marginTop: 40 },
+  errorText: { color: "#DC2626", textAlign: "center", marginTop: 20, fontWeight: "bold" },
+  emptyText: { textAlign: "center", color: "#94A3B8", marginTop: 40, fontSize: 15 },
 
-  // Card
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    overflow: "hidden",
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+  // 🔥 Estilos do GRID (2 Colunas)
+  rowWrapper: {
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
   },
-  cardImage: { width: "100%", height: 180, backgroundColor: "#E5E7EB" },
+  card: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginBottom: 16,
+    marginHorizontal: 4, // Espaçamento entre os dois cards da mesma linha
+    overflow: "hidden",
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    maxWidth: '48%', // Garante que não estique bizarramente se houver número ímpar
+  },
+  cardImage: { width: "100%", height: 130, backgroundColor: "#E2E8F0" },
   imagePlaceholder: {
     width: "100%",
-    height: 180,
-    backgroundColor: "#E5E7EB",
+    height: 130,
+    backgroundColor: "#F8FAFC",
     justifyContent: "center",
     alignItems: "center",
   },
-  cardContent: { padding: 20 },
-  rowBetween: {
+  cardContent: { padding: 12 },
+  cardHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
   categoryBadge: {
-    backgroundColor: "#E0F2FE",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    backgroundColor: "#FFF3EB",
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     borderRadius: 6,
+    flexShrink: 1,
   },
   categoryText: {
-    color: "#2563EB",
-    fontSize: 12,
+    color: "#EB681E",
+    fontSize: 10,
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  distanceText: { fontSize: 12, color: "#64748B", fontWeight: "bold" },
+  distanceText: { fontSize: 11, color: "#64748B", fontWeight: "600", marginLeft: 4 },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#0F172A",
     marginBottom: 4,
+    lineHeight: 20,
   },
-  donorText: { fontSize: 14, color: "#64748B" },
+  donorText: { fontSize: 12, color: "#94A3B8" },
 });

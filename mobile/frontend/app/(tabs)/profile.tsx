@@ -57,7 +57,7 @@ export default function ProfileScreen() {
     enabled: userRole !== 'Freteiro'
   });
 
-  // 🔥 SOLUÇÃO DO BUG: Recarrega todos os dados automaticamente quando a tela ganha foco
+  // Recarrega todos os dados automaticamente quando a tela ganha foco
   useFocusEffect(
     useCallback(() => {
       refetchProfile();
@@ -106,7 +106,6 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
       {/* HEADER PRINCIPAL */}
       <View style={styles.header}>
-        {/* Botão de Sair Realocado para Cima */}
         <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
             <Ionicons
               name="log-out-outline"
@@ -210,20 +209,42 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.actions}>
-        {/* BOTÃO DE VERIFICAÇÃO SÓ APARECE PARA QUEM PRECISA */}
+        
+        {/* NOVO CARD DE VERIFICAÇÃO */}
         {userRole !== 'Freteiro' && !profile?.isVerified && (
           <TouchableOpacity 
-            style={verificationStatus?.status === 'Rejeitado' ? styles.btnVerifyDanger : styles.btnVerify} 
+            style={[styles.verifyCard, verificationStatus?.status === 'Rejeitado' ? styles.verifyCardDanger : styles.verifyCardPending]} 
             onPress={() => router.push('/verification')}
+            activeOpacity={0.8}
           >
-            <Ionicons name="shield-checkmark" size={20} color="#FFF" style={styles.buttonIcon} />
-            <Text style={styles.btnVerifyText}>
-              {verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' 
-                ? 'Acompanhar Verificação' 
-                : verificationStatus?.status === 'Rejeitado' 
-                ? 'Tentar Verificação Novamente' 
-                : 'Enviar Documentos e Remover Trava'}
-            </Text>
+            <View style={styles.verifyCardIcon}>
+              <Ionicons 
+                name={verificationStatus?.status === 'Rejeitado' ? "close-circle" : "shield-half-outline"} 
+                size={28} 
+                color={verificationStatus?.status === 'Rejeitado' ? "#DC2626" : "#D97706"} 
+              />
+            </View>
+            <View style={styles.verifyCardTextContainer}>
+              <Text style={[styles.verifyCardTitle, verificationStatus?.status === 'Rejeitado' && {color: '#DC2626'}]}>
+                {verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' 
+                  ? 'Verificação em Andamento' 
+                  : verificationStatus?.status === 'Rejeitado' 
+                  ? 'Verificação Recusada' 
+                  : 'Conta Limitada'}
+              </Text>
+              <Text style={styles.verifyCardSub}>
+                {verificationStatus?.status === 'Processando_IA' || verificationStatus?.status === 'Analise_Manual' 
+                  ? 'Acompanhe o status da sua análise.' 
+                  : verificationStatus?.status === 'Rejeitado' 
+                  ? 'Toque para reenviar seus documentos.' 
+                  : 'Envie seus documentos para liberar acesso.'}
+              </Text>
+            </View>
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={verificationStatus?.status === 'Rejeitado' ? "#FCA5A5" : "#FCD34D"} 
+            />
           </TouchableOpacity>
         )}
 
@@ -267,7 +288,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* MODAL DE EDIÇÃO DE PERFIL - DESIGN REFINADO */}
+      {/* MODAL DE EDIÇÃO DE PERFIL */}
       <Modal visible={editModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -311,7 +332,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: Platform.OS === 'ios' ? 50 : 30, right: 20, zIndex: 10,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#FEF2F2",
     borderWidth: 1,
     borderColor: "#FCA5A5",
     paddingVertical: 10,
@@ -367,10 +388,15 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', color: '#94A3B8', marginTop: 30, fontStyle: 'italic', fontSize: 15 },
   
   actions: { padding: 20, gap: 12, marginBottom: 30 },
-  btnVerify: { padding: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 14, backgroundColor: '#10B981', elevation: 2, marginBottom: 12 },
-  btnVerifyDanger: { padding: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRadius: 14, backgroundColor: '#DC2626', elevation: 2, marginBottom: 12 },
-  btnVerifyText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
-  buttonIcon: { marginRight: 8 },
+
+  // Estilos do Novo Card de Verificação
+  verifyCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1 },
+  verifyCardPending: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' },
+  verifyCardDanger: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
+  verifyCardIcon: { marginRight: 14 },
+  verifyCardTextContainer: { flex: 1 },
+  verifyCardTitle: { fontSize: 15, fontWeight: 'bold', color: '#D97706', marginBottom: 2 },
+  verifyCardSub: { fontSize: 13, color: '#64748B', paddingRight: 10 },
   
   // Estilos do Novo Menu Moderno
   settingsCard: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden', elevation: 1 },

@@ -16,6 +16,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from "react-native";
 import { api } from "../../src/services/api";
 
@@ -65,7 +66,7 @@ export default function CreateDonationScreen() {
   const [category, setCategory] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false); 
   const handleAddImage = async () => {
     if (images.length >= 3) {
       return Alert.alert(
@@ -73,15 +74,12 @@ export default function CreateDonationScreen() {
         "Você pode adicionar no máximo 3 fotos.",
       );
     }
-
-    Alert.alert("Adicionar Foto", "Escolha a origem da imagem:", [
-      { text: "Câmera", onPress: pickFromCamera },
-      { text: "Galeria", onPress: pickFromGallery },
-      { text: "Cancelar", style: "cancel" },
-    ]);
+    // Abre o Modal em vez do Alert nativo
+    setIsImageModalVisible(true);
   };
 
   const pickFromGallery = async () => {
+    setIsImageModalVisible(false); // Fecha o modal primeiro
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -92,6 +90,7 @@ export default function CreateDonationScreen() {
   };
 
   const pickFromCamera = async () => {
+    setIsImageModalVisible(false); // Fecha o modal primeiro
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
       Alert.alert(
@@ -339,6 +338,37 @@ export default function CreateDonationScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* 🔥 NOVO: MODAL DE ESCOLHA DE IMAGEM (BOTTOM SHEET) 🔥 */}
+      <Modal visible={isImageModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.imageModalContent}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Adicionar Foto</Text>
+              <TouchableOpacity onPress={() => setIsImageModalVisible(false)}>
+                <Ionicons name="close-circle" size={28} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalOptionsRow}>
+              <TouchableOpacity style={styles.modalOptionBtn} onPress={pickFromCamera}>
+                <View style={styles.modalOptionIcon}>
+                  <Ionicons name="camera" size={32} color="#EB681E" />
+                </View>
+                <Text style={styles.modalOptionText}>Câmera</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.modalOptionBtn} onPress={pickFromGallery}>
+                <View style={styles.modalOptionIcon}>
+                  <Ionicons name="images" size={32} color="#EB681E" />
+                </View>
+                <Text style={styles.modalOptionText}>Galeria</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </KeyboardAvoidingView>
   );
 }
@@ -346,7 +376,6 @@ export default function CreateDonationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   
-  // 🔥 Ajuste do espaçamento do topo igual ao Perfil
   scrollContent: { 
     paddingHorizontal: 24, 
     paddingBottom: 80, 
@@ -354,7 +383,7 @@ const styles = StyleSheet.create({
   },
 
   header: { marginBottom: 30 },
-  headerTitle: { fontSize: 32, fontWeight: "bold", color: "#0F172A" },
+  headerTitle: { fontSize: 26, fontWeight: "bold", color: "#0F172A" }, 
   headerSub: { fontSize: 16, color: "#64748B", marginTop: 6 },
 
   section: { marginBottom: 24 },
@@ -395,7 +424,6 @@ const styles = StyleSheet.create({
     borderColor: "#FFF",
   },
 
-  // Inputs Padronizados
   input: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -407,7 +435,6 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 120, paddingTop: 18 },
 
-  // Categorias 
   categoryScroll: { flexDirection: "row" },
   chip: {
     backgroundColor: "#FFFFFF",
@@ -426,7 +453,6 @@ const styles = StyleSheet.create({
   chipText: { color: "#64748B", fontWeight: "600", fontSize: 14 },
   chipTextActive: { color: "#EB681E", fontWeight: "bold" },
 
-  // Botão Principal Padronizado
   submitBtn: {
     backgroundColor: "#EB681E",
     padding: 18,
@@ -444,4 +470,14 @@ const styles = StyleSheet.create({
   submitBtnDisabled: { opacity: 0.7 },
   submitBtnText: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
   buttonIcon: { marginRight: 8 },
+
+  // Estilos do Modal de Escolha de Imagem
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  imageModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 30 },
+  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#0F172A' },
+  modalOptionsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 20 },
+  modalOptionBtn: { alignItems: 'center' },
+  modalOptionIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#FFF3EB', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  modalOptionText: { fontSize: 15, fontWeight: '600', color: '#334155' }
 });
