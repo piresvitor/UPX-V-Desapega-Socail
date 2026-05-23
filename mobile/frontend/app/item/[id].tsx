@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Alert,
   useWindowDimensions,
+  Modal,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -40,6 +42,10 @@ export default function ItemDetailsScreen() {
   const queryClient = useQueryClient();
   const { width: windowWidth } = useWindowDimensions();
 
+  // Estados para as novas funcionalidades da UI
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  const [isStatusModalVisible, setStatusModalVisible] = useState(false);
+
   const { data: item, isLoading: loadingItem, error: itemError } = useQuery<ItemDetails>({
     queryKey: ['item', id],
     queryFn: async () => (await api.get(`/items/${id}`)).data,
@@ -64,8 +70,8 @@ export default function ItemDetailsScreen() {
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => await api.patch(`/items/${id}/status`, { status: newStatus }),
     onSuccess: (_, variables) => {
-      Alert.alert('Sucesso', `Status atualizado para: ${variables}`);
       queryClient.invalidateQueries({ queryKey: ['item', id] });
+      setStatusModalVisible(false); // Fecha o modal após o sucesso
     },
   });
 
@@ -79,13 +85,10 @@ export default function ItemDetailsScreen() {
 
   const { isOwner, isLocked } = useMemo(() => {
     if (!item || !me) return { isOwner: false, isLocked: false };
-
     const ownerCheck = String(me.id) === String(item.donor?.id);
     const createdAtDate = item.createdAt ? new Date(item.createdAt).getTime() : Date.now();
     const hoursOld = (Date.now() - createdAtDate) / (1000 * 60 * 60);
-    
     const lockedCheck = !ownerCheck && !me.isVerified && hoursOld < 24;
-    
     return { isOwner: ownerCheck, isLocked: lockedCheck };
   }, [item, me]);
 
@@ -104,18 +107,8 @@ export default function ItemDetailsScreen() {
     ]);
   };
 
-  const handleStatusChange = () => {
-    Alert.alert('Alterar Status', 'Escolha o status atual da sua doação:', [
-      { text: 'Disponível', onPress: () => updateStatusMutation.mutate('Disponível') },
-      { text: 'Reservado', onPress: () => updateStatusMutation.mutate('Reservado') },
-      { text: 'Doado', onPress: () => updateStatusMutation.mutate('Doado') },
-      { text: 'Cancelado', onPress: () => updateStatusMutation.mutate('Cancelado'), style: 'destructive' },
-      { text: 'Voltar', style: 'cancel' }
-    ]);
-  };
-
   if (loadingItem || loadingMe) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#2196F3" /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color="#EB681E" /></View>;
   }
 
   if (itemError) {
@@ -156,27 +149,17 @@ export default function ItemDetailsScreen() {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
             body { padding: 0; margin: 0; background-color: #F8FAFC; }
-            #map { width: 100%; height: 100%; min-height: 100%; }
+            #map { width: 100%; height: 100vh; } 
         </style>
     </head>
     <body>
         <div id="map"></div>
         <script>
-            // Inicializa o mapa com zoom 15 (ideal para bairros)
-            var map = L.map('map', {
-                zoomControl: false,
-                attributionControl: false
-            }).setView([${lat}, ${lng}], 15);
-
-            // Puxa as imagens do servidor super rápido e grátis do CartoDB
-            L.tileLayer('https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-                maxZoom: 19
-            }).addTo(map);
-
-            // Desenha o círculo azul semitransparente
+            var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([${lat}, ${lng}], 15);
+            L.tileLayer('https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
             L.circle([${lat}, ${lng}], {
-                color: '#2196F3',
-                fillColor: '#2196F3',
+                color: '#EB681E', // Laranja do projeto
+                fillColor: '#EB681E',
                 fillOpacity: 0.2,
                 weight: 2,
                 radius: 150
@@ -187,148 +170,247 @@ export default function ItemDetailsScreen() {
   `;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={[styles.carousel, { width: windowWidth }]}>
-        {item.imageUrls?.length > 0 ? (
-          item.imageUrls.map((url, index) => (
-            <Image key={index} source={{ uri: url }} style={[styles.image, { width: windowWidth }]} />
-          ))
-        ) : (
-          <View style={[styles.noImage, { width: windowWidth }]}><Text style={styles.noImageText}>Sem fotos disponíveis</Text></View>
-        )}
-      </ScrollView>
+    <View style={styles.mainContainer}>
+      
+      {/* Botão Flutuante de Voltar */}
+      <TouchableOpacity style={styles.floatingBackBtn} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="#FFF" />
+      </TouchableOpacity>
 
-      <View style={styles.content}>
-        <View style={styles.badgeRow}>
-          <View style={styles.categoryBadge}><Text style={styles.categoryText}>{item.category}</Text></View>
-          <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}><Text style={[styles.statusText, { color: statusColors.text }]}>{item.status}</Text></View>
-        </View>
-
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.categorySubText}>📦 Categoria: {item.category}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-          <Text style={{ fontSize: 15, color: '#666' }}>Postado por </Text>
-          <TouchableOpacity onPress={() => router.push(`/user/${item.donor?.id}`)}>
-            <Text style={styles.donorNameLink}>{item.donor?.fullName || 'Usuário'}</Text>
-          </TouchableOpacity>
-        </View>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         
-        <View style={styles.divider} />
-        
-        <Text style={styles.sectionTitle}>Descrição</Text>
-        <Text style={styles.description}>{item.description}</Text>
-
-        <Text style={styles.sectionTitle}>Localização Aproximada</Text>
-        <View style={styles.mapContainer}>
-          {hasValidLocation ? (
-            <WebView
-              originWhitelist={['*']}
-              source={{ html: mapHtml }}
-              style={styles.map}
-              scrollEnabled={false} // Desabilita o scroll da "página" para o usuário só mexer no mapa
-            />
+        {/* Carrossel de Imagens */}
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={[styles.carousel, { width: windowWidth }]}>
+          {item.imageUrls?.length > 0 ? (
+            item.imageUrls.map((url, index) => (
+              <TouchableOpacity key={index} activeOpacity={0.9} onPress={() => setFullScreenImage(url)}>
+                <Image source={{ uri: url }} style={[styles.image, { width: windowWidth }]} />
+              </TouchableOpacity>
+            ))
           ) : (
-            <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#E5E7EB' }]}>
-              <Ionicons name="location-outline" size={32} color="#9CA3AF" />
-              <Text style={{ color: '#6B7280', marginTop: 8 }}>Localização indisponível</Text>
-            </View>
+            <View style={[styles.noImage, { width: windowWidth }]}><Text style={styles.noImageText}>Sem fotos disponíveis</Text></View>
           )}
-        </View>
-      </View>
+        </ScrollView>
 
-      <View style={styles.footer}>
-        {isOwner ? (
-          <View style={styles.ownerGrid}>
-            <Text style={styles.ownerTitle}>Painel do Doador</Text>
-            <View style={styles.ownerActionRow}>
-              <TouchableOpacity style={[styles.btnHalf, styles.btnEdit]} onPress={() => router.push(`/item/edit/${id}`)}>
-                <Ionicons name="pencil-outline" size={20} color="#FFF" style={styles.buttonIcon} />
-                <Text style={styles.btnTextWhite}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.btnHalf, styles.btnOutline]} onPress={handleStatusChange}>
-                <Ionicons name="refresh-outline" size={20} color="#2196F3" style={styles.buttonIcon} />
-                <Text style={styles.btnTextOutline}>Status</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={confirmDelete}>
-              <Ionicons name="trash-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
-              <Text style={styles.btnDangerText}>Remover Doação</Text>
+        <View style={styles.content}>
+          <View style={styles.badgeRow}>
+            <View style={styles.categoryBadge}><Text style={styles.categoryText}>{item.category}</Text></View>
+            <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}><Text style={[styles.statusText, { color: statusColors.text }]}>{item.status}</Text></View>
+          </View>
+
+          <Text style={styles.title}>{item.title}</Text>
+          <View style={styles.donorInfoRow}>
+            <Text style={{ fontSize: 15, color: '#64748B' }}>Postado por </Text>
+            <TouchableOpacity onPress={() => router.push(`/user/${item.donor?.id}`)}>
+              <Text style={styles.donorNameLink}>{item.donor?.fullName || 'Usuário'}</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          item.status === 'Doado' ? (
-            <TouchableOpacity 
-              style={[styles.btn, styles.btnOutline]} 
-              onPress={() => router.push({
-                pathname: '/review/create',
-                params: { revieweeId: item.donor?.id, revieweeName: item.donor?.fullName, itemId: item.id }
-              })}
-            >
-              <Ionicons name="star-outline" size={20} color="#2196F3" style={styles.buttonIcon} />
-              <Text style={styles.btnTextOutline}>Avaliar Doador</Text>
-            </TouchableOpacity>
+          
+          <View style={styles.divider} />
+          
+          <Text style={styles.sectionTitle}>Descrição</Text>
+          <Text style={styles.description}>{item.description}</Text>
+
+          <Text style={styles.sectionTitle}>Localização Aproximada</Text>
+          <View style={styles.mapContainer}>
+            {hasValidLocation ? (
+              <WebView
+                originWhitelist={['*']}
+                source={{ html: mapHtml }}
+                style={styles.map}
+                scrollEnabled={false} 
+                javaScriptEnabled={true} // Reforço para renderizar no Android
+                domStorageEnabled={true} // Reforço para renderizar no Android
+              />
+            ) : (
+              <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#E2E8F0' }]}>
+                <Ionicons name="location-outline" size={32} color="#94A3B8" />
+                <Text style={{ color: '#64748B', marginTop: 8 }}>Localização indisponível</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          {isOwner ? (
+            <View style={styles.ownerGrid}>
+              <Text style={styles.ownerTitle}>Painel do Doador</Text>
+              <View style={styles.ownerActionRow}>
+                <TouchableOpacity style={[styles.btnHalf, styles.btnEdit]} onPress={() => router.push(`/item/edit/${id}`)}>
+                  <Ionicons name="pencil-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+                  <Text style={styles.btnTextWhite}>Editar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.btnHalf, styles.btnOutline]} onPress={() => setStatusModalVisible(true)}>
+                  <Ionicons name="refresh-outline" size={20} color="#334155" style={styles.buttonIcon} />
+                  <Text style={styles.btnTextOutline}>Status</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={confirmDelete}>
+                <Ionicons name="trash-outline" size={20} color="#DC2626" style={styles.buttonIcon} />
+                <Text style={styles.btnDangerText}>Remover Doação</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
-            <TouchableOpacity 
-              style={[styles.btn, isLocked ? styles.btnLocked : styles.btnPrimary]} 
-              onPress={handleRequestDonation}
-              activeOpacity={0.8}
-              disabled={startChatMutation.isPending || isLocked}
-            >
-              {startChatMutation.isPending ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <Ionicons name="chatbubbles-outline" size={20} color="#FFF" style={styles.buttonIcon} />
-                  <Text style={styles.btnTextWhite}>{isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )
-        )}
-      </View>
-    </ScrollView>
+            item.status === 'Doado' ? (
+              <TouchableOpacity 
+                style={[styles.btn, styles.btnOutline]} 
+                onPress={() => router.push({
+                  pathname: '/review/create',
+                  params: { revieweeId: item.donor?.id, revieweeName: item.donor?.fullName, itemId: item.id }
+                })}
+              >
+                <Ionicons name="star-outline" size={20} color="#EB681E" style={styles.buttonIcon} />
+                <Text style={[styles.btnTextOutline, { color: '#EB681E' }]}>Avaliar Doador</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={[styles.btn, isLocked ? styles.btnLocked : styles.btnPrimary]} 
+                onPress={handleRequestDonation}
+                activeOpacity={0.8}
+                disabled={startChatMutation.isPending || isLocked}
+              >
+                {startChatMutation.isPending ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <Ionicons name="chatbubbles-outline" size={20} color="#FFF" style={styles.buttonIcon} />
+                    <Text style={styles.btnTextWhite}>{isLocked ? '🔒 Bloqueado (Janela 24h)' : 'Solicitar Doação / Chat'}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Modal de Imagem em Tela Cheia */}
+      <Modal visible={!!fullScreenImage} transparent={true} animationType="fade">
+        <View style={styles.fullScreenModal}>
+          <TouchableOpacity style={styles.closeImageBtn} onPress={() => setFullScreenImage(null)}>
+            <Ionicons name="close" size={32} color="#FFF" />
+          </TouchableOpacity>
+          {fullScreenImage && (
+            <Image source={{ uri: fullScreenImage }} style={styles.fullScreenImage} />
+          )}
+        </View>
+      </Modal>
+
+      {/* Modal Customizado de Status (Bottom Sheet) */}
+      <Modal visible={isStatusModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.statusModalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.statusModalTitle}>Alterar Status</Text>
+                <Text style={styles.statusModalSub}>Escolha o status atual da sua doação:</Text>
+              </View>
+              <TouchableOpacity onPress={() => setStatusModalVisible(false)}>
+                <Ionicons name="close-circle" size={28} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.statusGrid}>
+              {/* Card Disponível */}
+              <TouchableOpacity style={[styles.statusCard, item.status === 'Disponível' && styles.statusCardActive]} onPress={() => updateStatusMutation.mutate('Disponível')}>
+                <Ionicons name="checkmark-circle" size={28} color="#10B981" />
+                <Text style={[styles.statusCardText, item.status === 'Disponível' && { color: '#10B981', fontWeight: 'bold' }]}>Disponível</Text>
+              </TouchableOpacity>
+              
+              {/* Card Reservado */}
+              <TouchableOpacity style={[styles.statusCard, item.status === 'Reservado' && styles.statusCardActive]} onPress={() => updateStatusMutation.mutate('Reservado')}>
+                <Ionicons name="time" size={28} color="#F59E0B" />
+                <Text style={[styles.statusCardText, item.status === 'Reservado' && { color: '#F59E0B', fontWeight: 'bold' }]}>Reservado</Text>
+              </TouchableOpacity>
+
+              {/* Card Doado */}
+              <TouchableOpacity style={[styles.statusCard, item.status === 'Doado' && styles.statusCardActive]} onPress={() => updateStatusMutation.mutate('Doado')}>
+                <Ionicons name="gift" size={28} color="#3B82F6" />
+                <Text style={[styles.statusCardText, item.status === 'Doado' && { color: '#3B82F6', fontWeight: 'bold' }]}>Doado</Text>
+              </TouchableOpacity>
+
+              {/* Card Cancelado */}
+              <TouchableOpacity style={[styles.statusCard, item.status === 'Cancelado' && styles.statusCardActive]} onPress={() => updateStatusMutation.mutate('Cancelado')}>
+                <Ionicons name="close-circle" size={28} color="#EF4444" />
+                <Text style={[styles.statusCardText, item.status === 'Cancelado' && { color: '#EF4444', fontWeight: 'bold' }]}>Cancelado</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  mainContainer: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1 },
   scrollContent: { paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  carousel: { height: 280, backgroundColor: '#E0E0E0' },
-  image: { height: 280, resizeMode: 'cover' },
-  noImage: { height: 280, justifyContent: 'center', alignItems: 'center' },
-  noImageText: { color: '#888', fontWeight: '500' },
-  content: { padding: 20 },
-  badgeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  categoryBadge: { backgroundColor: '#F5F5F5', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  categoryText: { color: '#555', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  statusText: { fontSize: 12, fontWeight: '800' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 6 },
-  categorySubText: { fontSize: 14, color: '#2196F3', fontWeight: 'bold', marginBottom: 6 },
-  divider: { height: 1, backgroundColor: '#D1D5DB', marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
-  description: { fontSize: 16, color: '#6B7280', lineHeight: 24, marginBottom: 25 },
-  donorNameLink: { fontSize: 15, color: '#2196F3', fontWeight: 'bold', textDecorationLine: 'underline' },
-  mapContainer: { borderRadius: 12, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#D1D5DB', elevation: 2 },
-  map: { width: '100%', height: 200, backgroundColor: '#F3F4F6' },
-  footer: { paddingHorizontal: 20, marginTop: 10 },
-  ownerTitle: { fontSize: 15, fontWeight: 'bold', color: '#6B7280', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
-  ownerGrid: { gap: 10 },
-  ownerActionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  btnHalf: { flex: 1, height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
-  btnEdit: { backgroundColor: '#10B981' }, 
-  btn: { height: 56, borderRadius: 12, padding: 16, justifyContent: 'center', alignItems: 'center', width: '100%', flexDirection: 'row' },
-  btnPrimary: { backgroundColor: '#FF9800' },
-  btnLocked: { backgroundColor: '#9CA3AF' },
-  btnOutline: { backgroundColor: '#FFF', borderWidth: 2, borderColor: '#2196F3' },
-  btnDanger: { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FCA5A5' }, 
-  btnTextWhite: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  btnTextOutline: { color: '#2196F3', fontSize: 16, fontWeight: 'bold' },
+  
+  // Botão Flutuante
+  floatingBackBtn: { position: 'absolute', top: Platform.OS === 'ios' ? 50 : 40, left: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  
+  // Visualizador de Imagem
+  fullScreenModal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  closeImageBtn: { position: 'absolute', top: 50, right: 20, zIndex: 20, padding: 10 },
+  fullScreenImage: { width: '100%', height: '80%', resizeMode: 'contain' },
+
+  // Modal de Status
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  statusModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 24 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  statusModalTitle: { fontSize: 20, fontWeight: 'bold', color: '#0F172A' },
+  statusModalSub: { fontSize: 14, color: '#64748B', marginTop: 4 },
+  statusGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  statusCard: { width: '48%', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 12 },
+  statusCardActive: { borderColor: '#94A3B8', backgroundColor: '#F1F5F9', borderWidth: 2 },
+  statusCardText: { fontSize: 14, fontWeight: '600', color: '#64748B', marginTop: 8 },
+
+  carousel: { height: 320, backgroundColor: '#E2E8F0' },
+  image: { height: 320, resizeMode: 'cover' },
+  noImage: { height: 320, justifyContent: 'center', alignItems: 'center' },
+  noImageText: { color: '#94A3B8', fontWeight: '500' },
+  
+  content: { padding: 24, backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -20 },
+  badgeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
+  categoryBadge: { backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  categoryText: { color: '#475569', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  statusText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  
+  title: { fontSize: 26, fontWeight: 'bold', color: '#0F172A', marginBottom: 8 },
+  categorySubText: { display: 'none' }, // Oculto pois a badge já faz o trabalho
+  donorInfoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  donorNameLink: { fontSize: 15, color: '#EB681E', fontWeight: 'bold', textDecorationLine: 'underline' },
+  
+  divider: { height: 1, backgroundColor: '#E2E8F0', marginBottom: 20 },
+  
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#0F172A', marginBottom: 10 },
+  description: { fontSize: 16, color: '#475569', lineHeight: 24, marginBottom: 25 },
+  
+  mapContainer: { borderRadius: 16, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#E2E8F0' },
+  map: { width: '100%', height: 220, backgroundColor: '#F8FAFC' },
+  
+  footer: { paddingHorizontal: 24, marginTop: 10 },
+  ownerTitle: { fontSize: 14, fontWeight: 'bold', color: '#94A3B8', textTransform: 'uppercase', marginBottom: 12, textAlign: 'center' },
+  ownerGrid: { gap: 12 },
+  ownerActionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  btnHalf: { flex: 1, height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  btnEdit: { backgroundColor: '#334155' }, 
+  btn: { height: 56, borderRadius: 14, padding: 16, justifyContent: 'center', alignItems: 'center', width: '100%', flexDirection: 'row' },
+  btnPrimary: { backgroundColor: '#EB681E', shadowColor: '#EB681E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
+  btnLocked: { backgroundColor: '#94A3B8' },
+  btnOutline: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1' },
+  btnDanger: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' }, 
+  
+  btnTextWhite: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+  btnTextOutline: { color: '#334155', fontSize: 16, fontWeight: 'bold' },
   btnDangerText: { color: '#DC2626', fontSize: 16, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 },
-  errorText: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 10 },
-  errorSub: { fontSize: 15, textAlign: 'center', color: '#6B7280', marginBottom: 25 },
-  backBtn: { paddingVertical: 12, paddingHorizontal: 24, backgroundColor: '#E5E7EB', borderRadius: 8 },
-  backBtnText: { color: '#1F2937', fontWeight: 'bold' },
+  
+  errorText: { fontSize: 24, fontWeight: 'bold', color: '#0F172A', marginBottom: 10 },
+  errorSub: { fontSize: 15, textAlign: 'center', color: '#64748B', marginBottom: 25 },
+  backBtn: { paddingVertical: 14, paddingHorizontal: 24, backgroundColor: '#F1F5F9', borderRadius: 12 },
+  backBtnText: { color: '#0F172A', fontWeight: 'bold' },
 });

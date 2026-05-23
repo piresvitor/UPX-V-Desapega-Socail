@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { api } from '../../src/services/api';
@@ -13,7 +12,8 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('Doador');
+  
+  const [uiRole, setUiRole] = useState('doador');
   
   const [passwordError, setPasswordError] = useState('');
   const [confirmError, setConfirmError] = useState('');
@@ -23,9 +23,16 @@ export default function RegisterScreen() {
   const { signIn } = useAuth();
   const router = useRouter();
 
+  const roleOptions = [
+    { id: 'doador', label: 'Quero Doar', icon: 'heart-outline', apiValue: 'Doador' },
+    { id: 'beneficiario', label: 'Receber', icon: 'hand-left-outline', apiValue: 'Beneficiário' },
+    { id: 'ambos', label: 'Doar e Receber', icon: 'swap-horizontal-outline', apiValue: 'Doador' },
+    { id: 'freteiro', label: 'Sou Motorista', icon: 'car-outline', apiValue: 'Freteiro' }
+  ];
+
   const registerMutation = useMutation({
-    mutationFn: async () => {
-      await api.post('/auth/register', { fullName, email, password, role });
+    mutationFn: async (backendRole: string) => {
+      await api.post('/auth/register', { fullName, email, password, role: backendRole });
       const loginResponse = await api.post('/auth/login', { email, password });
       return loginResponse.data;
     },
@@ -59,7 +66,9 @@ export default function RegisterScreen() {
     }
     
     if (isValid) {
-      registerMutation.mutate();
+      const selectedOption = roleOptions.find(r => r.id === uiRole);
+      const backendRole = selectedOption ? selectedOption.apiValue : 'Doador';
+      registerMutation.mutate(backendRole);
     }
   };
 
@@ -69,7 +78,6 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Criar Conta</Text>
       
-      {/* Campo: Nome Completo */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Nome Completo</Text>
         <TextInput 
@@ -81,7 +89,6 @@ export default function RegisterScreen() {
         />
       </View>
 
-      {/* Campo: E-mail */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>E-mail</Text>
         <TextInput 
@@ -95,7 +102,6 @@ export default function RegisterScreen() {
         />
       </View>
       
-      {/* Campo: Senha */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Senha</Text>
         <View style={styles.passwordContainer}>
@@ -118,7 +124,6 @@ export default function RegisterScreen() {
         )}
       </View>
 
-      {/* Campo: Confirmar Senha */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Confirmar Senha</Text>
         <View style={styles.passwordContainer}>
@@ -138,20 +143,33 @@ export default function RegisterScreen() {
       </View>
 
       <Text style={styles.label}>Como você deseja usar o app?</Text>
-      <View style={styles.pickerContainer}>
-        <Picker 
-          selectedValue={role} 
-          onValueChange={(itemValue) => setRole(itemValue)}
-          style={{ color: '#000000' }} // Evita bug de cor no dark mode do Picker
-        >
-          <Picker.Item label="Quero Doar Itens (Doador)" value="Doador" />
-          <Picker.Item label="Preciso de Doações (Beneficiário)" value="Beneficiário" />
-          <Picker.Item label="Sou Motorista (Freteiro)" value="Freteiro" />
-        </Picker>
+      
+      <View style={styles.roleGrid}>
+        {roleOptions.map((option) => {
+          const isSelected = uiRole === option.id;
+          return (
+            <TouchableOpacity 
+              key={option.id}
+              style={[styles.roleCard, isSelected && styles.roleCardSelected]}
+              onPress={() => setUiRole(option.id)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={option.icon as any} 
+                size={28} 
+                color={isSelected ? '#EB681E' : '#64748B'} 
+                style={{ marginBottom: 6 }}
+              />
+              <Text style={[styles.roleCardText, isSelected && styles.roleCardTextSelected]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {registerMutation.isPending ? (
-        <ActivityIndicator size="large" color="#FF9800" style={{ marginTop: 10 }} />
+        <ActivityIndicator size="large" color="#EB681E" style={{ marginTop: 10 }} />
       ) : (
         <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
           <Ionicons name="person-add-outline" size={20} color="#FFF" style={styles.buttonIcon} />
@@ -163,31 +181,38 @@ export default function RegisterScreen() {
         <Ionicons name="arrow-back-outline" size={20} color="#6B7280" style={styles.buttonIcon} />
         <Text style={styles.secondaryButtonText}>Voltar</Text>
       </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F8FAFC', maxWidth: 520, alignSelf: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111827', marginBottom: 25 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 60, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 400, alignSelf: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111827', marginBottom: 30 },
   
-  inputGroup: { marginBottom: 18, width: '100%' }, 
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginLeft: 4 }, 
-  
-  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 14, fontSize: 16, color: '#111827' },
-  
+  inputGroup: { marginBottom: 20, width: '100%' }, 
+  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#334155', marginBottom: 8, marginLeft: 4 }, 
+  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 18, borderRadius: 14, fontSize: 16, color: '#111827', width: '100%' },
   inputError: { borderColor: '#DC2626', borderWidth: 2 }, 
-  passwordContainer: { position: 'relative', justifyContent: 'center' },
-  eyeIcon: { position: 'absolute', right: 15 },
+  
+  passwordContainer: { position: 'relative', justifyContent: 'center', width: '100%' },
+  eyeIcon: { position: 'absolute', right: 18 },
   errorText: { color: '#DC2626', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
   helperText: { color: '#64748B', fontSize: 12, marginTop: 4, marginLeft: 4 }, 
-  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 10, color: '#334155' },
-  pickerContainer: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', borderRadius: 14, marginBottom: 20 },
-  primaryButton: { backgroundColor: '#2563EB', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: '#2563EB', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 3 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
-  secondaryButton: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#475569', fontSize: 16, fontWeight: 'bold' },
+  
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 15, color: '#334155', marginLeft: 4 },
+  
+  roleGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 20 },
+  roleCard: { width: '48%', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 12 },
+  roleCardSelected: { borderColor: '#EB681E', backgroundColor: '#FFF3EB', borderWidth: 2 },
+  roleCardText: { fontSize: 13, fontWeight: '600', color: '#64748B', textAlign: 'center' },
+  roleCardTextSelected: { color: '#EB681E', fontWeight: 'bold' },
+  
+  primaryButton: { backgroundColor: '#EB681E', padding: 18, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: '#EB681E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 3, width: '100%' },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
+  
+  secondaryButton: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', padding: 18, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, width: '100%' },
+  secondaryButtonText: { color: '#475569', fontSize: 18, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 }
 });

@@ -39,6 +39,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         
+        {/* Logo Aumentado */}
         <Image 
           source={require('../../assets/icon.png')} 
           style={styles.logo} 
@@ -48,7 +49,6 @@ export default function LoginScreen() {
         <Text style={styles.title}>Desapega Social</Text>
         <Text style={styles.subtitle}>Faça login para continuar</Text>
       
-      {/* Label para o E-mail adicionada */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>E-mail</Text>
         <TextInput
@@ -62,7 +62,6 @@ export default function LoginScreen() {
         />
       </View>
       
-      {/* Label para a Senha adicionada */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Senha</Text>
         <View style={styles.passwordContainer}>
@@ -81,7 +80,7 @@ export default function LoginScreen() {
       </View>
       
       {loginMutation.isPending ? (
-        <ActivityIndicator size="large" color="#FF9800" style={{ marginTop: 10 }} />
+        <ActivityIndicator size="large" color="#EB681E" style={{ marginTop: 10 }} />
       ) : (
         <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
           <Ionicons name="log-in-outline" size={20} color="#FFF" style={styles.buttonIcon} />
@@ -89,6 +88,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
       )}
 
+      {/* Link em Laranja */}
       <Link href="/(auth)/register" style={styles.link}>
         Não tem uma conta? Crie aqui.
       </Link>
@@ -99,19 +99,30 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 60, backgroundColor: '#F8FAFC', maxWidth: 520, alignSelf: 'center' },
-  logo: { width: 140, height: 140, alignSelf: 'center', marginBottom: 14 },
+  // Ajuste na largura máxima para o formulário não ficar "espremido" no centro
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 60, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 400, alignSelf: 'center' },
+  
+  // Aumentado de 140x140 para 180x180
+  logo: { width: 180, height: 180, alignSelf: 'center', marginBottom: 20 },
+  
   title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111827' },
-  subtitle: { fontSize: 15, textAlign: 'center', marginBottom: 30, color: '#475569', marginTop: 8 },
+  subtitle: { fontSize: 16, textAlign: 'center', marginBottom: 35, color: '#475569', marginTop: 8 },
   
-  inputGroup: { marginBottom: 18, width: '100%' },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginLeft: 4 },
+  // Garantindo que o input ocupe 100% do espaço disponível
+  inputGroup: { marginBottom: 20, width: '100%' },
+  inputLabel: { fontSize: 14, fontWeight: 'bold', color: '#334155', marginBottom: 8, marginLeft: 4 },
   
-  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 14, borderRadius: 14, fontSize: 16, color: '#111827' },
-  passwordContainer: { position: 'relative', justifyContent: 'center' },
-  eyeIcon: { position: 'absolute', right: 15 },
-  primaryButton: { backgroundColor: '#2563EB', padding: 16, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, shadowColor: '#2563EB', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 3 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+  // Aumentado o padding (altura) e a fonte da caixa de texto
+  input: { borderWidth: 1, borderColor: '#CBD5E1', backgroundColor: '#FFFFFF', padding: 18, borderRadius: 14, fontSize: 16, color: '#111827', width: '100%' },
+  
+  passwordContainer: { position: 'relative', justifyContent: 'center', width: '100%' },
+  eyeIcon: { position: 'absolute', right: 18 },
+  
+  // Cor laranja principal do projeto (#EB681E) aplicada ao botão e sombra
+  primaryButton: { backgroundColor: '#EB681E', padding: 18, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, shadowColor: '#EB681E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 3, width: '100%' },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   buttonIcon: { marginRight: 8 },
-  link: { textAlign: 'center', marginTop: 28, color: '#2563EB', fontWeight: 'bold' }
+  
+  // Cor laranja aplicada ao link
+  link: { textAlign: 'center', marginTop: 28, color: '#EB681E', fontWeight: 'bold', fontSize: 15 }
 });
